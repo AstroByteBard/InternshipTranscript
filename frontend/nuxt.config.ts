@@ -6,6 +6,17 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/eslint'],
   css: ['@/assets/css/main.css'],
+  ui: {
+    theme: {
+      colors: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
+    }
+  },
+  colorMode: {
+    preference: 'light',
+    fallback: 'light',
+    classSuffix: '',
+    storageKey: 'app-color-mode-v2'
+  },
   vite: {
     plugins: [tailwindcss()],
   },

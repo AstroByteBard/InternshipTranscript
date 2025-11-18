@@ -1,7 +1,21 @@
-<template>
-  <UDashboardGroup>
-    <UDashboardSidebar />
+<script setup>
+const pageTitle = useState("pageTitle")
+const pageSubtitle = useState("pageSubtitle")
+</script>
 
-    <slot />
+<template>
+  <UDashboardGroup class="min-w-screen ">
+    <DashboardSidebar class="min-h-screen" />
+
+    <div class="flex-1 w-full">
+      <DashboardNavbar :title="pageTitle" :subtitle="pageSubtitle" >
+        <template #actions>
+          <slot name="navbar-actions" />
+        </template>
+      </DashboardNavbar>
+      <UDashboardPanel class="px-8 py-5 min-h-screen">
+        <slot />
+      </UDashboardPanel>
+    </div>
   </UDashboardGroup>
 </template>
