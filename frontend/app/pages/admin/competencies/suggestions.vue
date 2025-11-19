@@ -6,9 +6,9 @@ const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
 const pageSubtitle = useState("pageSubtitle")
 
-pageIcon.value = "lucide:earth"
-pageTitle.value = "General Competencies"
-pageSubtitle.value = "Overview of student skill assessment decided by the university"
+pageIcon.value = "lucide:messages-square"
+pageTitle.value = "Suggestions Competencies"
+pageSubtitle.value = "Overview of student evaluations and system activity"
 
 const overlay = useOverlay()
 const addDuplicateModal = overlay.create(DuplicateCompetenciesModal)
@@ -18,11 +18,11 @@ const itemsyear = ref(['2023', '2024', '2025']);
 const selectedYear = ref('2025');
 
 function showDuplicateModal() {
-    addDuplicateModal.open({ title: 'General' })
+    addDuplicateModal.open({ title: 'Suggestions' })
 }
 
 function showCompetenciesModal() {
-    addCompetenciesModal.open({ context: 'General' })
+    addCompetenciesModal.open({ context: 'Suggestions' })
 }
 </script>
 

@@ -20,7 +20,7 @@ const router = useRouter()
 
 const activeTab = ref(0)
 
-const itemsSchools = ref(['All', 'School of Information Technology', 'School of Business', 'School of Management'])
+const itemsSchools = ref(['School of Information Technology', 'School of Business', 'School of Management'])
 const selectedSchool = ref('');
 
 const itemsyear = ref(['2023', '2024', '2025']);
@@ -29,7 +29,7 @@ const selectedYear = ref('2025');
 const itemssemesters = ref(['1', '2', '3'])
 const selectedSemester = ref('');
 
-const itemsStatus = ref(['All', 'Sent', 'Pending', 'Failed'])
+const itemsStatus = ref([ 'Sent', 'Pending', 'Failed'])
 const selectedStatus = ref('');
 
 const email_subject = ref('');

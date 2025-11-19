@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import DownloadModal from '~/components/DownloadModal.vue'
 
 const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
@@ -9,7 +9,8 @@ pageIcon.value = "lucide:layout-dashboard"
 pageTitle.value = "Dashboard"
 pageSubtitle.value = "Overview of student evaluation activity"
 
-const showModal = ref(false);
+const overlay = useOverlay()
+const modal = overlay.create(DownloadModal)
 
 const itemsyear = ref(['2023', '2024', '2025']);
 const selectedYear = ref('2025');
@@ -75,19 +76,23 @@ const DoughnutChartData = {
   ]
 }
 
+function showModal() {
+  modal.open()
+}
+
 </script>
 
 <template>
   <NuxtLayout name="admin">
     <template #navbar-actions>
-      <UButton icon="lucide:download" color="error" variant="solid" label="Download CSV" @click="showModal = true" />
+      <UButton icon="lucide:download" color="error" variant="solid" label="Download CSV" @click="showModal" />
     </template>
 
     <filter class="flex justify-end gap-5">
       <USelect v-model="selectedYear" size="xl" :items="itemsyear" class="w-30" color="error" />
       <USelect v-model="selectedSemester" size="xl" placeholder="Semesters" :items="itemssemesters" color="error" />
-      <USelectMenu v-model="selectedSchool" size="xl" placeholder="Schools" :items="itemsSchools" class="w-80" color="error" />
-      <USelectMenu v-model="selectedDepartment" size="xl" placeholder="Majors" :items="itemsDepartments" class="w-60" color="error" />
+      <USelectMenu v-model="selectedSchool" size="xl" placeholder="Schools" :items="itemsSchools" class="w-68" color="error" />
+      <USelectMenu v-model="selectedDepartment" size="xl" placeholder="Majors" :items="itemsDepartments" class="w-56" color="error" />
     </filter>
 
     <header class="grid grid-cols-3 gap-10 mt-5">

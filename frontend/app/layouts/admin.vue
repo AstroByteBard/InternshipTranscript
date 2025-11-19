@@ -11,10 +11,11 @@ const pageSubtitle = useState("pageSubtitle")
     <div class="flex-1 w-full">
       <DashboardNavbar :title="pageTitle" :subtitle="pageSubtitle" :icon="pageIcon" >
         <template #actions>
+          <slot name="navbar-sub-actions" />
           <slot name="navbar-actions" />
         </template>
       </DashboardNavbar>
-      <UDashboardPanel class="px-8 py-5 min-h-screen">
+      <UDashboardPanel class="px-6 py-5 min-h-screen">
         <slot />
       </UDashboardPanel>
     </div>

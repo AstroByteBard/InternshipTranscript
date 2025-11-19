@@ -16,7 +16,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <UDashboardNavbar :ui="{ 'root' : 'py-10 border-b border-gray-300 w-full px-6 items-center justify-between' }">
+  <UDashboardNavbar :ui="{ 'root' : 'w-full px-6 py-10 items-center justify-between border-b border-gray-300', 'right': 'flex items-center gap-5' }">
     <template #left>
       <UButton :icon="props.icon" color="neutral" class="mr-2"/>
       <div>
@@ -25,6 +25,7 @@ const props = defineProps({
       </div>
     </template>
     <template #right>
+      <slot name="sub-actions" />
       <slot name="actions" />
     </template>
   </UDashboardNavbar>
