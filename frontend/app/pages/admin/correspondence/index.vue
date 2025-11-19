@@ -3,19 +3,22 @@ const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
 const pageSubtitle = useState("pageSubtitle")
 
-import { h, resolveComponent, ref} from 'vue'
-
 pageIcon.value = "lucide:mail"
 pageTitle.value = "Correspondence"
 pageSubtitle.value = "Send the assessment email and track its activity"
 
+import { getPaginationRowModel } from '@tanstack/vue-table'
+
 const UButton = resolveComponent("UButton");
 const UBadge = resolveComponent("UBadge");
+const table = useTemplateRef('table')
+const pagination = ref({
+    pageIndex: 0,
+    pageSize: 10
+})
+const router = useRouter()
 
 const activeTab = ref(0)
-
-const page = ref(1);
-const pageCount = ref(10);
 
 const itemsSchools = ref(['All', 'School of Information Technology', 'School of Business', 'School of Management'])
 const selectedSchool = ref('');
@@ -63,17 +66,17 @@ const columns = [
         }
     }, {
         header: 'Send Email',
-        cell: (row) => {
+        cell: ({ row }) => {
             return h(UButton, { icon: 'lucide:mail', color: 'neutral', variant: 'ghost', onClick: () => { console.log('Send email to', row.original.major) } })
         }
     }, {
         header: 'Student',
-        cell: (row) => {
-            return h(UButton, { icon: 'lucide:users', color: 'neutral', variant: 'ghost', onClick: () => { console.log('View students in', row.original.major) } })
+        cell: ({ row }) => {
+            return h(UButton, { icon: 'lucide:users', color: 'neutral', variant: 'ghost', onClick: () => { router.push(`/admin/correspondence/${row.original.major}`) } })
         }
     }, {
         header: 'Preview',
-        cell: (row) => {
+        cell: ({ row }) => {
             return h(UButton, { icon: 'lucide:eye', color: 'neutral', variant: 'ghost', onClick: () => { console.log('Preview email for', row.original.major) } })
         }
     }
@@ -95,24 +98,24 @@ const tableItems = [{
 <template>
     <NuxtLayout name="admin">
         <UCard>
-            <UTabs  v-model="activeTab" :items="tableItems" color="error" class="w-full">
+            <UTabs v-model="activeTab" :items="tableItems" color="error" class="w-full">
                 <template #email>
                     <div class="grid grid-cols-5 gap-4">
                         <UFormField label="School" required>
                             <USelectMenu placeholder="Select School" :items="itemsSchools" v-model="selectedSchool"
-                                class="w-full" />
+                                class="w-full" color="error" />
                         </UFormField>
                         <UFormField label="Academic Year" required>
                             <USelectMenu placeholder="Select Academic Year" :items="itemsyear" v-model="selectedYear"
-                                class="w-full" />
+                                class="w-full" color="error" />
                         </UFormField>
                         <UFormField label="Semester" required>
                             <USelect placeholder="Select Semester" :items="itemssemesters" v-model="selectedSemester"
-                                class="w-full" />
+                                class="w-full" color="error" />
                         </UFormField>
                         <UFormField label="Status" required>
                             <USelect placeholder="Select Status" :items="itemsStatus" v-model="selectedStatus"
-                                class="w-full" />
+                                class="w-full" color="error" />
                         </UFormField>
                         <UFormField label="Search" class="w-full">
                             <UButton block label="Filter" color="error" variant="solid" />
@@ -129,13 +132,27 @@ const tableItems = [{
                             <UTextarea v-model="email_body" placeholder="Typing the email body here" rows="10"
                                 class="w-full" />
                         </UFormField>
+                        <div class="flex justify-end">
+                            <UButton label="Save Template" color="error" variant="solid" />
+                        </div>
                     </div>
                 </template>
             </UTabs>
         </UCard>
 
-          <UTable v-if="activeTab == 0" :data="data" :columns="columns"
-            class="flex-1 rounded-2xl border-2 border-gray-300 mt-5 max-h-[450px]"
-            :ui="{ 'thead': 'bg-gray-50 text-xl font-bold' }" />
+        <div class="w-full space-y-4" v-if="activeTab == 0">
+            <UTable ref="table"  v-model:pagination="pagination" :data="data" :columns="columns"
+                sticky :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
+                class="flex-1 rounded-2xl border-2 border-gray-300 mt-5 max-h-[450px]"
+                :ui="{ 'thead': 'bg-gray-50 text-xl font-bold' }" />
+            <div class="flex justify-between">
+                <h1 class="text-gray-600 font-medium ">Total Students: {{ table?.tableApi?.getFilteredRowModel().rows.length }}</h1>
+                <UPagination activeColor="error"
+                    :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+                    :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+                    :total="table?.tableApi?.getFilteredRowModel().rows.length"
+                    @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)" />
+            </div>
+        </div>
     </NuxtLayout>
 </template>

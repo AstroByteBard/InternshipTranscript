@@ -17,10 +17,10 @@ const selectedYear = ref('2025');
 const itemssemesters = ref(['1', '2', '3'])
 const selectedSemester = ref('');
 
-const itemsSchools = ref(['All', 'School of Information Technology', 'School of Business', 'School of Management'])
+const itemsSchools = ref([ 'School of Information Technology', 'School of Business', 'School of Management'])
 const selectedSchool = ref('');
 
-const itemsDepartments = ref(['All', 'Computer Science', 'Information Systems', 'Business Administration', 'Marketing', 'Accounting', 'Management'])
+const itemsDepartments = ref([ 'Computer Science', 'Information Systems', 'Business Administration', 'Marketing', 'Accounting', 'Management'])
 const selectedDepartment = ref('');
 
 const dataDepartments = ref([
@@ -84,10 +84,10 @@ const DoughnutChartData = {
     </template>
 
     <filter class="flex justify-end gap-5">
-      <USelectMenu v-model="selectedYear" size="xl" :items="itemsyear" />
-      <USelectMenu v-model="selectedSemester" size="xl" placeholder="Semesters" :items="itemssemesters" />
-      <USelectMenu v-model="selectedSchool" size="xl" placeholder="Schools" :items="itemsSchools" />
-      <USelectMenu v-model="selectedDepartment" size="xl" placeholder="Majors" :items="itemsDepartments" />
+      <USelect v-model="selectedYear" size="xl" :items="itemsyear" class="w-30" color="error" />
+      <USelect v-model="selectedSemester" size="xl" placeholder="Semesters" :items="itemssemesters" color="error" />
+      <USelectMenu v-model="selectedSchool" size="xl" placeholder="Schools" :items="itemsSchools" class="w-80" color="error" />
+      <USelectMenu v-model="selectedDepartment" size="xl" placeholder="Majors" :items="itemsDepartments" class="w-60" color="error" />
     </filter>
 
     <header class="grid grid-cols-3 gap-10 mt-5">
