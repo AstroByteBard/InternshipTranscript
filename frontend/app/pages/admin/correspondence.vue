@@ -3,15 +3,19 @@ const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
 const pageSubtitle = useState("pageSubtitle")
 
-import { h, resolveComponent, ref } from 'vue'
+import { h, resolveComponent, ref} from 'vue'
 
 pageIcon.value = "lucide:mail"
 pageTitle.value = "Correspondence"
 pageSubtitle.value = "Send the assessment email and track its activity"
 
-
-const showTable = ref(true);
+const UButton = resolveComponent("UButton");
 const UBadge = resolveComponent("UBadge");
+
+const activeTab = ref(0)
+
+const page = ref(1);
+const pageCount = ref(10);
 
 const itemsSchools = ref(['All', 'School of Information Technology', 'School of Business', 'School of Management'])
 const selectedSchool = ref('');
@@ -38,33 +42,51 @@ const data = [
 ]
 
 const columns = [
-  {
-    accessor: 'major',
-    header: 'Major',
-    cell: ({ row }) => row.major || '—'
-  },
-  {
-    accessor: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const color = {
-        Sent: 'success',
-        Pending: 'warning',
-        Failed: 'danger'
-      }[row.status]
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () => row.status)
+    {
+        accessor: 'major',
+        header: 'Major',
+        cell: ({ row }) => {
+            return row.original.major || '—'
+        }
+    },
+    {
+        accessor: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+            const status = row.original.status // ใช้ row.original
+            const color = {
+                Sent: 'success',
+                Pending: 'warning',
+                Failed: 'neutral'
+            }[status]
+            return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () => status)
+        }
+    }, {
+        header: 'Send Email',
+        cell: (row) => {
+            return h(UButton, { icon: 'lucide:mail', color: 'neutral', variant: 'ghost', onClick: () => { console.log('Send email to', row.original.major) } })
+        }
+    }, {
+        header: 'Student',
+        cell: (row) => {
+            return h(UButton, { icon: 'lucide:users', color: 'neutral', variant: 'ghost', onClick: () => { console.log('View students in', row.original.major) } })
+        }
+    }, {
+        header: 'Preview',
+        cell: (row) => {
+            return h(UButton, { icon: 'lucide:eye', color: 'neutral', variant: 'ghost', onClick: () => { console.log('Preview email for', row.original.major) } })
+        }
     }
-  }
 ]
-
-
 
 const tableItems = [{
     label: 'Email Sending',
-    slot: 'email'
+    slot: 'email',
+    value: 0
 }, {
     label: 'Email Templates',
-    slot: 'templates'
+    slot: 'templates',
+    value: 1
 }]
 
 
@@ -73,7 +95,7 @@ const tableItems = [{
 <template>
     <NuxtLayout name="admin">
         <UCard>
-            <UTabs :items="tableItems" color="error" class="w-full">
+            <UTabs  v-model="activeTab" :items="tableItems" color="error" class="w-full">
                 <template #email>
                     <div class="grid grid-cols-5 gap-4">
                         <UFormField label="School" required>
@@ -112,8 +134,8 @@ const tableItems = [{
             </UTabs>
         </UCard>
 
-        <UTable v-show="showTable" :data="data" :columns="columns"
-            class="flex-1 rounded-2xl border-2 border-gray-300 mt-5 "
+          <UTable v-if="activeTab == 0" :data="data" :columns="columns"
+            class="flex-1 rounded-2xl border-2 border-gray-300 mt-5 max-h-[450px]"
             :ui="{ 'thead': 'bg-gray-50 text-xl font-bold' }" />
     </NuxtLayout>
 </template>
