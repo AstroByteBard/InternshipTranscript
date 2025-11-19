@@ -1,9 +1,11 @@
 <script setup>
 import { ref } from 'vue';
 
+const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
 const pageSubtitle = useState("pageSubtitle")
 
+pageIcon.value = "lucide:layout-dashboard"
 pageTitle.value = "Dashboard"
 pageSubtitle.value = "Overview of student evaluation activity"
 

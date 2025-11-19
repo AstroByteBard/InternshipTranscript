@@ -8,7 +8,7 @@ const pageSubtitle = useState("pageSubtitle")
     <DashboardSidebar class="min-h-screen" />
 
     <div class="flex-1 w-full">
-      <DashboardNavbar :title="pageTitle" :subtitle="pageSubtitle" >
+      <DashboardNavbar :title="pageTitle" :subtitle="pageSubtitle" :icon="pageIcon" >
         <template #actions>
           <slot name="navbar-actions" />
         </template>
