@@ -18,7 +18,7 @@ function onSubmit(event) {
 <template>
   <div class="w-full min-h-screen grid grid-cols-2 ">
     <div class="flex justify-center items-center">
-      <img src="/loginpic.png" alt="Login Image" class=""/>
+      <img src="/loginpic.png" alt="Login Image" />
     </div>
     <div class="flex flex-col items-center justify-center ">
       <form class="bg-white border border-gray-100 p-8 rounded-lg shadow-md w-[60%]" @submit="onSubmit">
