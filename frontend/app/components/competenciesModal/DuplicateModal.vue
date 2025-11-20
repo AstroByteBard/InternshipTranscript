@@ -21,7 +21,7 @@ const selectedYear = ref('2025');
         </template>
         <template #footer="{ close }">
             <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-            <UButton label="Save" color="error" />
+            <UButton label="Save" color="error" @click="close" />
         </template>
     </UModal>
 </template>

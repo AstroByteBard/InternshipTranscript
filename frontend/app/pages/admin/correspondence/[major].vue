@@ -32,19 +32,6 @@ const pagination = ref({
     pageSize: 8 
 })
 
-// const { data, status } = await useFetch('https://jsonplaceholder.typicode.com/users', {
-//     key: 'table-users',
-//     transform: (data) => {
-//         return (
-//             data?.map((user) => ({
-//                 ...user,
-//                 avatar: { src: `https://i.pravatar.cc/120?img=${user.id}`, alt: `${user.name} avatar` }
-//             })) || []
-//         )
-//     },
-//     lazy: true
-// })
-
 const data = ref([
     {
         id: 1,

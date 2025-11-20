@@ -4,7 +4,7 @@ const items = [[
   { label: 'Correspondence', icon: 'lucide:mail', to: '/admin/correspondence' },
   { label: 'Competencies', icon: 'lucide:lightbulb', children: [{ label: 'General', to: '/admin/competencies/general', icon: 'lucide:earth' }, { label: 'Specific', to: '/admin/competencies/specific', icon: 'lucide:school' }, { label: 'Suggestions', to: '/admin/competencies/suggestions', icon: 'lucide:messages-square' }] },
   { label: 'Documents', icon: 'lucide:file-edit', to: '/admin/documents' },
-  { label: 'Administrator', icon: 'lucide:users-round', children: [{ label: 'User', icon: 'lucide:user', to: '/admin/administrator/user' }, { label: 'Roles', icon: 'lucide:shield', to: '/admin/administrator/roles' }] }
+  { label: 'Administrator', icon: 'lucide:users-round', children: [{ label: 'Users', icon: 'lucide:user', to: '/admin/administrator/users' }, { label: 'Roles', icon: 'lucide:shield', to: '/admin/administrator/roles' }] }
   ],[
   { label: 'Feedback', icon: 'lucide:message-circle', to: '/admin/feedback'},
   { label: 'Help & Support', icon: 'lucide:help-circle', to: '/admin/help'},
