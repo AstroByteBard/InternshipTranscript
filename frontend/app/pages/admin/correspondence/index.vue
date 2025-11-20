@@ -72,12 +72,12 @@ const columns = [
     }, {
         header: 'Student',
         cell: ({ row }) => {
-            return h(UButton, { icon: 'lucide:users', color: 'neutral', variant: 'ghost', onClick: () => { router.push(`/admin/correspondence/${row.original.major}`) } })
+            return h(UButton, { icon: 'lucide:users', color: 'neutral', variant: 'ghost', onClick: () => { router.push(`/admin/correspondence/major/${row.original.major}`) } })
         }
     }, {
         header: 'Preview',
         cell: ({ row }) => {
-            return h(UButton, { icon: 'lucide:eye', color: 'neutral', variant: 'ghost', onClick: () => { console.log('Preview email for', row.original.major) } })
+            return h(UButton, { icon: 'lucide:eye', color: 'neutral', variant: 'ghost', onClick: () => { router.push(`/admin/correspondence/view/${row.original.id}`) } })
         }
     }
 ]
