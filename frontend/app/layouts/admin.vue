@@ -1,4 +1,5 @@
 <script setup>
+const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
 const pageSubtitle = useState("pageSubtitle")
 </script>
