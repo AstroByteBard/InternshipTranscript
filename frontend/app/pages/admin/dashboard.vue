@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import DownloadModal from '~/components/DownloadModal.vue'
 
 const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
@@ -9,7 +9,8 @@ pageIcon.value = "lucide:layout-dashboard"
 pageTitle.value = "Dashboard"
 pageSubtitle.value = "Overview of student evaluation activity"
 
-const showModal = ref(false);
+const overlay = useOverlay()
+const modal = overlay.create(DownloadModal)
 
 const itemsyear = ref(['2023', '2024', '2025']);
 const selectedYear = ref('2025');
@@ -17,10 +18,10 @@ const selectedYear = ref('2025');
 const itemssemesters = ref(['1', '2', '3'])
 const selectedSemester = ref('');
 
-const itemsSchools = ref(['All', 'School of Information Technology', 'School of Business', 'School of Management'])
+const itemsSchools = ref([ 'School of Information Technology', 'School of Business', 'School of Management'])
 const selectedSchool = ref('');
 
-const itemsDepartments = ref(['All', 'Computer Science', 'Information Systems', 'Business Administration', 'Marketing', 'Accounting', 'Management'])
+const itemsDepartments = ref([ 'Computer Science', 'Information Systems', 'Business Administration', 'Marketing', 'Accounting', 'Management'])
 const selectedDepartment = ref('');
 
 const dataDepartments = ref([
@@ -75,19 +76,23 @@ const DoughnutChartData = {
   ]
 }
 
+function showModal() {
+  modal.open()
+}
+
 </script>
 
 <template>
   <NuxtLayout name="admin">
     <template #navbar-actions>
-      <UButton icon="lucide:download" color="error" variant="solid" label="Download CSV" @click="showModal = true" />
+      <UButton icon="lucide:download" color="error" variant="solid" label="Download CSV" @click="showModal" />
     </template>
 
     <filter class="flex justify-end gap-5">
-      <USelectMenu v-model="selectedYear" size="xl" :items="itemsyear" />
-      <USelectMenu v-model="selectedSemester" size="xl" placeholder="Semesters" :items="itemssemesters" />
-      <USelectMenu v-model="selectedSchool" size="xl" placeholder="Schools" :items="itemsSchools" />
-      <USelectMenu v-model="selectedDepartment" size="xl" placeholder="Majors" :items="itemsDepartments" />
+      <USelect v-model="selectedYear" size="xl" :items="itemsyear" class="w-30" color="error" />
+      <USelect v-model="selectedSemester" size="xl" placeholder="Semesters" :items="itemssemesters" color="error" />
+      <USelectMenu v-model="selectedSchool" size="xl" placeholder="Schools" :items="itemsSchools" class="w-68" color="error" />
+      <USelectMenu v-model="selectedDepartment" size="xl" placeholder="Majors" :items="itemsDepartments" class="w-56" color="error" />
     </filter>
 
     <header class="grid grid-cols-3 gap-10 mt-5">
