@@ -5,7 +5,7 @@ const pageIcon = useState("pageIcon")
 const pageTitle = useState("pageTitle")
 const pageSubtitle = useState("pageSubtitle")
 
-pageIcon.value = "lucide:document"
+pageIcon.value = "lucide:file-edit"
 pageTitle.value = "Document"
 pageSubtitle.value = "Create template for documents and manage document"
 
@@ -17,8 +17,7 @@ const newDocumentName = ref("")
 
 <template>
   <NuxtLayout name="admin">
-
-    <!-- ปุ่ม Add บน Navbar -->
+ 
     <template #navbar-actions>
       <UButton 
         icon="lucide:plus"
@@ -29,8 +28,6 @@ const newDocumentName = ref("")
       />
     </template>
 
-
-    <!-- CONTENT -->
     <div class="p-8 relative min-h-[270px]">
 
       <div 
