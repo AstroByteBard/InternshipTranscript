@@ -1,12 +1,4 @@
 <script setup>
-const pageIcon = useState("pageIcon")
-const pageTitle = useState("pageTitle")
-const pageSubtitle = useState("pageSubtitle")
-
-pageIcon.value = "lucide:mail"
-pageTitle.value = "Correspondence"
-pageSubtitle.value = "Send the assessment email and track its activity"
-
 import { getPaginationRowModel } from '@tanstack/vue-table'
 
 const route = useRoute()
