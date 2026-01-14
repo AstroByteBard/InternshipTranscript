@@ -8,12 +8,7 @@
   "paths": {
     "/students": {
       "get": {
-        "summary": "Get all Students",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
+        "summary": "Get all Students"
       },
       "post": {
         "summary": "Create a student",
@@ -54,15 +49,8 @@
               }
             }
           }
-        },
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
         }
-      }
-    },
-    "/students/{id}": {
+      },
       "put": {
         "summary": "Update a students",
         "parameters": [
@@ -113,41 +101,50 @@
               }
             }
           }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated"
-          }
         }
       },
       "delete": {
         "summary": "Delete a students",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The Students ID"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted"
+        }
+      }
+    },
+    "/students/explorers": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["id"]
+              }
+            }
           }
         }
       }
     },
     "/academic/major": {
       "get": {
-        "summary": "Get all majors",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
+        "summary": "Get all majors"
       },
       "post": {
         "summary": "Create a major",
@@ -188,45 +185,8 @@
           }
         }
       },
-      "responses": {
-        "201": {
-          "description": "Created"
-        }
-      }
-    },
-    "/academic/major/{id}": {
-      "get": {
-        "summary": "Get major by ID",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The major ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      },
       "put": {
-        "summary": "Update a major",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The major ID"
-          }
-        ],
+        "summary": "Create a major",
         "requestBody": {
           "required": true,
           "content": {
@@ -234,6 +194,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "id": {
+                    "type": "string"
+                  },
                   "title": {
                     "type": "array",
                     "items": {
@@ -257,64 +220,56 @@
                   "school": {
                     "type": "string"
                   }
-                }
+                },
+                "required": ["title", "school"]
               }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Updated"
-            }
-          }
-        },
-        "delete": {
-          "summary": "Delete a major",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "id",
-              "schema": {
-                "type": "string"
-              },
-              "required": true,
-              "description": "The major ID"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Deleted"
             }
           }
         }
       },
       "delete": {
         "summary": "Delete a major",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The major ID"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted"
+        }
+      }
+    },
+    "/academic/major/explorers": {
+      "post": {
+        "summary": "Get major by ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["id"]
+              }
+            }
           }
         }
       }
     },
     "/academic/school": {
       "get": {
-        "summary": "Get all schools",
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
+        "summary": "Get all schools"
       },
       "post": {
         "summary": "Create a school",
@@ -350,47 +305,10 @@
               }
             }
           }
-        },
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      }
-    },
-    "/academic/school/{id}": {
-      "get": {
-        "summary": "Get school by ID",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The school ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
         }
       },
       "put": {
         "summary": "Update a school",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The school ID"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -398,6 +316,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "id": {
+                    "type": "string"
+                  },
                   "title": {
                     "type": "array",
                     "items": {
@@ -422,30 +343,45 @@
                 "required": ["title"]
               }
             }
-          },
-          "responses": {
-            "200": {
-              "description": "Updated"
-            }
           }
         }
       },
       "delete": {
         "summary": "Delete a school",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The school ID"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Deleted"
+        }
+      }
+    },
+    "/academic/school/explorers": {
+      "get": {
+        "summary": "Get school by ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["id"]
+              }
+            }
           }
         }
       }
@@ -499,39 +435,140 @@
             "description": "Created"
           }
         }
-      }
-    },
-    "/setting/group/{id}": {
-      "get": {
-        "summary": "Get group by ID",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "description": "The group ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
+      },
+      "put": {
+        "summary": "update a group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": { "type": "string" },
+                        "value": { "type": "string" }
+                      }
+                    }
+                  },
+                  "description": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": { "type": "string" },
+                        "value": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
-      "put": {
-        
+      "delete": {
+        "summary": "delete a group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/setting/status": {
       "get": {
-        "summary": "Get all statuses",
-        "responses": {
-          "200": {
-            "description": "Success"
+        "summary": "Get status"
+      },
+      "post": {
+        "summary": "create a status",
+        "requestBody": {
+          "required": true,
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": { "type": "string" },
+                      "value": { "type": "string" }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": { "type": "string" },
+                      "value": { "type": "string" }
+                    }
+                  }
+                }
+              },
+              "required": ["title"]
+            }
           }
+        }
+      },
+      "put": {
+        "summary": "upadte a status",
+        "requestBody": {
+          "required": true,
+          "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": { "type": "string" },
+                        "value": { "type": "string" }
+                      }
+                    }
+                  },
+                  "description": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": { "type": "string" },
+                        "value": { "type": "string" }
+                      }
+                    }
+                  },
+                  "group": {
+                    "type": "string"
+                  }
+                },
+                "required": ["title"]
+              }
+            }
         }
       }
     }

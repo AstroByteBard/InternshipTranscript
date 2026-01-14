@@ -3,6 +3,7 @@ const router = express.Router();
 
 const message = require("./service/message");
 const status = require("./service/status");
+const group = require("./service/group")
 const verification = require("./service/verification");
 // const auth_message = require("./service/auth_message");
 // const Role = require("../Accounts/service/role");
@@ -18,6 +19,12 @@ router.get("/status", status.onQuerys);
 router.post("/status", status.onCreate);
 router.put("/status", status.onUpdate);
 router.delete("/status", status.onDelete);
+
+router.get("/group", group.onQuerys)
+router.post("/group", group.onCreate)
+router.put("/group", group.onUpdate)
+router.delete("/group", group.onDelete)
+
 
 // router.get("/levels", level.onQuerys);
 // router.post("/levels/explorers", level.onCreate);
