@@ -4,9 +4,9 @@ const router = express.Router();
 const message = require("./service/message");
 const status = require("./service/status");
 const verification = require("./service/verification");
-const auth_message = require("./service/auth_message");
-const Role = require("../Accounts/service/role");
-const Authen_Type = require("../Accounts/service/authen_type");
+// const auth_message = require("./service/auth_message");
+// const Role = require("../Accounts/service/role");
+// const Authen_Type = require("../Accounts/service/authen_type");
 
 
 router.get("/message", message.onQuerys);
@@ -34,21 +34,21 @@ router.delete("/verification", verification.onDelete);
 
 // authen service
 
-router.get("/auth/message", auth_message.onQuerys);
-router.post("/auth/message/explorers", auth_message.onCreate);
-router.post("/auth/message", auth_message.onCreate);
-router.put("/auth/message", auth_message.onUpdate);
-router.delete("/auth/message", auth_message.onDelete);
+// router.get("/auth/message", auth_message.onQuerys);
+// router.post("/auth/message/explorers", auth_message.onCreate);
+// router.post("/auth/message", auth_message.onCreate);
+// router.put("/auth/message", auth_message.onUpdate);
+// router.delete("/auth/message", auth_message.onDelete);
 
-router.get("/role", Role.onQuerys);
-router.post("/role", Role.onCreate);
-router.put("/role", Role.onUpdate);
-router.delete("/role", Role.onDelete);
+// router.get("/role", Role.onQuerys);
+// router.post("/role", Role.onCreate);
+// router.put("/role", Role.onUpdate);
+// router.delete("/role", Role.onDelete);
 
-router.get("/authen/type", Authen_Type.onQuerys);
-router.post("/authen/type", Authen_Type.onCreate);
-router.put("/authen/type", Authen_Type.onUpdate);
-router.delete("/authen/type", Authen_Type.onDelete);
+// router.get("/authen/type", Authen_Type.onQuerys);
+// router.post("/authen/type", Authen_Type.onCreate);
+// router.put("/authen/type", Authen_Type.onUpdate);
+// router.delete("/authen/type", Authen_Type.onDelete);
 
 
 module.exports = router;

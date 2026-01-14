@@ -1,5 +1,5 @@
 const mongo = require('mongodb');
-const Organization = require('../controller/organization');
+const Organization = require('../controller/students');
 const ResMessage = require("../../Settings/service/message");
 
 exports.onQuery = async function (request, response) {

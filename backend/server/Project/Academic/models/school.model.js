@@ -1,10 +1,9 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+var mongoose    = require('mongoose');
+var Schema      = mongoose.Schema;
 
-var objsSchema = new Schema({
-
+var objsSchema  = new Schema({
     title           : [{
         key            : {type: String, default: null},
         value          : {type: String, default: null},
@@ -13,11 +12,10 @@ var objsSchema = new Schema({
         key            : {type: String, default: null},
         value          : {type: String, default: null},
     }],
-    // status          : {type: mongoose.Schema.Types.ObjectId, ref: 'Setting_Status', default: "689c04cb255db4e56aea88ef" },
     create          : {
         by              : {type: mongoose.Schema.Types.ObjectId, ref: 'Information_Accounts'},
         datetime        : {type: Date, default: Date.now}
     },
-
 });
-module.exports = mongoose.model('Setting_Group', objsSchema, 'Setting_Group');
+
+module.exports = mongoose.model('Setting_School', objsSchema, 'Setting_School');
