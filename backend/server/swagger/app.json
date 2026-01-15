@@ -5,6 +5,12 @@
     "version": "1.0.0",
     "description": "API documentation"
   },
+  "servers": [
+    {
+      "url": "http://localhost:8081/api/v1",
+      "description": "Development server"
+    }
+  ],
   "paths": {
     "/students": {
       "get": {

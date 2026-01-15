@@ -18,4 +18,4 @@ var objsSchema  = new Schema({
     },
 });
 
-module.exports = mongoose.model('Setting_School', objsSchema, 'Setting_School');
+module.exports = mongoose.model('Academic_School', objsSchema, 'Academic_School');
