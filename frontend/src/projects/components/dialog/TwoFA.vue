@@ -155,7 +155,7 @@ export default {
   border: 2px solid #ccc;
   border-radius: 8px;
   transition: all 0.2s ease;
-  //text-transform: uppercase; /* ทำให้ตัวอักษรเป็นตัวใหญ่ */
+  text-transform: uppercase; /* ทำให้ตัวอักษรเป็นตัวใหญ่ */
 }
 
 .otp-input input:focus {
