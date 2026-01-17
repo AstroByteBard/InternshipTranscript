@@ -8,7 +8,7 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
 // Views
-const Dashboard = () => import('@/views/Dashboard')
+const Dashboards = () => import('@/views/Dashboard')
 
 const Colors = () => import('@/views/theme/Colors')
 const Typography = () => import('@/views/theme/Typography')
@@ -86,6 +86,9 @@ const Inbox = () => import('@/views/apps/email/Inbox')
 const Message = () => import('@/views/apps/email/Message')
 
 
+// project 
+
+const Dashboard = () => import('@/projects/views/dashboard')
 
 const Login = () => import('@/projects/views/Login.vue')
 
@@ -102,11 +105,8 @@ export default new Router({
             path: '/',
             redirect: '/dashboard',
             name: 'Home',
-            component: TheContainer,
+            component: TheContainer_Project,
             children: [
-
-
-
 
 
                 {
@@ -141,7 +141,7 @@ export default new Router({
                 {
                     path: 'charts',
                     name: 'Charts',
-                    component: Charts
+                    component: Dashboards
                 },
                 {
                     path: 'tables',

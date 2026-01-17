@@ -1,11 +1,6 @@
 <template>
-  <CSidebar
-      class="bg-style1"
-      :minimize="minimize"
-      unfoldable
-      :show="show"
-      @update:show="(value) => $store.commit('set', ['sidebarShow', value])"
-  >
+  <CSidebar class="bg-style1" :minimize="minimize" unfoldable :show="show"
+    @update:show="(value) => $store.commit('set', ['sidebarShow', value])">
     <CSidebarBrand class="d-md-down-none">
       <!--      <CIcon-->
       <!--          class="c-sidebar-brand-full"-->
@@ -16,11 +11,11 @@
       <!--      />-->
       <div class="c-sidebar-brand-full">
         <a href="/">
-          <CRow >
+          <CRow>
             <img class="pt-2 pb-2" src="@/assets/logo.svg" height="60px">
             <CCol class="text-white">
               <p class="font-weight-bold mb-0 mt-2 h5">MFU</p>
-              <p class="font-weight-bold">Dashboard System</p>
+              <p class="font-weight-bold">Internship Transcript System</p>
             </CCol>
           </CRow>
         </a>
@@ -28,15 +23,9 @@
 
 
       <!--      <img src="@/assets/logo.svg" height="48"/>-->
-      <CIcon
-          class="c-sidebar-brand-minimized"
-          name="logo"
-          size="custom-size"
-          :height="35"
-          viewBox="0 0 110 134"
-      />
+      <CIcon class="c-sidebar-brand-minimized" name="logo" size="custom-size" :height="35" viewBox="0 0 110 134" />
     </CSidebarBrand>
-    <CRenderFunction flat :contentToRender="nav"/>
+    <CRenderFunction flat :contentToRender="nav" />
     <!--    <CSidebarMinimizer-->
     <!--        class="c-d-md-down-none"-->
     <!--        @click.native="$store.commit('toggle', 'sidebarMinimize')"-->
@@ -66,6 +55,55 @@ export default {
       nav: [{
         _name: 'CSidebarNav',
         _children: [
+
+          {
+            _name: 'CSidebarNavItem',
+            name: 'Dashboard',
+            to: '/dashboard',
+            icon: 'cil-window-restore'
+          },
+          {
+            _name: 'CSidebarNavDropdown',
+            name: 'Correspondence',
+            to: '/Correspondence',
+            icon: 'cil-envelope-closed',
+            items: [
+              {
+                name: 'Email to advisors',
+                to: '/project/email/advice'
+              },
+              {
+                name: 'Email to student',
+                to: '/project/email/student'
+              }
+            ]
+          },
+          {
+            _name: 'CSidebarNavDropdown',
+            name: 'Competencies',
+            to: '/Competencies',
+            icon: 'cil-lightbulb',
+            items: [
+              {
+                name: 'General',
+                to: '/Competencies/General'
+              },
+              {
+                name: 'Specific',
+                to: '/Competencies/Specific' 
+              },
+              {
+                name: 'Suggestions',
+                to: '/Competencies/Suggestions'
+              }
+            ]
+          },
+          {
+            _name: 'CSidebarNavItem',
+            name: 'Documents',
+            icon: 'cil-description',
+            to: '/documents'
+          },
 
           {
             _name: 'CSidebarNavTitle',

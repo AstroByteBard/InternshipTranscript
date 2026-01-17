@@ -2,15 +2,15 @@ import Vue from "vue";
 import Vuex from "vuex";
 Vue.use(Vuex);
 
-import DialogMessages from "./modules/Dialog/index";
-import Setting from './modules/Setting/index'
+// import DialogMessages from "./modules/Dialog/index";
+// import Setting from './modules/Setting/index'
 
-import Payment from  "@/store/modules/Payments/index";
-import Organization from "@/store/modules/organization";
-import Accounts from "@/store/modules/Accounts/index";
-import Authentication from "@/store/modules/Authentication/index";
+// import Payment from  "@/store/modules/Payments/index";
+// import Organization from "@/store/modules/organization";
+// import Accounts from "@/store/modules/Accounts/index";
+// import Authentication from "@/store/modules/Authentication/index";
 
-
+import Academic from "@/store/modules/Academic"
 
 const state = {
   sidebarShow: 'responsive',
@@ -41,19 +41,21 @@ export default new Vuex.Store({
   state,
   mutations,
   modules : {
-      dialog: DialogMessages,
-      setting : Setting,
-      payment : Payment,
-      organization : Organization,
-    //
-    //
-    // campus : Campus,
-    // faculty : Facultys,
-    // departent : Departments,
-    //
-    //
-      auth : Authentication,
-    account : Accounts,
+    academic: Academic
+    
+    //   dialog: DialogMessages,
+    //   setting : Setting,
+    //   payment : Payment,
+    //   organization : Organization,
+    // //
+    // //
+    // // campus : Campus,
+    // // faculty : Facultys,
+    // // departent : Departments,
+    // //
+    // //
+    //   auth : Authentication,
+    // account : Accounts,
     //
     // roles : settingRoles,
     //

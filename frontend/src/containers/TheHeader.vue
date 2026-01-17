@@ -12,7 +12,7 @@
     />
     <CHeaderBrand class="mx-auto d-lg-none w-100 bg-danger" to="/">
 <!--      <img src="@/assets/logo.svg" height="48"/>-->
-      <label class="font-weight-bold h4 mt-1 text-white">MFU Smart Campus</label>
+      <label class="font-weight-bold h4 mt-1 text-white">Internship Transcript System</label>
     </CHeaderBrand>
     <CHeaderNav class="d-md-down-none mr-auto">
 <!--      <CHeaderNavItem class="px-3">-->
