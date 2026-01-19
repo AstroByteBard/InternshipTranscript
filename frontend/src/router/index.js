@@ -6,7 +6,7 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
 // Views
-const Dashboards = () => import('@/views/Dashboard')
+const Dashboards = () => import('@/projects/views/dashboard')
 
 const Colors = () => import('@/views/theme/Colors')
 const Typography = () => import('@/views/theme/Typography')
@@ -86,8 +86,9 @@ const Message = () => import('@/views/apps/email/Message')
 
 // project 
 
-const Dashboard = () => import('@/projects/views/Dashboard')
-const Student = () => import('@/projects/views/Student.vue')
+const Dashboard = () => import('@/projects/views/dashboard')
+const Student = () => import('@/projects/views/student')
+
 const Login = () => import('@/projects/views/Login')
 
 
