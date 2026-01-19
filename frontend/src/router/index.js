@@ -6,8 +6,7 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
 // Views
-const Dashboards = () => import('@/views/Dashboard')
-
+// const Dashboards = () => import('@/views/Dashboard')
 const Colors = () => import('@/views/theme/Colors')
 const Typography = () => import('@/views/theme/Typography')
 
@@ -85,10 +84,14 @@ const Message = () => import('@/views/apps/email/Message')
 
 
 // project 
-
 const Dashboard = () => import('@/projects/views/Dashboard')
-const Student = () => import('@/projects/views/Student.vue')
+const Student = () => import('@/projects/views/Student')
 const Login = () => import('@/projects/views/Login')
+
+// competencies
+const general = () => import('@/projects/views/competencies/general')
+const specific = () => import('@/projects/views/competencies/specific')
+const suggestions = () => import('@/projects/views/competencies/suggestions')
 
 
 Vue.use(Router)
@@ -111,6 +114,33 @@ export default new Router({
                     path: 'dashboard',
                     name: 'Dashboard',
                     component: Dashboard
+                },
+
+                {
+                    path: 'competencies',
+                    redirect: '/competencies/general',
+                    name: 'Competencies',
+                    component: {
+                        render(c) {
+                            return c('router-view')
+                        }
+                    },
+                    children: [
+                        {
+                            path: 'general',
+                            name: 'General',
+                            component:general
+                        },
+                        {
+                            path: 'specific',
+                            name: 'Specific',
+                            component:specific
+                        },{
+                            path: 'suggestions',
+                            name: 'Suggestions',
+                            component:suggestions
+                        }
+                    ]
                 },
 
                 {
@@ -153,11 +183,6 @@ export default new Router({
                             component: Typography
                         }
                     ]
-                },
-                {
-                    path: 'charts',
-                    name: 'Charts',
-                    component: Dashboards
                 },
                 {
                     path: 'tables',
