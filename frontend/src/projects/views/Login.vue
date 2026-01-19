@@ -18,7 +18,7 @@ import TwoFA from "@/projects/components/dialog/TwoFA.vue";
 
 
 export default {
-  name: 'index',
+  name: 'Login',
   components: {TwoFA, SignIn, Multiselect},
   props: {
     icon: {

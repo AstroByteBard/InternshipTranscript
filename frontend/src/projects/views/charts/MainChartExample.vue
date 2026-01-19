@@ -1,16 +1,16 @@
 <template>
-  <CChartBar
-    :datasets="defaultDatasets"
-    :options="defaultOptions"
-    :labels="['Liberal Arts', 'Science', 'Management', 'Applied Digital Technology', 'Agro-Industry', 'Law']"
-  />
+  <CChartBar 
+    :datasets="defaultDatasets" 
+    :options="defaultOptions" 
+    :labels="schoolLabels" />
 </template>
 
 <script>
 import { CChartBar } from '@coreui/vue-chartjs'
+import { mapGetters } from 'vuex'
 import { getStyle, hexToRgba } from '@coreui/utils/src'
 
-function random (min, max) {
+function random(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
@@ -19,12 +19,41 @@ export default {
   components: {
     CChartBar
   },
+  data() {
+    return {
+
+    }
+  },
+
+  mounted() {
+  },
+
+  created() {
+    this.onInit();
+  },
+  methods: {
+    onInit() {
+      this.$store.dispatch("academic/school")
+    }
+  },
+
   computed: {
-    defaultDatasets () {
+    ...mapGetters('academic', ['school']),
+
+    schoolLabels(){
+      const lang = this.$i18n.locale
+
+      return this.school.map(item => {
+      const found = item.title.find(t => t.key === lang)
+      return found ? found.value : ''
+      })
+    },
+
+    defaultDatasets() {
       const brandSuccess = getStyle('success') || '#4dbd74'
       const brandDanger = getStyle('danger') || '#f86c6b'
 
-      let elements = 6
+      let elements = 14
       const data1 = []
       const data2 = []
 
@@ -51,7 +80,7 @@ export default {
         }
       ]
     },
-    defaultOptions () {
+    defaultOptions() {
       return {
 
         maintainAspectRatio: false,
@@ -86,6 +115,9 @@ export default {
         }
       }
     }
+  },
+  watch: {
+
   }
 }
 </script>

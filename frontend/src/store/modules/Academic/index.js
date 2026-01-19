@@ -21,17 +21,19 @@ const ServerModule = {
 
     actions: {
         major({commit}, data) {
-            Service.members('explorers', data, {})
+            Service.major('get', data, {})
                 .then((response) => {
-                    store.commit("academic/major/explore", response.data.data)
+                    console.log(response.data.data)
+                    commit('major', response.data.data)
                 }).catch((err) => {
                     console.log(err)
             });
         },
         school({commit}, data) {
-            Service.campus('explorers', data, {})
+            Service.school('get', data, {})
                 .then((response) => {
-                    store.commit("academic/school/explore", response.data.data)
+                    console.log(response.data.data)
+                    commit('school', response.data.data)
                 }).catch((err) => {
                     console.log(err)
             });
@@ -43,8 +45,8 @@ const ServerModule = {
             return state.major;
         },
         school(state) {
-            return state.school
-        }
+            return state.school;
+        },
     },
 };
 

@@ -15,57 +15,56 @@
       <label class="font-weight-bold h4 mt-1 text-white">Internship Transcript System</label>
     </CHeaderBrand>
     <CHeaderNav class="d-md-down-none mr-auto">
-<!--      <CHeaderNavItem class="px-3">-->
-<!--        <CHeaderNavLink to="/dashboard">-->
-<!--          Dashboard-->
-<!--        </CHeaderNavLink>-->
-<!--      </CHeaderNavItem>-->
-<!--      <CHeaderNavItem class="px-3">-->
-<!--        <CHeaderNavLink to="/users" exact>-->
-<!--          Users-->
-<!--        </CHeaderNavLink>-->
-<!--      </CHeaderNavItem>-->
-<!--      <CHeaderNavItem class="px-3">-->
-<!--        <CHeaderNavLink>-->
-<!--          Settings-->
-<!--        </CHeaderNavLink>-->
-<!--      </CHeaderNavItem>-->
+         <CHeaderNavItem class="px-3">
+           <CHeaderNavLink to="/dashboard">
+             Dashboard
+           </CHeaderNavLink>
+        </CHeaderNavItem>
+         <CHeaderNavItem class="px-3">
+           <CHeaderNavLink to="/users" exact>
+             Users
+           </CHeaderNavLink>
+         </CHeaderNavItem>
+        <CHeaderNavItem class="px-3">
+           <CHeaderNavLink>
+             Settings
+           </CHeaderNavLink>
+         </CHeaderNavItem>
     </CHeaderNav>
     <CHeaderNav>
-<!--      <CHeaderNavItem class="px-3">-->
-<!--        <button-->
-<!--          @click="() => $store.commit('toggle', 'darkMode')"-->
-<!--          class="c-header-nav-btn"-->
-<!--        >-->
-<!--          <CIcon v-if="$store.state.darkMode" name="cil-sun"/>-->
-<!--          <CIcon v-else name="cil-moon"/>-->
-<!--        </button>-->
-<!--      </CHeaderNavItem>-->
-<!--      <TheHeaderDropdownNotif/>-->
-<!--      <TheHeaderDropdownTasks/>-->
-<!--      <TheHeaderDropdownMssgs/>-->
-<!--      <TheHeaderDropdownAccnt/>-->
-<!--      <CHeaderNavItem class="px-3">-->
-<!--        <button-->
-<!--          in-header-->
-<!--          class="c-header-nav-btn"-->
-<!--          @click="$store.commit('toggle', 'asideShow')"-->
-<!--        >-->
-<!--          <CIcon size="lg" name="cil-applications-settings" class="mr-2"/>-->
-<!--        </button>-->
-<!--      </CHeaderNavItem>-->
-<!--      <CHeaderNavItem >-->
-<!--        <CButton size="sm" color="info" shape="pill" variant="outline" style="width: 35px; height:35px;" @click="onSwitchLang" >-->
-<!--          {{lang.toUpperCase()}}-->
-<!--        </CButton>-->
-<!--      </CHeaderNavItem>-->
+      <!-- <CHeaderNavItem class="px-3">
+        <button
+          @click="() => $store.commit('toggle', 'darkMode')"
+          class="c-header-nav-btn"
+        >
+          <CIcon v-if="$store.state.darkMode" name="cil-sun"/>
+          <CIcon v-else name="cil-moon"/>
+        </button>
+      </CHeaderNavItem>
+      <TheHeaderDropdownNotif/>
+      <TheHeaderDropdownTasks/>
+      <TheHeaderDropdownMssgs/>
+      <TheHeaderDropdownAccnt/>
+      <CHeaderNavItem class="px-3">
+        <button
+          in-header
+          class="c-header-nav-btn"
+          @click="$store.commit('toggle', 'asideShow')">
+          <CIcon size="lg" name="cil-applications-settings" class="mr-2"/>
+        </button>
+      </CHeaderNavItem>
+      <CHeaderNavItem >
+        <CButton size="sm" color="info" shape="pill" variant="outline" style="width: 35px; height:35px;" @click="onSwitchLang" >
+          {{lang.toUpperCase()}}
+        </CButton>
+      </CHeaderNavItem> -->
 
-<!--      <TheHeaderDropdownAccnt class="pr-3"/>-->
+      <TheHeaderDropdownAccnt class="pr-3"/>
     </CHeaderNav>
 
-<!--    <CSubheader class="px-3">-->
-<!--      <CBreadcrumbRouter class="border-0 mb-0"/>-->
-<!--    </CSubheader>-->
+    <!-- <CSubheader class="px-3">
+      <CBreadcrumbRouter class="border-0 mb-0"/>
+    </CSubheader> -->
   </CHeader>
 </template>
 

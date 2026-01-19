@@ -104,6 +104,22 @@ export default {
             icon: 'cil-description',
             to: '/documents'
           },
+          {
+            _name: 'CSidebarNavDropdown',
+            name: 'Administrator',
+            to: '/administrator',
+            icon: 'cil-lightbulb',
+            items: [
+              {
+                name: 'Admin',
+                to: '/administrator/Admin'
+              },
+              {
+                name: 'Student',
+                to: '/administrator/student'
+              }
+            ]
+          },
 
           {
             _name: 'CSidebarNavTitle',
