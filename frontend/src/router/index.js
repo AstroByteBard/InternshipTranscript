@@ -2,8 +2,6 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 // Containers
-const TheContainer = () => import('@/containers/TheContainer')
-const TheContainer_Landing = () => import('@/containers/TheContainer_Landing.vue')
 const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
@@ -88,9 +86,9 @@ const Message = () => import('@/views/apps/email/Message')
 
 // project 
 
-const Dashboard = () => import('@/projects/views/dashboard')
-
-const Login = () => import('@/projects/views/Login.vue')
+const Dashboard = () => import('@/projects/views/Dashboard')
+const Student = () => import('@/projects/views/Student.vue')
+const Login = () => import('@/projects/views/Login')
 
 
 Vue.use(Router)
@@ -113,6 +111,24 @@ export default new Router({
                     path: 'dashboard',
                     name: 'Dashboard',
                     component: Dashboard
+                },
+
+                {
+                    path: 'administrator',
+                    redirect: '/administrator/student',
+                    name: 'administrator',
+                    component: {
+                        render(c) {
+                            return c('router-view')
+                        }
+                    },
+                    children: [
+                        {
+                            path:'student',
+                            name:'Student',
+                            component: Student
+                        }
+                    ]
                 },
 
 

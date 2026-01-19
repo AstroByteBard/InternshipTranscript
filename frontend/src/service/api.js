@@ -14,15 +14,15 @@ export default {
     school(method, data, configs) {
         switch (method) {
             case 'exp': 
-                return instance.post("/api/v1/academic/school/explorers", data);
+                return instance.post("/academic/school/explorers", data);
             case 'get':
-                return instance.get("/api/v1/academic/school", data);
+                return instance.get("/academic/school", data);
             case 'post':
-                return instance.post("/api/v1/academic/school", data);
+                return instance.post("/academic/school", data);
             case 'put':
-                return instance.put("/api/v1/academic/school", data);
+                return instance.put("/academic/school", data);
             case 'delete':
-                return instance.delete("/api/v1/academic/school", data);
+                return instance.delete("/academic/school", data);
             default:
                 break;
         }
@@ -31,15 +31,15 @@ export default {
     major(method, data, configs) {
         switch (method) {
             case 'exp': 
-                return instance.post("/api/v1/academic/major/explorers", data);
+                return instance.post("/academic/major/explorers", data);
             case 'get':
-                return instance.get("/api/v1/academic/major", data);
+                return instance.get("/academic/major", data);
             case 'post':
-                return instance.post("/api/v1/academic/major", data);
+                return instance.post("/academic/major", data);
             case 'put':
-                return instance.put("/api/v1/academic/major", data);
+                return instance.put("/academic/major", data);
             case 'delete':
-                return instance.delete("/api/v1/academic/major", data);
+                return instance.delete("/academic/major", data);
             default:
                 break;
         }
