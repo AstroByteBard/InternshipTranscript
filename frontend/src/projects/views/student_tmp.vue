@@ -3,6 +3,15 @@
     <WidgetsDropdown />
     <CRow>
       <CCol sm="12">
+        <CCard>
+          <CCardHeader>
+            <div class="card-header-actions">
+              <CButton color="primary" size="sm" @click="showImportModal = true">
+                <CIcon name="cil-user-follow"/> Import Students
+              </CButton>
+            </div>
+          </CCardHeader>
+          <CCardBody>
         <CTableWrapper
           :items="getShuffledUsersData()"
           hover
@@ -12,19 +21,29 @@
           fixed
           caption="StudentTable"
         />
+        </CCardBody>
+        </CCard>
       </CCol>
     </CRow>
+
+    <!-- Import Modal -->
+    <ImportStudentModal 
+      :show.sync="showImportModal"
+      @import="onImportFile"
+    />
   </div>
 </template>
 
 <script>
 import CTableWrapper from './tables/Table.vue'
 import usersData from '../../views/users/UsersData'
+import ImportStudentModal from '../../views/Import/ImportStudentModal.vue'
 
 export default {
   name: 'student',
   components: {
-    CTableWrapper
+    CTableWrapper, 
+    ImportStudentModal
   },
   data() {
     return {
