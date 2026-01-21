@@ -1,75 +1,131 @@
 <template>
     <div>
-        <CRow class="mb-3">
-            <CCol col="6" sm="4" md="2" xl class="d-flex justify-content-end">
-                <CButton color="danger" size="lg" @click="addGeneralForm = true">
-                    <CIcon name="cil-plus" />&nbsp;Add
-                </CButton>
-            </CCol>
-        </CRow>
 
-        <CRow v-for="form in forms" :key="form.id">
-          <CCol>
-                <CCard :border-color="form.id === selectedFormId ? 'danger' : 'secondary'" class="form-card">
-                    <CCardBody class="py-3">
-                        <div class="d-flex align-items-center w-100 gap-3">
+        <!-- Form In Use -->
+        <div>
+            <CRow class="mb-3"> 
+                <CCol>
+                    <h3>Form in Use </h3> 
+                </CCol>
+            </CRow>
+            <CRow v-if="selectedForm">
+                <CCol>
+                    <CCard class="form-card" accent-color="danger">
+                        <CCardBody class="py-3">
+                            <div class="d-flex align-items-center w-100 gap-3">
 
-                            <!-- left -->
-                            <CButton
-                                size="sm"
-                                :color="form.id === selectedFormId ? 'danger' : 'secondary'"
-                                variant="outline"
-                                class="px-3"
-                                @click="selectForm(form.id)"
-                            >
-                                {{ form.id === selectedFormId ? 'Selected' : 'Select' }}
-                            </CButton>
+                                <!-- center -->
+                                <div class="flex-grow-1 mx-4">
+                                    <div class="d-flex align-items-baseline">
+                                        <h5 class="mr-1">{{ selectedForm.title }}</h5>
+                                        <span class="text-medium-emphasis small">
+                                            / created {{ selectedForm.created }}
+                                        </span>
+                                    </div>
 
-                            <!-- center -->
-                            <div class="flex-grow-1 mx-4">
-                                <div class="d-flex align-items-baseline">
-                                    <h5 class="mr-1">{{ form.title }}</h5>
-                                    <span class="text-medium-emphasis small">
-                                        / created {{ form.created }}
-                                    </span>
+                                    <p class="mb-0">
+                                        {{ selectedForm.description }}
+                                    </p>
                                 </div>
 
-                                <p class="mb-0">
-                                    {{ form.description }}
-                                </p>
+                                <!-- right -->
+                                <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
+                                    <template #toggler-content>
+                                        <CIcon name="cil-options" />
+                                    </template>
+                                    <CDropdownItem>Use</CDropdownItem>
+                                    <CDropdownItem>Edit</CDropdownItem>
+                                    <CDropdownItem>Duplicate</CDropdownItem>
+                                    <CDropdownItem>Delete</CDropdownItem>
+                                </CDropdown>
                             </div>
+                        </CCardBody>
+                    </CCard>
+                </CCol>
+            </CRow>
+        </div>
 
-                            <!-- right -->
-                            <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                <template #toggler-content>
-                                    <CIcon name="cil-options" />
-                                </template>
-                                <CDropdownItem>Edit</CDropdownItem>
-                                <CDropdownItem>Duplicate</CDropdownItem>
-                                <CDropdownItem class="text-danger">Delete</CDropdownItem>
-                            </CDropdown>
+        <!-- Form In Not Use -->
+        <div>
+            <CRow class="d-flex align-items-center mb-3">
+                <CCol>
+                    <h3> Create Forms</h3>
+                </CCol>
 
-                        </div>
-                    </CCardBody>
-                </CCard>
-          </CCol>
-        </CRow>
+                <CCol col="auto">
+                    <CButton color="danger" @click="addGeneralForm = true">
+                        <CIcon name="cil-plus" />&nbsp;New
+                    </CButton>
+                </CCol>
+            </CRow>
 
-        <CModal 
-          :centered="true" 
-          :show.sync="addGeneralForm" 
-          :close-on-backdrop="true"
-        >
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-        cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-        proident, sunt in culpa qui officia deserunt mollit anim id est laborum
-          <template #header>
-            <h6 class="modal-title">New General Competencies Form</h6>
-            <CButtonClose @click="addGeneralForm = false" class="text-black" />
-          </template>
+            <CRow v-for="form in forms" :key="form.id">
+                <CCol>
+                    <CCard class="form-card">
+                        <CCardBody class="py-3">
+                            <div class="d-flex align-items-center w-100 gap-3">
+
+                                <!-- center -->
+                                <div class="flex-grow-1 mx-4">
+                                    <div class="d-flex align-items-baseline">
+                                        <h5 class="mr-1">{{ form.title }}</h5>
+                                        <span class="text-medium-emphasis small">
+                                            / created {{ form.created }}
+                                        </span>
+                                    </div>
+
+                                    <p class="mb-0">
+                                        {{ form.description }}
+                                    </p>
+                                </div>
+
+                                <!-- right -->
+                                <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
+                                    <template #toggler-content>
+                                        <CIcon name="cil-options" />
+                                    </template>
+                                    <CDropdownItem @click="selectForm(form.id)">Use</CDropdownItem>
+                                    <CDropdownItem>Edit</CDropdownItem>
+                                    <CDropdownItem>Duplicate</CDropdownItem>
+                                    <CDropdownItem>Delete</CDropdownItem>
+                                </CDropdown>
+                            </div>
+                        </CCardBody>
+                    </CCard>
+                </CCol>
+            </CRow>
+        </div>
+
+        <CPagination
+          align="end"
+          :active-page.sync="currentPage"
+          :pages="10"/>
+
+        <CModal :centered="true" :show.sync="addGeneralForm" :close-on-backdrop="true">
+            <div>
+                <label>
+                    Title
+                </label>
+
+                <CInput v-model="title" placeholder="text Title here" />
+            </div>
+            <div>
+                <label>
+                    Description
+                </label>
+
+                <CTextarea v-model="description" :rows="4" :maxlength="200"
+                    placeholder="Description of the form questions written to help user use the correct form" />
+                <div class="d-flex justify-content-end">{{ (description || '').length }}/200</div>
+            </div>
+            <template #header>
+                <h6 class="modal-title">New General Competencies Form</h6>
+                <CButtonClose @click="addGeneralForm = false" class="text-black" />
+            </template>
+            <template #footer>
+                <CButton @click="addGeneralForm = false">Close</CButton>
+                <CButton @click="submitForm" color="danger">Save</CButton>
+            </template>
         </CModal>
     </div>
 </template>
@@ -81,6 +137,12 @@ export default {
     },
     data() {
         return {
+
+            title: '',
+            description: '',
+
+            currentPage: 3,
+
             addGeneralForm: false,
             selectedFormId: null,
             forms: [
@@ -136,13 +198,19 @@ export default {
         },
 
         selectForm(id) {
-            console.log(id)
             this.selectedFormId = id
+        },
+
+        submitForm() {
+            console.log(this.title)
+            console.log(this.description)
         }
     },
 
     computed: {
-
+        selectedForm() {
+            return this.forms.find(form => form.id === this.selectedFormId)
+        }
     },
 
     watch: {

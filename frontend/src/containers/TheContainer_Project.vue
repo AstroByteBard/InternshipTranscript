@@ -12,7 +12,7 @@
             </transition>
           </CContainer>
         </main>
-        <TheFooter/>
+        <!-- <TheFooter/> -->
       </div>
     </CWrapper>
     <CenterLoading/>
