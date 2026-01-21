@@ -62,4 +62,30 @@ export default {
         }
     },
 
+    students(method, data, configs) {
+    switch (method) {
+        case 'exp': 
+            return instance.post("/students/explorers", data);
+        case 'get':
+            return instance.get("/students", data);
+        case 'post':
+            return instance.post("/students", data);  // ส่ง JSON ปกติ
+        case 'put':
+            return instance.put("/students", data);
+        case 'delete':
+            return instance.delete("/students", data);
+        case 'import':
+            return instance.post("/students/import", data, {
+                headers:{
+                    "Content-Type": "multipart/form-data",  
+                },
+                ...configs
+            });
+        default:
+            break;
+    }
+},
+
+
+
 }

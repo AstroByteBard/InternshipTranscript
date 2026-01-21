@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-
 const students = require("./service/students");
+
 
 router.get("", students.onQuerys);
 router.post("/explorers", students.onQuery);
