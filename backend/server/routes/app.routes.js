@@ -1,6 +1,7 @@
 const settingsRoutes = require("../Project/Settings/settings.routes");
 const AcademicRoutes = require("../Project/Academic/Academic.routes");
 const StudentsRoutes = require("../Project/Students/students.routes");
+const CompetenciesRoutes = require("../Project/Competencies/Competencies.routes");
 
 
 // const sync = require("../sync/mis");
@@ -8,6 +9,7 @@ module.exports = function (app) {
 
   var path = "/api/v1";
   // app.use(path, googleRoutes.onDistance )
+  app.use(path + '/competencies', CompetenciesRoutes) // complete
   app.use(path + '/academic', AcademicRoutes); // complete
   app.use(path + '/students', StudentsRoutes); // complete
   app.use(path + '/setting', settingsRoutes); // complete
