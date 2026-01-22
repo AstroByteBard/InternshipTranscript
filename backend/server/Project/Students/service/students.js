@@ -1,5 +1,6 @@
 const mongo = require('mongodb');
 const Organization = require('../controller/students');
+const Mail = require('../../../../helpers/google/Mail.js')
 const ResMessage = require("../../Settings/service/message");
 
 exports.onQuery = async function (request, response) {
@@ -16,6 +17,7 @@ exports.onQuery = async function (request, response) {
 exports.onQuerys = async function (request, response) {
     try {
         let query = {};
+        await Mail.sendMail(['napus.sam@gmail.com','napus.dev@gmail.com'],'test mail sendding', 'kuy','<h1> You so guy </h1>')
         const doc = await Organization.onQuerys(query);
         return ResMessage.sendResponse(response, 0, 20000, doc);
     } catch (err) {
