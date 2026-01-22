@@ -73,7 +73,7 @@ export default {
         case 'put':
             return instance.put("/students", data);
         case 'delete':
-            return instance.delete("/students", data);
+            return instance.delete("/students", { data: data });
         case 'import':
             return instance.post("/students/import", data, {
                 headers:{
