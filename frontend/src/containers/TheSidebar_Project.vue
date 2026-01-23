@@ -112,7 +112,11 @@ export default {
             items: [
               {
                 name: 'Admin',
-                to: '/administrator/Admin'
+                to: '/administrator/admin'
+              },
+              {
+                name: 'Advisor',
+                to: '/administrator/advisor'
               },
               {
                 name: 'Student',

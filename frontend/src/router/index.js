@@ -88,6 +88,8 @@ const Message = () => import('@/views/apps/email/Message')
 
 const Dashboard = () => import('@/projects/views/dashboard')
 const Student = () => import('@/projects/views/student')
+const Admin = () => import('@/projects/views/admin')
+const Advisor = () => import('@/projects/views/advisor')
 const Login = () => import('@/projects/views/login')
 
 
@@ -113,6 +115,7 @@ export default new Router({
                     component: Dashboard
                 },
 
+
                 {
                     path: 'administrator',
                     redirect: '/administrator/student',
@@ -130,6 +133,44 @@ export default new Router({
                         }
                     ]
                 },
+
+                {
+                    path: 'administrator',
+                    redirect: '/administrator/admin',
+                    name: 'administrator',
+                    component: {
+                        render(c) {
+                            return c('router-view')
+                        }
+                    },
+                    children: [
+                        {
+                            path:'admin',
+                            name:'Admin',
+                            component: Admin
+                        }
+                    ]
+                },
+
+                {
+                    path: 'administrator',
+                    redirect: '/administrator/advisor',
+                    name: 'administrator',
+                    component: {
+                        render(c) {
+                            return c('router-view')
+                        }
+                    },
+                    children: [
+                        {
+                            path:'advisor',
+                            name:'Advisor',
+                            component: Advisor
+                        }
+                    ]
+                },
+
+                
 
 
                 {
