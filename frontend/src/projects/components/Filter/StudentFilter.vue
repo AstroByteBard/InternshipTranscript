@@ -4,7 +4,7 @@
             <CRow class="mt-4">
                 <CCol sm="12" md="7">
                     <CInput
-                    placeholder="Student ID, Name, Email..." 
+                    placeholder="Search..." 
                     v-model="filters.search"
                     @keyup.enter="applySearch" />
                 </CCol>
