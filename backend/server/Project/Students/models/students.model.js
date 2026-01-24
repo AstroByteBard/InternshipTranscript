@@ -14,7 +14,7 @@ var objsSchema = new Schema({
         semester        : {type: Number, default: 1},
         major           : {type: mongoose.Schema.Types.ObjectId, ref: 'Setting_Major', default: null},
         school          : {type: mongoose.Schema.Types.ObjectId, ref: 'Setting_School', default: null},
-        year            : {type: String, default: () => new Date().getFullYear().toString() } // For Present Year หรือ กำหมดให้ ค่าตั้งต้น เป็น ปีปัจจุบัน
+        year            : {type: String, default: new Date().getFullYear().toString() } // For Present Year หรือ กำหมดให้ ค่าตั้งต้น เป็น ปีปัจจุบัน
     },
     status              : {type: mongoose.Schema.Types.ObjectId, ref: 'Setting_Status', default: "689c04cb255db4e56aea88ef" },
 });
