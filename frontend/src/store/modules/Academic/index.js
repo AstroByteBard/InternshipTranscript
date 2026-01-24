@@ -23,7 +23,6 @@ const ServerModule = {
         major({commit}, data) {
             Service.major('get', data, {})
                 .then((response) => {
-                    console.log(response.data.data)
                     commit('major', response.data.data)
                 }).catch((err) => {
                     console.log(err)
@@ -32,7 +31,6 @@ const ServerModule = {
         school({commit}, data) {
             Service.school('get', data, {})
                 .then((response) => {
-                    console.log(response.data.data)
                     commit('school', response.data.data)
                 }).catch((err) => {
                     console.log(err)
@@ -44,9 +42,10 @@ const ServerModule = {
         major(state) {
             return state.major;
         },
+
         school(state) {
             return state.school;
-        },
+        }
     },
 };
 
