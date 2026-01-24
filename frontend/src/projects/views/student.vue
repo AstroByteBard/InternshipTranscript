@@ -1,45 +1,29 @@
 <template>
   <div>
+    <CRow class="d-flex justify-content-end">
+      <CCol col="auto">
+        <CButton color="primary" size="sm" @click="showImportModal = true">
+          <CIcon name="cil-user-follow" /> Import Students
+        </CButton>
+      </CCol>
+    </CRow>
     <CRow>
       <CCol sm="12">
-        <CCard>
-          <CCardHeader>
-            <div class="card-header-actions">
-              <CButton color="primary" size="sm" @click="showImportModal = true">
-                <CIcon name="cil-user-follow" /> Import Students
+        <!-- Filter Section -->
+        <StudentFilter :schools="school" :majors="major" :courses="courses" @filter="onFilter" />
+        <CCardBody>
+          <CTableWrapper :items="filteredStudents" :fields="studentFields" hover striped bordered small fixed
+            caption="StudentTable">
+            <template #actions="{ item }">
+              <CButton color="info" size="sm" @click="openEditModal(item)" class="mr-1">
+                <CIcon name="cil-pencil" />
               </CButton>
-            </div>
-          </CCardHeader>
-          <!-- Filter Section -->
-    <StudentFilter 
-      :schools="schools"
-      :majors="majors"
-      :courses="courses"
-      @filter="onFilter"
-    />
-          <CCardBody>
-            <CTableWrapper 
-              :items="filteredStudents" 
-              :fields="studentFields" 
-              :loading="isLoading" 
-              hover 
-              striped
-              bordered 
-              small 
-              fixed 
-              caption="StudentTable"
-            >
-              <template #actions="{ item }">
-                <CButton color="info" size="sm" @click="openEditModal(item)" class="mr-1">
-                  <CIcon name="cil-pencil" />
-                </CButton>
-                <CButton color="danger" size="sm" @click="openDeleteModal(item)">
-                  <CIcon name="cil-trash" />
-                </CButton>
-              </template>
-            </CTableWrapper>
-          </CCardBody>
-        </CCard>
+              <CButton color="danger" size="sm" @click="openDeleteModal(item)">
+                <CIcon name="cil-trash" />
+              </CButton>
+            </template>
+          </CTableWrapper>
+        </CCardBody>
       </CCol>
     </CRow>
 
@@ -56,7 +40,7 @@ import ImportStudentModal from '../../views/Import/ImportStudentModal.vue'
 import EditStudentModal from '@/views/modal/EditStudentModal.vue'
 import DeleteStudentModal from '@/views/modal/DeleteStudentModal.vue'
 import StudentFilter from '@/projects/components/Filter/StudentFilter.vue'
-import Service from '@/service/api.js'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'student',
@@ -76,78 +60,99 @@ export default {
       deleteStudent: null,
       studentFields: [
         { key: 'studentID', label: 'STUDENT ID' },
-        { key: 'displayName', label: 'NAME', _style: 'min-width:200px' },
-        { key: 'email', label: 'EMAIL' },
+        { key: 'nameTh', label: 'NAME TH', _style: 'min-width:200px' },
+        { key: 'nameEn', label: 'NAME EN', _style: 'min-width:200px' },
+        { key: 'email', label: 'STUDENT EMAIL' },
+        { key: 'info.advisor', label: 'ADVISOR EMAIL' },
         { key: 'schoolName', label: 'SCHOOL' },
         { key: 'majorName', label: 'PROGRAM' },
-        { key: 'info.year', label: 'YEAR' },
-        { key: 'info.semester', label: 'SEMESTER' },
-        { key: 'info.course', label: 'COURSE' },
+        { key: 'year', label: 'YEAR' },
+        { key: 'semester', label: 'SEMESTER' },
+        { key: 'course', label: 'COURSE' },
         { key: 'actions', label: 'ACTIONS', _style: 'width:100px' }
       ],
-      students: [],
-      majors: [],
-      schools: [],
       courses: [],
-      isLoading: false,
       currentFilters: {}
     }
   },
 
   computed: {
-    formattedStudents() {
-      return this.students.map(student => {
-        const displayName = this.getDisplayName(student.name)
-        const schoolName = this.getSchoolName(student.info && student.info.school)
-        const majorName = this.getMajorName(student.info && student.info.major)
+    ...mapGetters('academic', ['school', 'major']),
+    ...mapGetters('students', ['students']),
 
-        return {
-          ...student,
-          displayName,
-          schoolName,
-          majorName
-        }
-      })
+
+    studentsWithNames() {
+      const schools = this.school || [];
+      const majors = this.major || [];
+      function getStudentNameByLang(nameArr, lang) {
+        if (!Array.isArray(nameArr)) return '-';
+        const found = nameArr.find(nameObj => nameObj.key === lang);
+        return found && found.value ? found.value : '-';
+      }
+      function getSchoolName(schoolId) {
+        const school = schools.find(
+          schoolItem => String(schoolItem._id) === String(schoolId)
+        );
+        if (!school) return '-';
+        const titleTh = (school.title || []).find(titleObj => titleObj.key === 'th');
+        return titleTh ? titleTh.value : '-';
+      }
+      function getMajorName(majorId) {
+        const major = majors.find(
+          majorItem => String(majorItem._id) === String(majorId)
+        );
+        if (!major) return '-';
+        const titleTh = (major.title || []).find(titleObj => titleObj.key === 'th');
+        return titleTh ? titleTh.value : '-';
+      }
+      return (this.students || []).map(student => ({
+        ...student,
+        nameTh: getStudentNameByLang(student.name, 'th'),
+        nameEn: getStudentNameByLang(student.name, 'en'),
+        school: student.info?.school || '-',
+        schoolName: getSchoolName(student.info?.school),
+        major: student.info?.major || '-',
+        majorName: getMajorName(student.info?.major),
+        year: student.info?.year || '-',
+        semester: student.info?.semester || '-',
+        course: student.info?.course || '-'
+      }));
     },
 
     filteredStudents() {
-      let filtered = this.formattedStudents
+      let filtered = this.studentsWithNames;
 
-      // Search filter
       if (this.currentFilters.search) {
         const search = this.currentFilters.search.toLowerCase()
-        filtered = filtered.filter(s => 
-          s.studentID.toLowerCase().includes(search) ||
-          s.displayName.toLowerCase().includes(search) ||
-          s.email.toLowerCase().includes(search)
+        filtered = filtered.filter(searchs =>
+          searchs.studentID.toLowerCase().includes(search) ||
+          searchs.nameTh.toLowerCase().includes(search) ||
+          searchs.nameEn.toLowerCase().includes(search) ||
+          searchs.email.toLowerCase().includes(search)
         )
       }
 
-      // School filter
       if (this.currentFilters.school) {
-        filtered = filtered.filter(s => 
-          s.info.school === this.currentFilters.school
+        filtered = filtered.filter(searchs =>
+          searchs.school === this.currentFilters.school
         )
       }
 
-      // Major filter
       if (this.currentFilters.major) {
-        filtered = filtered.filter(s => 
-          s.info.major === this.currentFilters.major
+        filtered = filtered.filter(searchs =>
+          searchs.major === this.currentFilters.major
         )
       }
 
-      // Year filter
       if (this.currentFilters.year) {
-        filtered = filtered.filter(s => 
-          s.info.year === String(this.currentFilters.year)
+        filtered = filtered.filter(searchs =>
+          searchs.year === String(this.currentFilters.year)
         )
       }
 
-      // Semester filter
       if (this.currentFilters.semester) {
-        filtered = filtered.filter(s => 
-          s.info.semester === this.currentFilters.semester
+        filtered = filtered.filter(searchs =>
+          searchs.semester === this.currentFilters.semester
         )
       }
 
@@ -156,74 +161,35 @@ export default {
   },
 
   async mounted() {
-    await this.loadMasterData()
-    await this.loadStudents()
+    await this.getSchoolandMajor()
+    await this.getstudents()
   },
 
   methods: {
-    // ... methods เดิมทั้งหมด
+    ...mapActions('academic', {
+      loadMajors: 'major',
+      loadSchools: 'school'
+    }),
 
-    onFilter(filters) {
-      console.log('Applying filters:', filters)
-      this.currentFilters = { ...filters }
-    },
+    ...mapActions('students', {
+      getstudents: 'getstudents',
+      updateStudentAction: 'updateStudent',
+      deleteStudentAction: 'deleteStudent'
+    }),
 
-    getDisplayName(nameArray) {
-      if (!nameArray || !Array.isArray(nameArray)) return '-'
-      const nameTh = nameArray.find(n => n.key === 'th')
-      return nameTh && nameTh.value ? nameTh.value : '-'
-    },
-
-    getSchoolName(school) {
-      if (!school) return '-'
-      if (typeof school === 'string') {
-        const schoolObj = this.schools.find(s => s._id === school)
-        return this.getTitleValue(schoolObj)
-      }
-      return this.getTitleValue(school)
-    },
-
-    getMajorName(major) {
-      if (!major) return '-'
-      if (typeof major === 'string') {
-        const majorObj = this.majors.find(m => m._id === major)
-        return this.getTitleValue(majorObj)
-      }
-      return this.getTitleValue(major)
-    },
-
-    getTitleValue(obj) {
-      if (!obj || !obj.title || !Array.isArray(obj.title)) return '-'
-      const titleTh = obj.title.find(t => t.key === 'th')
-      const titleEn = obj.title.find(t => t.key === 'en')
-      return (titleTh && titleTh.value) || (titleEn && titleEn.value) || '-'
-    },
-
-    async loadMasterData() {
+    async getSchoolandMajor() {
       try {
-        const [majorResponse, schoolResponse] = await Promise.all([
-          Service.major('get'),
-          Service.school('get')
+        await Promise.all([
+          this.loadMajors(),
+          this.loadSchools()
         ])
-
-        this.majors = majorResponse.data?.data || majorResponse.data || []
-        this.schools = schoolResponse.data?.data || schoolResponse.data || []
       } catch (error) {
         console.error('Error loading master data:', error)
       }
     },
 
-    async loadStudents() {
-      this.isLoading = true
-      try {
-        const response = await Service.students('get')
-        this.students = response.data?.data || response.data || []
-      } catch (error) {
-        console.error('Error loading students:', error)
-        alert('Failed to load students: ' + (error.response?.data?.message || error.message))
-      } finally {
-        this.isLoading = false
-      }
+    onFilter(filters) {
+      this.currentFilters = { ...filters }
     },
 
     openEditModal(student) {
@@ -242,6 +208,20 @@ export default {
         semester: student.info.semester || 1
       }
       this.showEditModal = true
+    },
+
+    openDeleteModal(student) {
+      this.deleteStudent = student
+      this.showDeleteModal = true
+    },
+
+    async loadStudents() {
+      try {
+        await this.fetchStudents()
+      } catch (error) {
+        console.error('Error loading students:', error)
+        alert('Failed to load students: ' + (error.response?.data?.message || error.message))
+      }
     },
 
     async saveEdit(student) {
@@ -264,30 +244,20 @@ export default {
           }
         }
 
-        await Service.students('put', updateData)
+        await this.updateStudentAction(updateData)
         alert('Updated successfully')
         this.showEditModal = false
-        this.loadStudents()
       } catch (error) {
         console.error('Error updating student:', error)
         alert('Error: ' + (error.response?.data?.message || error.message))
       }
     },
 
-    openDeleteModal(student) {
-      this.deleteStudent = student
-      this.showDeleteModal = true
-    },
-
     async confirmDelete(student) {
       if (!student || !student._id) return
 
       try {
-        await Service.students('delete', { _id: student._id })
-        const index = this.students.findIndex(s => s._id === student._id)
-        if (index > -1) {
-          this.students.splice(index, 1)
-        }
+        await this.deleteStudentAction(student._id)
         this.showDeleteModal = false
         this.deleteStudent = null
         alert('Deleted successfully')
@@ -297,8 +267,10 @@ export default {
     },
 
     onImportFile(result) {
-      this.loadStudents()
+      this.fetchStudents()
     }
   }
+
 }
+
 </script>

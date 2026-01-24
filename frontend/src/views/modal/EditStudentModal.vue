@@ -57,6 +57,15 @@ export default {
       default: null
     }
   },
+  watch: {
+    student: {
+      immediate: true,
+      handler(newVal) {
+        // สร้างสำเนาของ student เพื่อแก้ไขใน modal
+        this.localStudent = newVal ? { ...newVal } : null
+      }
+    }
+  },
   computed: {
     isVisible: {
       get() {
@@ -71,10 +80,11 @@ export default {
   },
   methods: {
     close() {
+
       this.$emit('update:show', false)
     },
     save() {
-      this.$emit('save', this.student)
+      this.$emit('save', this.localStudent)
     }
   }
 }
