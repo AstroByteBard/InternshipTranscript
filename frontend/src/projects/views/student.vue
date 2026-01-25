@@ -215,15 +215,6 @@ export default {
       this.showDeleteModal = true
     },
 
-    async loadStudents() {
-      try {
-        await this.fetchStudents()
-      } catch (error) {
-        console.error('Error loading students:', error)
-        alert('Failed to load students: ' + (error.response?.data?.message || error.message))
-      }
-    },
-
     async saveEdit(student) {
       if (!student) return
 
@@ -245,8 +236,10 @@ export default {
         }
 
         await this.updateStudentAction(updateData)
-        alert('Updated successfully')
+        await this.getstudents()
         this.showEditModal = false
+        
+        alert('Updated successfully')
       } catch (error) {
         console.error('Error updating student:', error)
         alert('Error: ' + (error.response?.data?.message || error.message))
@@ -254,20 +247,15 @@ export default {
     },
 
     async confirmDelete(student) {
-      if (!student || !student._id) return
-
-      try {
-        await this.deleteStudentAction(student._id)
-        this.showDeleteModal = false
-        this.deleteStudent = null
-        alert('Deleted successfully')
-      } catch (error) {
-        alert('Error: ' + (error.response?.data?.message || error.message))
-      }
+      await this.deleteStudentAction({ id: student._id })
+      await this.getstudents()
+      this.showDeleteModal = false
+      
     },
 
-    onImportFile(result) {
-      this.fetchStudents()
+    async onImportFile() {
+      await this.getstudents()
+      // window.location.reload() // Uncomment if you want a hard refresh
     }
   }
 

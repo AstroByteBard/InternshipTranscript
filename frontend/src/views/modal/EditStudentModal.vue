@@ -10,25 +10,25 @@
     <CForm v-if="student">
       <CRow>
         <CCol sm="6">
-          <CInput label="Student ID" v-model="student.studentID" readonly />
+          <CInput label="Student ID" v-model="localStudent.studentID" readonly />
         </CCol>
         <CCol sm="6">
-          <CInput label="Email" v-model="student.email" />
+          <CInput label="Email" v-model="localStudent.email" />
         </CCol>
       </CRow>
       <CRow>
         <CCol sm="12">
-          <CInput label="Name (Thai)" v-model="student.name_th" />
+          <CInput label="Name (Thai)" v-model="localStudent.name_th" />
         </CCol>
       </CRow>
       <CRow>
         <CCol sm="12">
-          <CInput label="Name (English)" v-model="student.name_en" />
+          <CInput label="Name (English)" v-model="localStudent.name_en" />
         </CCol>
       </CRow>
       <CRow>
         <CCol sm="12">
-          <CInput label="Academic Year" v-model="student.year" />
+          <CInput label="Academic Year" v-model="localStudent.year" />
         </CCol>
       </CRow>
     </CForm>
@@ -45,6 +45,8 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex'
+
 export default {
   name: 'EditStudentModal',
   props: {
@@ -57,6 +59,11 @@ export default {
       default: null
     }
   },
+  data() {
+    return {
+      localStudent: null
+    }
+  },
   watch: {
     student: {
       immediate: true,
@@ -67,6 +74,7 @@ export default {
     }
   },
   computed: {
+    ...mapState('students', ['students']),
     isVisible: {
       get() {
         return this.show
@@ -79,12 +87,15 @@ export default {
     }
   },
   methods: {
+    ...mapActions('students', ['updateStudent', 'getstudents']),
     close() {
-
       this.$emit('update:show', false)
     },
     save() {
-      this.$emit('save', this.localStudent)
+      // เรียก action updateStudent แล้ว emit กลับเมื่อสำเร็จ
+      this.updateStudent(this.localStudent).then(() => {
+        this.$emit('save', this.localStudent)
+      })
     }
   }
 }
