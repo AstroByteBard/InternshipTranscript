@@ -130,11 +130,11 @@
 
         <div v-if="selected === 'Email Template'">
 
-            <!-- Form In Use -->
+            <!-- Email In Use -->
             <div class="mt-3">
                 <CRow class="mb-3"> 
                     <CCol>
-                        <h4>Form in Use </h4> 
+                        <h4>Email in Use </h4> 
                     </CCol>
                 </CRow>
                 <CRow v-if="selectedForm">
@@ -147,9 +147,6 @@
                                     <div class="flex-grow-1 mx-4">
                                         <div class="d-flex align-items-baseline">
                                             <h5 class="mr-1">{{ selectedForm.title }}</h5>
-                                            <span class="text-medium-emphasis small">
-                                                / created {{ selectedForm.created }}
-                                            </span>
                                         </div>
 
                                         <p class="mb-0">
@@ -182,13 +179,13 @@
                     </CCol>
 
                     <CCol col="auto">
-                        <CButton color="danger" @click="addGeneralForm = true">
+                        <CButton color="danger" @click="addEmailModel = true">
                             <CIcon name="cil-plus" />&nbsp;New
                         </CButton>
                     </CCol>
                 </CRow>
 
-                <CRow v-for="form in forms" :key="form.id">
+                <CRow v-for="email in emailsData" :key="email._id">
                     <CCol>
                         <CCard class="form-card">
                             <CCardBody class="py-3">
@@ -197,14 +194,14 @@
                                     <!-- center -->
                                     <div class="flex-grow-1 mx-4">
                                         <div class="d-flex align-items-baseline">
-                                            <h5 class="mr-1">{{ form.title }}</h5>
-                                            <span class="text-medium-emphasis small">
+                                            <h5 class="mr-1">{{ email.title }}</h5>
+                                            <!-- <span class="text-medium-emphasis small">
                                                 / created {{ form.created }}
-                                            </span>
+                                            </span> -->
                                         </div>
 
                                         <p class="mb-0">
-                                            {{ form.description }}
+                                            {{ email.description }}
                                         </p>
                                     </div>
 
@@ -213,7 +210,7 @@
                                         <template #toggler-content>
                                             <CIcon name="cil-options" />
                                         </template>
-                                        <CDropdownItem @click="selectForm(form.id)">Use</CDropdownItem>
+                                        <CDropdownItem @click="selectForm(email._id)">Use</CDropdownItem>
                                         <CDropdownItem>Edit</CDropdownItem>
                                         <CDropdownItem>Duplicate</CDropdownItem>
                                         <CDropdownItem>Delete</CDropdownItem>
@@ -226,6 +223,34 @@
             </div>
 
         </div>
+
+        <CModal :centered="true" :show.sync="addEmailModel" :close-on-backdrop="true">
+            <div>
+                <label>
+                    Title
+                </label>
+
+                <CInput v-model="title" placeholder="text Title here" />
+            </div>
+            <div>
+                <label>
+                    Description
+                </label>
+
+                <CTextarea v-model="description" :rows="4" :maxlength="200"
+                    placeholder="Description of the form questions written to help user use the correct form" />
+                <div class="d-flex justify-content-end">{{ (description || '').length }}/200</div>
+            </div>
+            <template #header>
+                <h6 class="modal-title">New Email Form</h6>
+                <CButtonClose @click="addEmailModel = false" class="text-black" />
+            </template>
+            <template #footer>
+                <CButton @click="addEmailModel = false">Close</CButton>
+                <CButton @click="submitForm" color="danger">Save</CButton>
+            </template>
+        </CModal>
+
     </div>
 </template>
 
@@ -243,6 +268,7 @@ export default {
             selectionAcademicYear: 2568,
             selectionSemester: 1,
             selectedFormId: null,
+            addEmailModel: null,
             filteredMajors: [],
             fields: [
                 { key: 'majorTitle', label: 'Major' },
@@ -252,38 +278,11 @@ export default {
                 { key: 'advisors', label: 'Advisors' },
                 { key: 'preview', label: 'Preview' },
             ],
-            forms: [
-                {
-                    id: 1,
-                    title: 'Evaluation Form (2021)',
-                    created: 'Jun 15, 2021',
-                    description: 'Description of the form questions...'
-                },
-                {
-                    id: 2,
-                    title: 'Evaluation Form (2022)',
-                    created: 'Jul 10, 2022',
-                    description: 'Another description...'
-                },
-                {
-                    id: 3,
-                    title: 'Evaluation Form (2023)',
-                    created: 'Aug 5, 2023',
-                    description: 'Another description...'
-                },
-                {
-                    id: 4,
-                    title: 'Evaluation Form (2023)',
-                    created: 'Aug 5, 2023',
-                    description: 'Another description...'
-                },
-                {
-                    id: 5,
-                    title: 'Evaluation Form (2023)',
-                    created: 'Aug 5, 2023',
-                    description: 'Another description...'
-                }
-            ]
+
+            title: '',
+            description: '',
+
+            
         }
     },
 
@@ -302,7 +301,8 @@ export default {
     methods: {
         onInit() {
             this.$store.dispatch("academic/school"),
-            this.$store.dispatch("academic/major")
+            this.$store.dispatch("academic/major"),
+            this.$store.dispatch("email/email")
         },
         sendStatusColor(status) {
             switch (status) {
@@ -316,21 +316,47 @@ export default {
             return status.charAt(0) + status.slice(1).toLowerCase()
         },
 
-        selectForm(id) {
-            this.selectedFormId = id
+        selectForm(_id) {
+            this.selectedFormId = _id
         },
 
         search() {
             this.filteredMajors = this.major.filter( major => major.school === this.selectionSchool._id )
         },
 
+        submitForm() {
+
+            const payload = {
+
+            }
+
+            this.$store.dispatch('email/createEmail',)
+        }
+
     },
 
     computed: {
         ...mapGetters('academic', ['school','major']),
+        ...mapGetters('email',['emailAdviser']),
 
         selectedForm() {
-            return this.forms.find(form => form.id === this.selectedFormId)
+            if (!this.selectedFormId) return null
+
+            const lang = this.$i18n.locale
+            const email = this.emailAdviser.find(
+                email => email._id === this.selectedFormId
+            )
+
+
+            const title = email.title.find(title => title.key === lang)?.value
+            const description = email.description.find(description => description.key === lang)?.value
+
+            return {
+                _id: email._id,
+                title: title,
+                description: description,
+                template: email.description
+            }
         },
 
         majorsTable() {
@@ -339,10 +365,10 @@ export default {
 
             return source.map(item => {
                 
-                const title = item.title.find(t => t.key === lang)
+                const title = item.title.find(t => t.key === lang).value
 
                 return {
-                majorTitle: title ? title.value : '-',
+                majorTitle: title,
                 evaluationStatus: 'Incomplete', // มาจาก backend
                 sendStatus: 'Pending',             // มาจาก backend
                 sendEmail: true,
@@ -352,12 +378,28 @@ export default {
             })
         },
 
+        emailsData() {
+            const lang = this.$i18n.locale
+
+            return this.emailAdviser.map(item => {
+                const title = item.title.find(t => t.key === lang).value
+                const description = item.description.find(d => d.key === lang).value
+                
+                return {
+                    _id: item._id,
+                    title: title,
+                    description: description,
+                    activity: item.activity,
+                    template: item.description
+                }
+            })
+        },
 
         schools(){
             const lang = this.$i18n.locale
             return this.school.map(item => ({
                 _id: item._id,
-                label: item.title.find(t => t.key === lang)?.value
+                label: item.title.find(t => t.key === lang).value
             }))
         },
 

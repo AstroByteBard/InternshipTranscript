@@ -18,9 +18,6 @@
                                 <div class="flex-grow-1 mx-4">
                                     <div class="d-flex align-items-baseline">
                                         <h5 class="mr-1">{{ selectedForm.title }}</h5>
-                                        <span class="text-medium-emphasis small">
-                                            / created {{ selectedForm.created }}
-                                        </span>
                                     </div>
 
                                     <p class="mb-0">

@@ -11,6 +11,7 @@ Vue.use(Vuex);
 // import Authentication from "@/store/modules/Authentication/index";
 
 import Academic from "@/store/modules/Academic"
+import Email from "@/store/modules/Email"
 
 const state = {
   sidebarShow: 'responsive',
@@ -41,8 +42,8 @@ export default new Vuex.Store({
   state,
   mutations,
   modules : {
-    academic: Academic
-    
+    academic: Academic,
+    email: Email
     //   dialog: DialogMessages,
     //   setting : Setting,
     //   payment : Payment,
