@@ -42,6 +42,7 @@ export default new Router({
                     component: Dashboard
                 },
 
+
                 {
                     path: 'correspondence',
                     redirect: '/correspondence/advisors',

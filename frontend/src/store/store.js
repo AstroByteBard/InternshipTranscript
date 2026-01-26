@@ -11,6 +11,7 @@ Vue.use(Vuex);
 // import Authentication from "@/store/modules/Authentication/index";
 
 import Academic from "@/store/modules/Academic"
+import Students from "@/store/modules/Students"
 import Email from "@/store/modules/Email"
 
 const state = {
@@ -42,8 +43,8 @@ export default new Vuex.Store({
   state,
   mutations,
   modules : {
-    academic: Academic,
-    email: Email
+    academic: Academic
+    
     //   dialog: DialogMessages,
     //   setting : Setting,
     //   payment : Payment,

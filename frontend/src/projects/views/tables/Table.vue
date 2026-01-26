@@ -18,6 +18,12 @@
         :dark="dark"
         :pagination="{doubleArrows: false, align: 'center'}"
       >
+
+      <template #actions="data">
+          <td>
+            <slot name="actions" :item="data.item"></slot>
+          </td>
+        </template>
       </CDataTable>
     </CCardBody>
   </CCard>

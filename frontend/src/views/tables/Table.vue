@@ -18,11 +18,6 @@
         :dark="dark"
         pagination
       >
-        <template #status="{item}">
-          <td>
-            <CBadge :color="getBadge(item.status)">{{item.status}}</CBadge>
-          </td>
-        </template>
       </CDataTable>
     </CCardBody>
   </CCard>
@@ -49,14 +44,6 @@ export default {
     small: Boolean,
     fixed: Boolean,
     dark: Boolean
-  },
-  methods: {
-    getBadge (status) {
-      return status === 'Active' ? 'success'
-        : status === 'Inactive' ? 'secondary'
-          : status === 'Pending' ? 'warning'
-            : status === 'Banned' ? 'danger' : 'primary'
-    }
   }
 }
 </script>

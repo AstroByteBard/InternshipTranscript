@@ -45,7 +45,10 @@ const ServerModule = {
                     console.log(err)
             });
         }
+        
     },
+
+    
 
     getters: {
         major(state) {
