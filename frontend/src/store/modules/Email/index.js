@@ -30,10 +30,11 @@ const ServerModule = {
                     console.log(err)
             });
         },
-        createEmail({commit},data) {
+        createEmail({ dispatch },data) {
             Service.email('post', data, {})
-                .then(() => {
-                    dispatch('email')
+                .then((response) => {
+                    console.log('สถานนะการส่งอีเมล : ', response.data)
+                    return dispatch ('email')
                 }).catch((err) => {
                         console.log(err)
             });

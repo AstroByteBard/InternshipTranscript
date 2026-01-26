@@ -47,8 +47,8 @@ export default {
 
     major(method, data, configs) {
         switch (method) {
-            case 'exp': 
-                return instance.post("/academic/major/explorers", data);
+            case 'sendmail': 
+                return instance.post("/academic/major/sendmail", data);
             case 'get':
                 return instance.get("/academic/major", data);
             case 'post':

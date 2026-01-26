@@ -28,6 +28,15 @@ const ServerModule = {
                     console.log(err)
             });
         },
+        sendMajor({},data){
+            Service.major('sendmail',data, {})
+                .then((response) => {
+                    console.log('สถานนะการส่งอีเมล : ', response.data)
+                }).catch((err) => {
+                            console.log(err)
+            });
+        }
+        ,
         school({commit}, data) {
             Service.school('get', data, {})
                 .then((response) => {

@@ -104,9 +104,9 @@
                         </template>
 
                         <!-- Send Email -->
-                        <template #sendEmail>
+                        <template #sendEmail = "{ item }">
                             <td>
-                                <CIcon name="cil-envelope-closed" size="lg" />
+                                <CIcon name="cil-envelope-closed" size="lg" @click="sendEmail( item._id )" />
                             </td>
                         </template>
 
@@ -137,35 +137,28 @@
                         <h4>Email in Use </h4> 
                     </CCol>
                 </CRow>
-                <CRow v-if="selectedForm">
-                    <CCol>
+                <CRow v-for="email in emailsData" :key="email._id">
+                    <CCol v-if="email.activity">
                         <CCard class="form-card" accent-color="danger">
-                            <CCardBody class="py-3">
-                                <div class="d-flex align-items-center w-100 gap-3">
+                        <CCardBody class="py-3">
+                            <div class="d-flex align-items-center w-100 gap-3">
 
-                                    <!-- center -->
-                                    <div class="flex-grow-1 mx-4">
-                                        <div class="d-flex align-items-baseline">
-                                            <h5 class="mr-1">{{ selectedForm.title }}</h5>
-                                        </div>
+                            <div class="flex-grow-1 mx-4">
+                                <h5>{{ email.title }}</h5>
+                                <p class="mb-0">{{ email.description }}</p>
+                            </div>
 
-                                        <p class="mb-0">
-                                            {{ selectedForm.description }}
-                                        </p>
-                                    </div>
+                            <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
+                                <template #toggler-content>
+                                <CIcon name="cil-options" />
+                                </template>
+                                <CDropdownItem>Edit</CDropdownItem>
+                                <CDropdownItem>Duplicate</CDropdownItem>
+                                <CDropdownItem>Delete</CDropdownItem>
+                            </CDropdown>
 
-                                    <!-- right -->
-                                    <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                        <template #toggler-content>
-                                            <CIcon name="cil-options" />
-                                        </template>
-                                        <CDropdownItem>Use</CDropdownItem>
-                                        <CDropdownItem>Edit</CDropdownItem>
-                                        <CDropdownItem>Duplicate</CDropdownItem>
-                                        <CDropdownItem>Delete</CDropdownItem>
-                                    </CDropdown>
-                                </div>
-                            </CCardBody>
+                            </div>
+                        </CCardBody>
                         </CCard>
                     </CCol>
                 </CRow>
@@ -186,37 +179,30 @@
                 </CRow>
 
                 <CRow v-for="email in emailsData" :key="email._id">
-                    <CCol>
+                    <CCol v-if="!email.activity">
                         <CCard class="form-card">
-                            <CCardBody class="py-3">
-                                <div class="d-flex align-items-center w-100 gap-3">
+                        <CCardBody class="py-3">
+                            <div class="d-flex align-items-center w-100 gap-3">
 
-                                    <!-- center -->
-                                    <div class="flex-grow-1 mx-4">
-                                        <div class="d-flex align-items-baseline">
-                                            <h5 class="mr-1">{{ email.title }}</h5>
-                                            <!-- <span class="text-medium-emphasis small">
-                                                / created {{ form.created }}
-                                            </span> -->
-                                        </div>
+                            <div class="flex-grow-1 mx-4">
+                                <h5>{{ email.title }}</h5>
+                                <p class="mb-0">{{ email.description }}</p>
+                            </div>
 
-                                        <p class="mb-0">
-                                            {{ email.description }}
-                                        </p>
-                                    </div>
+                            <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
+                                <template #toggler-content>
+                                <CIcon name="cil-options" />
+                                </template>
+                                <CDropdownItem @click="useTemplate(email._id)">
+                                Use
+                                </CDropdownItem>
+                                <CDropdownItem>Edit</CDropdownItem>
+                                <CDropdownItem>Duplicate</CDropdownItem>
+                                <CDropdownItem>Delete</CDropdownItem>
+                            </CDropdown>
 
-                                    <!-- right -->
-                                    <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                        <template #toggler-content>
-                                            <CIcon name="cil-options" />
-                                        </template>
-                                        <CDropdownItem @click="selectForm(email._id)">Use</CDropdownItem>
-                                        <CDropdownItem>Edit</CDropdownItem>
-                                        <CDropdownItem>Duplicate</CDropdownItem>
-                                        <CDropdownItem>Delete</CDropdownItem>
-                                    </CDropdown>
-                                </div>
-                            </CCardBody>
+                            </div>
+                        </CCardBody>
                         </CCard>
                     </CCol>
                 </CRow>
@@ -234,12 +220,12 @@
             </div>
             <div>
                 <label>
-                    Description
+                    template
                 </label>
 
-                <CTextarea v-model="description" :rows="4" :maxlength="200"
+                <CTextarea v-model="template" :rows="4" :maxlength="200"
                     placeholder="Description of the form questions written to help user use the correct form" />
-                <div class="d-flex justify-content-end">{{ (description || '').length }}/200</div>
+                <div class="d-flex justify-content-end">{{ (template || '').length }}/200</div>
             </div>
             <template #header>
                 <h6 class="modal-title">New Email Form</h6>
@@ -267,7 +253,6 @@ export default {
             selectionSchool: null,
             selectionAcademicYear: 2568,
             selectionSemester: 1,
-            selectedFormId: null,
             addEmailModel: null,
             filteredMajors: [],
             fields: [
@@ -280,7 +265,7 @@ export default {
             ],
 
             title: '',
-            description: '',
+            template: '',
 
             
         }
@@ -316,10 +301,6 @@ export default {
             return status.charAt(0) + status.slice(1).toLowerCase()
         },
 
-        selectForm(_id) {
-            this.selectedFormId = _id
-        },
-
         search() {
             this.filteredMajors = this.major.filter( major => major.school === this.selectionSchool._id )
         },
@@ -327,37 +308,51 @@ export default {
         submitForm() {
 
             const payload = {
-
+                "title": [
+                    {
+                    "key": "th",
+                    "value": "ทดสอบ"
+                    },
+                    {
+                    "key": "en",
+                    "value": this.title
+                    }
+                ],
+                "description": [
+                    {
+                    "key": "th",
+                    "value": "test"
+                    },
+                    {
+                    "key": "en",
+                    "value": "test"
+                    }
+                ],
+                "templete": this.template,
+                "activity": false,
+                "group": "69730cdf31640a4d402b0670"
             }
 
-            this.$store.dispatch('email/createEmail',)
-        }
+            this.$store.dispatch('email/createEmail', payload)
+            .then(() => {
+                this.addEmailModel = false
+                this.title = ''
+                this.template = ''
+            })
 
+        },
+
+        sendEmail(_id){
+            const payload = {
+                "_id": _id ,
+                "templete" : "6973168131640a4d402b0682"
+            }
+        }
     },
 
     computed: {
         ...mapGetters('academic', ['school','major']),
         ...mapGetters('email',['emailAdviser']),
-
-        selectedForm() {
-            if (!this.selectedFormId) return null
-
-            const lang = this.$i18n.locale
-            const email = this.emailAdviser.find(
-                email => email._id === this.selectedFormId
-            )
-
-
-            const title = email.title.find(title => title.key === lang)?.value
-            const description = email.description.find(description => description.key === lang)?.value
-
-            return {
-                _id: email._id,
-                title: title,
-                description: description,
-                template: email.description
-            }
-        },
 
         majorsTable() {
             const lang = this.$i18n.locale

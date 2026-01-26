@@ -97,7 +97,7 @@ exports.onSendEmail = async function (request, response) {
 
         const templete = await Email.onQuery({ _id: query.templete }, [] , 'templete');
         
-        await Mail.sendMail('napus.sam@gmail.com','gay','get',templete.templete)
+        await Mail.sendMail(emails,'gay','get',templete.templete)
         return ResMessage.sendResponse(response, 0, 20000)
     } catch (err) {
         ResMessage.sendResponse(response, 0, 40400)

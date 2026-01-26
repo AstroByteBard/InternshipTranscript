@@ -18,6 +18,7 @@ const suggestions = () => import('@/projects/views/competencies/Suggestions')
 //correspondence
 
 const Email_advisors = () => import('@/projects/views/correspondence/Advisors')
+const Email_student = () => import('@/projects/views/correspondence/Student')
 
 
 Vue.use(Router)
@@ -55,6 +56,11 @@ export default new Router({
                             path: 'advisors',
                             name: 'Advisors',
                             component: Email_advisors
+                        },
+                        {
+                            path: 'student',
+                            name: 'Student',
+                            component: Email_student
                         }
                     ]
                 },
