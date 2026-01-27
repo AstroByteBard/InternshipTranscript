@@ -6,7 +6,7 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
 // Views
-const Dashboards = () => import('@/projects/views/dashboard')
+const Dashboards = () => import('@/projects/views/Dashboard')
 
 const Colors = () => import('@/views/theme/Colors')
 const Typography = () => import('@/views/theme/Typography')
