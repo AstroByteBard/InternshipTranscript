@@ -16,7 +16,6 @@ import moment from "moment";
 import SignIn from "@/projects/components/dialog/SignIn.vue";
 import TwoFA from "@/projects/components/dialog/TwoFA.vue";
 
-
 export default {
   name: 'Login',
   components: {TwoFA, SignIn, Multiselect},
