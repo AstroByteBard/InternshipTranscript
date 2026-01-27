@@ -97,7 +97,7 @@ Vue.use(Router)
 export default new Router({
     mode: 'history', // https://router.vuejs.org/api/#mode
     linkActiveClass: 'open active',
-    scrollBehavior: () => ({y: 0}),
+    scrollBehavior: () => ({ y: 0 }),
     routes: [
 
         {
@@ -126,8 +126,8 @@ export default new Router({
                     },
                     children: [
                         {
-                            path:'student',
-                            name:'Student',
+                            path: 'student',
+                            name: 'Student',
                             component: Student
                         }
                     ]
@@ -144,8 +144,8 @@ export default new Router({
                     },
                     children: [
                         {
-                            path:'admin',
-                            name:'Admin',
+                            path: 'admin',
+                            name: 'Admin',
                             component: Admin
                         }
                     ]
@@ -162,14 +162,14 @@ export default new Router({
                     },
                     children: [
                         {
-                            path:'advisor',
-                            name:'Advisor',
+                            path: 'advisor',
+                            name: 'Advisor',
                             component: Advisor
                         }
                     ]
                 },
 
-                
+
 
 
                 {
@@ -228,7 +228,7 @@ export default new Router({
                 },
                 {
                     path: 'users',
-                    meta: {label: 'Users'},
+                    meta: { label: 'Users' },
                     component: {
                         render(c) {
                             return c('router-view')
