@@ -35,8 +35,8 @@
 </template>
 
 <script>
-import CTableWrapper from './tables/Table.vue'
-import ImportStudentModal from '../../views/Import/ImportStudentModal.vue'
+import CTableWrapper from '@/views/tables/Table.vue'
+import ImportStudentModal from '@/views/Import/ImportStudentModal.vue'
 import EditStudentModal from '@/views/modal/EditStudentModal.vue'
 import DeleteStudentModal from '@/views/modal/DeleteStudentModal.vue'
 import StudentFilter from '@/projects/components/Filter/StudentFilter.vue'

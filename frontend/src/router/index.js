@@ -87,9 +87,9 @@ const Message = () => import('@/views/apps/email/Message')
 // project 
 
 const Dashboard = () => import('@/projects/views/Dashboard')
-const Student = () => import('@/projects/views/Student')
-const Admin = () => import('@/projects/views/Admin')
-const Advisor = () => import('@/projects/views/Advisor')
+const Student = () => import('@/projects/views/administrator/Student')
+const Admin = () => import('@/projects/views/administrator/Admin')
+const Advisor = () => import('@/projects/views/administrator/Advisor')
 const Login = () => import('@/projects/views/Login')
 
 Vue.use(Router)
