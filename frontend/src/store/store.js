@@ -43,6 +43,8 @@ export default new Vuex.Store({
   state,
   mutations,
   modules : {
+    email: Email,
+    students: Students,
     academic: Academic
     
     //   dialog: DialogMessages,

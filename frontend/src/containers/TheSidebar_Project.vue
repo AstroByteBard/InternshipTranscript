@@ -35,7 +35,7 @@
 
 <script>
 import nav from './_nav'
-// import TheSidebarProfile from "@/projects/components/Util/TheSidebarProfile";
+
 export default {
   name: 'TheSidebar_Project',
   components: {},
