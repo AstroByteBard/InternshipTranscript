@@ -13,14 +13,17 @@ var objsSchema  = new Schema({
         value          : {type: String, default: null},
     }],
     major           : {type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Major', default: null },
-    config          : [{
-        key            : {type: String, default: null},
-        value          : [{
-            key           : {type:String, default: null },
-            value         : {type:String, default: null }
-        }]
-    }],
+    config          : [{type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Question', default: null }],
     active          : {type: Boolean, default: false}
 }, { timestamps: true});
+
+objsSchema.pre('findOneAndUpdate', async function(next) {
+    const update = this.getUpdate();
+    if (update.active === true) {
+        await this.model.updateMany({ active: true }, { active: false });
+    }
+    next();
+});
+
 
 module.exports = mongoose.model('Competencies_Hardskill', objsSchema, 'Competencies_Hardskill');

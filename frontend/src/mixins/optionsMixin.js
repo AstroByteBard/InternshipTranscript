@@ -21,5 +21,27 @@ export default {
             return [...base, ...mapped]
         },
 
+        buildGeneralDataDetail(list) {
+            const lang = this.lang || this.$store.getters['setting/lang'] || this.$i18n.locale
+            const base = { title: '', description: '', config: [] }
+            if (!list) return base
+
+            const title = list.title?.find(t => t.key === lang)
+            const description = list.description?.find(t => t.key === lang)
+            const config = list.config?.filter(item => item).map(item => {
+                return {
+                    _id: item._id,
+                    label: item.label?.find(l => l.key === lang),
+                    question: item.question?.find(q => q.key === lang)
+                }
+            })
+
+            return {
+                title: title?.value || '',
+                description: description?.value || '',
+                config: config,
+            }
+        },
+
     },
 }

@@ -12,7 +12,6 @@
         </CRow>
 
         <div v-if="selected === 'Email Sending'">
-            <!-- Default View: School/Year Filter and Main Table -->
             <div v-if="!selectedMajor">
                 <CRow class="my-3">
                     <CCol>
@@ -47,21 +46,14 @@
 
                 <CRow>
                     <CCol>
-                        <CDataTable class="custom-table" striped outlined :items="majorsTable" :fields=fields
+                        <CDataTable class="custom-table" outlined :items="majorsTable" :fields=fields
                             :items-per-page="8" :pagination="{ doubleArrows: false, align: 'end' }">
-                            <!-- Evaluation Status -->
-                            <template #evaluationStatus="{ item }">
-                                <td>
-                                    <CBadge :color="item.evaluationStatus === 'COMPLETE' ? 'success' : 'secondary'">
-                                        {{ item.evaluationStatus === 'COMPLETE' ? 'Complete' : 'Incomplete' }}
-                                    </CBadge>
-                                </td>
-                            </template>
 
                             <!-- Send Status -->
                             <template #sendStatus="{ item }">
-                                <td>
-                                    <CBadge :color="sendStatusColor(item.sendStatus)">
+                                <td class="text-center">
+                                    <CBadge :color="sendStatusColor(item.sendStatus)" class="px-3 py-2"
+                                        style="font-size: 12px;">
                                         {{ formatSendStatus(item.sendStatus) }}
                                     </CBadge>
                                 </td>
@@ -69,84 +61,33 @@
 
                             <!-- Send Email -->
                             <template #sendEmail="{ item }">
-                                <td>
-                                    <CIcon name="cil-envelope-closed" size="lg" @click="sendEmail(item._id)" />
+                                <td class="text-center">
+                                    <CButton size="sm" color="warning" @click="sendEmail(item._id)">
+                                        <CIcon name="cil-envelope-closed" />
+                                    </CButton>
                                 </td>
                             </template>
 
                             <!-- Advisors -->
                             <template #advisors="{ item }">
-                                <td>
-                                    <CIcon name="cil-user" size="lg" class="cursor-pointer"
-                                        @click="selectMajor(item)" />
+                                <td class="text-center">
+                                    <CButton size="sm" color="info" @click="selectMajor(item)">
+                                        <CIcon name="cil-user" />
+                                    </CButton>
                                 </td>
                             </template>
 
                             <!-- Preview -->
                             <template #preview>
-                                <td>
-                                    <CIcon name="cil-magnifying-glass" size="lg" />
+                                <td class="text-center">
+                                    <CButton size="sm" color="info">
+                                        <CIcon name="cil-magnifying-glass" />
+                                    </CButton>
                                 </td>
                             </template>
                         </CDataTable>
                     </CCol>
                 </CRow>
-            </div>
-
-            <!-- Detail View: Advisors List -->
-            <div v-else>
-                <CRow class="mb-3">
-                    <CCol>
-                        <h6 class="text-muted">
-                            <span class="cursor-pointer" @click="clearSelectedMajor">E-mail to Advisors</span>
-                            >
-                            <span class="text-danger">{{ selectedMajor.majorTitle }}</span>
-                        </h6>
-                    </CCol>
-                </CRow>
-
-                <CRow class="mb-3 align-items-center">
-                    <CCol sm="4">
-                        <CInput placeholder="Search..." v-model="advisorSearch">
-                            <template #prepend-content>
-                                <CIcon name="cil-magnifying-glass" />
-                            </template>
-                        </CInput>
-                    </CCol>
-                    <CCol sm="4">
-                        <CSelect placeholder="Send Status" :options="['All', 'Sent', 'Failed', 'Pending']" />
-                    </CCol>
-                    <CCol sm="4" class="text-right">
-                        <CButton color="danger" class="text-white">
-                            <CIcon name="cil-envelope-closed" class="mr-2" /> Resend Email
-                        </CButton>
-                    </CCol>
-                </CRow>
-
-                <CRow>
-                    <CCol>
-                        <CDataTable class="custom-table" striped outlined :items="selectedMajorAdvisors"
-                            :fields="advisorFields" :items-per-page="8"
-                            :pagination="{ doubleArrows: false, align: 'end' }">
-                            <template #id="{ index }">
-                                <td>{{ index + 1 }}</td>
-                            </template>
-                            <template #resend>
-                                <td>
-                                    <CIcon name="cil-envelope-closed" size="lg" />
-                                </td>
-                            </template>
-                            <template #status="{ item }">
-                                <td>
-                                    <CBadge :color="sendStatusColor(item.status)">
-                                        {{ formatSendStatus(item.status) }}
-                                    </CBadge>
-                                </td>
-                            </template>
-                        </CDataTable>
-                    </CCol>
-                </CRow>
-
             </div>
 
         </div>
@@ -169,15 +110,16 @@
                                     <div class="d-flex align-items-center w-100 gap-3">
                                         <div class="flex-grow-1 mx-4">
                                             <h5>{{ email.title }}</h5>
-                                            <p class="mb-0">{{ email.description }}</p>
+                                            <p>{{ email.description }}</p>
+                                            <p class="mb-0">{{ email.updatedAt }}</p>
                                         </div>
                                         <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
                                             <template #toggler-content>
                                                 <CIcon name="cil-options" />
                                             </template>
                                             <CDropdownItem>Edit</CDropdownItem>
-                                            <CDropdownItem>Duplicate</CDropdownItem>
-                                            <CDropdownItem>Delete</CDropdownItem>
+                                            <CDropdownItem @click="duplicateEmail(email._id)">Duplicate</CDropdownItem>
+                                            <CDropdownItem @click="removeEmail(email._id)">Delete</CDropdownItem>
                                         </CDropdown>
                                     </div>
                                 </CCardBody>
@@ -215,7 +157,8 @@
                                     <div class="d-flex align-items-center w-100 gap-3">
                                         <div class="flex-grow-1 mx-4">
                                             <h5>{{ email.title }}</h5>
-                                            <p class="mb-0">{{ email.description }}</p>
+                                            <p>{{ email.description }}</p>
+                                            <p class="mb-0">{{ email.updatedAt }}</p>
                                         </div>
                                         <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
                                             <template #toggler-content>
@@ -225,8 +168,8 @@
                                                 Use
                                             </CDropdownItem>
                                             <CDropdownItem>Edit</CDropdownItem>
-                                            <CDropdownItem>Duplicate</CDropdownItem>
-                                            <CDropdownItem>Delete</CDropdownItem>
+                                            <CDropdownItem @click="duplicateEmail(email._id)">Duplicate</CDropdownItem>
+                                            <CDropdownItem @click="removeEmail(email._id)">Delete</CDropdownItem>
                                         </CDropdown>
                                     </div>
                                 </CCardBody>
@@ -250,14 +193,14 @@
                     Title
                 </label>
 
-                <CInput v-model="title" placeholder="text Title here" />
+                <CInput v-model.lazy="title" placeholder="text Title here" />
             </div>
             <div>
                 <label>
                     template
                 </label>
 
-                <CTextarea v-model="template" :rows="4" :maxlength="200"
+                <CTextarea v-model.lazy="template" :rows="4" :maxlength="200"
                     placeholder="Description of the form questions written to help user use the correct form" />
                 <div class="d-flex justify-content-end">{{ (template || '').length }}/200</div>
             </div>
@@ -267,7 +210,7 @@
             </template>
             <template #footer>
                 <CButton @click="addEmailModel = false">Close</CButton>
-                <CButton @click="submitForm" color="danger">Save</CButton>
+                <CButton @click="createForm" color="danger">Save</CButton>
             </template>
         </CModal>
     </div>
@@ -298,14 +241,6 @@ export default {
             title: '',
             template: '',
 
-            selectedMajor: null,
-            advisorFields: [
-                { key: 'id', label: 'Id', _classes: 'text-center', _style: 'width: 80px' },
-                { key: 'email', label: 'Advisors\' E-mail' },
-                { key: 'status', label: 'Send Status', _classes: 'text-center' },
-                { key: 'resend', label: 'Resend Email', _classes: 'text-center' },
-            ],
-            advisorSearch: '',
         }
     },
 
@@ -323,9 +258,9 @@ export default {
 
     methods: {
         onInit() {
-            this.$store.dispatch("academic/school"),
-                this.$store.dispatch("academic/major"),
-                this.$store.dispatch("email/email")
+            this.$store.dispatch("academic/school")
+            this.$store.dispatch("academic/major")
+            this.$store.dispatch("email/EmailAdviser/email")
         },
         // ... (previous methods)
         sendStatusColor(status) {
@@ -346,7 +281,7 @@ export default {
             this.selectedMajor = null
         },
 
-        submitForm() {
+        createForm() {
             // ... (existing submitForm)
             const payload = {
                 "title": [
@@ -374,7 +309,7 @@ export default {
                 "group": "69730cdf31640a4d402b0670"
             }
 
-            this.$store.dispatch('email/createEmail', payload)
+            this.$store.dispatch('email/EmailAdviser/createEmail', payload)
                 .then(() => {
                     this.addEmailModel = false
                     this.title = ''
@@ -382,17 +317,45 @@ export default {
                 })
         },
 
+        useTemplate(_id) {
+            const payload = {
+                "_id": _id,
+                "activity": true,
+            }
+            this.$store.dispatch('email/EmailAdviser/updateEmail', payload)
+        },
+
+        duplicateEmail(_id) {
+            const payload = this.emailAdviser.find(email => email._id === _id)
+
+            delete payload._id
+            delete payload.createdAt
+            delete payload.updatedAt
+            delete payload.__v
+
+            payload.activity = false
+
+            this.$store.dispatch('email/EmailAdviser/createEmail', payload)
+        },
+
         sendEmail(_id) {
             const payload = {
                 "_id": _id,
                 "templete": "6973168131640a4d402b0682"
             }
-        }
+            this.$store.dispatch('email/EmailAdviser/sendEmail', payload)
+        },
+        removeEmail(_id) {
+            const payload = {
+                "_id": _id,
+            }
+            this.$store.dispatch('email/EmailAdviser/deleteEmail', payload)
+        },
     },
 
     computed: {
         ...mapGetters('academic', ['school', 'major']),
-        ...mapGetters('email', ['emailAdviser']),
+        ...mapGetters('email/EmailAdviser', ['emailAdviser']),
 
         majorsTable() {
             const lang = this.$i18n.locale
@@ -457,34 +420,6 @@ export default {
             return ['1', '2', '3']
         },
 
-        selectedMajorAdvisors() {
-            if (!this.selectedMajor) return []
-
-            // If the selected major has real advisor data, map it.
-            // Otherwise, return mock data for demonstration purposes as per the UI requirement.
-            // Assuming current data structure might not support the full table yet.
-
-            const realAdvisors = this.selectedMajor.advisors || []
-            if (realAdvisors.length > 0) {
-                return realAdvisors.map(adv => ({
-                    email: adv.email || adv, // checking format
-                    status: 'SENT' // mock status
-                }))
-            }
-
-            // Mock Data matching the screenshot
-            return [
-                { email: 'nuttarwathunkitcharoen@hisense.com', status: 'FAILED' },
-                { email: 'apiradee.wa@summitthai.com', status: 'SENT' },
-                { email: 'tantai.t@extend-it-resource.com', status: 'SENT' },
-                { email: 'worawit.sut@ascendcorp.com', status: 'SENT' },
-                { email: 'sarunya@bmsp.tech', status: 'SENT' },
-                { email: 'nattapong.anupat@gmail.com', status: 'FAILED' },
-                { email: 'vorapol.wong@gmail.com', status: 'FAILED' },
-                { email: 'Thiphawan.B@tcc-technology.com', status: 'FAILED' },
-            ]
-        },
-
         activeEmails() {
             return this.emailsData.filter(email => email.activity)
         },
@@ -501,19 +436,17 @@ export default {
 </script>
 
 <style>
+.custom-table tbody {
+    background: #fff;
+}
+
 .custom-table thead th {
     background-color: #8c4646;
-    /* Reddish brown */
     color: #ffffff;
     font-weight: 600;
     text-align: center;
     border: 1px solid #d8dbe0;
     vertical-align: middle;
-}
-
-.custom-table thead th:first-child {
-    text-align: left;
-    padding-left: 20px;
 }
 
 .custom-table tbody td {
@@ -526,10 +459,6 @@ export default {
     border: solid #d8dbe0;
     padding: 10px;
     transition: all 0.2s ease-in-out;
-}
-
-.btn-tab:hover {
-    background-color: #f0f0f0;
 }
 
 .btn-tab.active {

@@ -11,18 +11,81 @@ instance.defaults.headers = {
 
 export default {
 
-    email(method, data, configs) {
+    general(method, data, configs) {
         switch (method) {
-            case 'exp': 
-                return instance.post("/email/explorers", data);
             case 'get':
-                return instance.get("/email", data);
+                return instance.get("/competencies/softskill", data);
             case 'post':
-                return instance.post("/email", data);
+                return instance.post("/competencies/softskill", data);
             case 'put':
-                return instance.put("/email", data);
+                return instance.put("/competencies/softskill", data);
             case 'delete':
-                return instance.delete("/email", data);
+                return instance.delete("/competencies/softskill", { data: data });
+            default:
+                break;
+        }
+    },
+
+
+    specific(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/competencies/hardskill", data);
+            case 'post':
+                return instance.post("/competencies/hardskill", data);
+            case 'put':
+                return instance.put("/competencies/hardskill", data);
+            case 'delete':
+                return instance.delete("/competencies/hardskill", { data: data });
+            default:
+                break;
+        }
+    },
+
+    proposition(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/competencies/suggestions", data);
+            case 'post':
+                return instance.post("/competencies/suggestions", data);
+            case 'put':
+                return instance.put("/competencies/suggestions", data);
+            case 'delete':
+                return instance.delete("/competencies/suggestions", { data: data });
+            default:
+                break;
+        }
+    },
+
+    emailAdviser(method, data, configs) {
+        switch (method) {
+            case 'exp':
+                return instance.post("/email/adviser/explorers", data);
+            case 'get':
+                return instance.get("/email/adviser", data);
+            case 'post':
+                return instance.post("/email/adviser", data);
+            case 'put':
+                return instance.put("/email/adviser", data);
+            case 'delete':
+                return instance.delete("/email/adviser", { data: data });
+            default:
+                break;
+        }
+    },
+
+    emailStudent(method, data, configs) {
+        switch (method) {
+            case 'exp':
+                return instance.post("/email/student/explorers", data);
+            case 'get':
+                return instance.get("/email/student", data);
+            case 'post':
+                return instance.post("/email/student", data);
+            case 'put':
+                return instance.put("/email/student", data);
+            case 'delete':
+                return instance.delete("/email/student", { data: data });
             default:
                 break;
         }
@@ -30,7 +93,7 @@ export default {
 
     school(method, data, configs) {
         switch (method) {
-            case 'exp': 
+            case 'exp':
                 return instance.post("/academic/school/explorers", data);
             case 'get':
                 return instance.get("/academic/school", data);
@@ -45,18 +108,63 @@ export default {
         }
     },
 
-    major(method, data, configs) {
+    program(method, data, configs) {
         switch (method) {
-            case 'sendmail': 
-                return instance.post("/academic/major/sendmail", data);
+            case 'sendmail':
+                return instance.post("/academic/program/sendmail", data);
             case 'get':
-                return instance.get("/academic/major", data);
+                return instance.get("/academic/program", data);
             case 'post':
-                return instance.post("/academic/major", data);
+                return instance.post("/academic/program", data);
             case 'put':
-                return instance.put("/academic/major", data);
+                return instance.put("/academic/program", data);
             case 'delete':
-                return instance.delete("/academic/major", data);
+                return instance.delete("/academic/program", data);
+            default:
+                break;
+        }
+    },
+
+    course(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/academic/course", data);
+            case 'post':
+                return instance.post("/academic/course", data);
+            case 'put':
+                return instance.put("/academic/course", data);
+            case 'delete':
+                return instance.delete("/academic/course", data);
+            default:
+                break;
+        }
+    },
+
+    advisors(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/advisors", data);
+            case 'post':
+                return instance.post("/advisors", data);
+            case 'put':
+                return instance.put("/advisors", data);
+            case 'delete':
+                return instance.delete("/advisors", { data: data });
+            default:
+                break;
+        }
+    },
+
+    students(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/students", data);
+            case 'post':
+                return instance.post("/students", data);
+            case 'put':
+                return instance.put("/students", data);
+            case 'delete':
+                return instance.delete("/students", { data: data });
             default:
                 break;
         }
@@ -78,31 +186,4 @@ export default {
                 break;
         }
     },
-
-    students(method, data, configs) {
-    switch (method) {
-        case 'exp': 
-            return instance.post("/students/explorers", data);
-        case 'get':
-            return instance.get("/students", data);
-        case 'post':
-            return instance.post("/students", data);  // ส่ง JSON ปกติ
-        case 'put':
-            return instance.put("/students", data);
-        case 'delete':
-            return instance.delete("/students", { data: data });
-        case 'import':
-            return instance.post("/students/import", data, {
-                headers:{
-                    "Content-Type": "multipart/form-data",  
-                },
-                ...configs
-            });
-        default:
-            break;
-    }
-},
-
-
-
 }

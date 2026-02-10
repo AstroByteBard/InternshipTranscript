@@ -10,9 +10,10 @@ Vue.use(Vuex);
 // import Accounts from "@/store/modules/Accounts/index";
 // import Authentication from "@/store/modules/Authentication/index";
 
+import Competencies from "@/store/modules/Competencies"
 import Academic from "@/store/modules/Academic"
-import Students from "@/store/modules/Students"
 import Email from "@/store/modules/Email"
+import Member from "@/store/modules/Member"
 
 const state = {
   sidebarShow: 'responsive',
@@ -22,18 +23,18 @@ const state = {
 }
 
 const mutations = {
-  toggleSidebarDesktop (state) {
+  toggleSidebarDesktop(state) {
     const sidebarOpened = [true, 'responsive'].includes(state.sidebarShow)
     state.sidebarShow = sidebarOpened ? false : 'responsive'
   },
-  toggleSidebarMobile (state) {
+  toggleSidebarMobile(state) {
     const sidebarClosed = [false, 'responsive'].includes(state.sidebarShow)
     state.sidebarShow = sidebarClosed ? true : 'responsive'
   },
-  set (state, [variable, value]) {
+  set(state, [variable, value]) {
     state[variable] = value
   },
-  toggle (state, variable) {
+  toggle(state, variable) {
     state[variable] = !state[variable]
   }
 }
@@ -42,11 +43,12 @@ const mutations = {
 export default new Vuex.Store({
   state,
   mutations,
-  modules : {
+  modules: {
     email: Email,
-    students: Students,
+    competencies: Competencies,
+    member: Member,
     academic: Academic
-    
+
     //   dialog: DialogMessages,
     //   setting : Setting,
     //   payment : Payment,

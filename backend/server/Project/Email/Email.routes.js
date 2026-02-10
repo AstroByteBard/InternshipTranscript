@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
 
-const Email = require("./service/email");
+const Student = require("./service/student");
+const Adviser = require("./service/adviser");
 
-router.get("", Email.onQuerys);
-router.post("/explorers", Email.onQuery);
-router.post("", Email.onCreate);
-router.put("", Email.onUpdate);
-router.delete("", Email.onDelete);
+router.get("/adviser", Adviser.onQuerys);
+router.post("/adviser/explorers", Adviser.onQuery);
+router.post("/adviser", Adviser.onCreate);
+router.put("/adviser", Adviser.onUpdate);
+router.delete("/adviser", Adviser.onDelete);
+
+
+router.get("/student", Student.onQuerys);
+router.post("/student/explorers", Student.onQuery);
+router.post("/student", Student.onCreate);
+router.put("/student", Student.onUpdate);
+router.delete("/student", Student.onDelete);
 
 
 module.exports = router;

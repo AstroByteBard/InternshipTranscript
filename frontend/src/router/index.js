@@ -11,7 +11,8 @@ const Student = () => import('@/projects/views/Student')
 const Login = () => import('@/projects/views/Login')
 
 // competencies
-const general = () => import('@/projects/views/competencies/General')
+const general = () => import('@/projects/views/competencies/General/index')
+const GeneralDetail = () => import('@/projects/views/competencies/General/Detail')
 const specific = () => import('@/projects/views/competencies/Specific')
 const suggestions = () => import('@/projects/views/competencies/Suggestions')
 
@@ -79,16 +80,21 @@ export default new Router({
                         {
                             path: 'general',
                             name: 'General',
-                            component:general
+                            component: general
+                        },
+                        {
+                            path: 'general/:id',
+                            name: 'GeneralDetail',
+                            component: GeneralDetail
                         },
                         {
                             path: 'specific',
                             name: 'Specific',
-                            component:specific
-                        },{
+                            component: specific
+                        }, {
                             path: 'suggestions',
                             name: 'Suggestions',
-                            component:suggestions
+                            component: suggestions
                         }
                     ]
                 },

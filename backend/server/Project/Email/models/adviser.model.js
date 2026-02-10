@@ -12,9 +12,9 @@ var objsSchema  = new Schema({
         key            : {type: String, default: null},
         value          : {type: String, default: null},
     }],
-    config          : [{type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Question', default: null }],
-    active          : {type: Boolean, default: false}
-}, { timestamps: true});
+    templete        : {type: String , default: null},
+    active          : {type: Boolean, default: false},
+}, { timestamps: true });
 
 objsSchema.pre('findOneAndUpdate', async function(next) {
     const update = this.getUpdate();
@@ -22,7 +22,6 @@ objsSchema.pre('findOneAndUpdate', async function(next) {
         await this.model.updateMany({ active: true }, { active: false });
     }
     next();
-}); 
+});
 
-
-module.exports = mongoose.model('Competencies_Softskill', objsSchema, 'Competencies_Softskill');
+module.exports = mongoose.model('Email_Adviser', objsSchema, 'Email_Adviser');

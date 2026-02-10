@@ -20,5 +20,6 @@ router.post("/suggestions", Suggestions.onCreate);
 router.put("/suggestions", Suggestions.onUpdate);
 router.delete("/suggestions", Suggestions.onDelete);
 
+
 module.exports = router;
 
