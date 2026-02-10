@@ -8,7 +8,7 @@ let transporter = nodemailer.createTransport({
     },
 });
 
-exports.sendMail = async function (to, subject, text, html) {
+exports.sendMail = async function (to, subject, text, html) {    
     let mailOptions = {
         from: `"My App" <${process.env.EMAIL_USER}>`,
         to,          // ผู้รับ

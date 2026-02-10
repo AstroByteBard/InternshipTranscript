@@ -1,9 +1,9 @@
 <template>
   <div class="c-app" :class="{ 'c-dark-theme': $store.state.darkMode }">
-    <TheSidebar_Project/>
-    <TheAside/>
+    <TheSidebar_Project />
+    <TheAside />
     <CWrapper>
-      <TheHeader/>
+      <TheHeader />
       <div class="c-body">
         <main class="c-main">
           <CContainer fluid>
@@ -12,22 +12,21 @@
             </transition>
           </CContainer>
         </main>
-        <TheFooter/>
+        <!-- <TheFooter/> -->
       </div>
     </CWrapper>
-    <CenterLoading/>
-    <DialogMessage/>
-    <SignIn/>
+    <CenterLoading />
+    <DialogMessage />
+    <SignIn />
 
   </div>
 </template>
 
 <script>
-import TheSidebar from './TheSidebar'
 import TheHeader from './TheHeader'
 import TheFooter from './TheFooter'
 import TheAside from './TheAside'
-import {mapGetters} from "vuex";
+import { mapGetters } from "vuex";
 import store from "@/store/store";
 //
 import { io } from "socket.io-client";
@@ -43,7 +42,6 @@ export default {
     SignIn,
     CenterLoading,
     DialogMessage,
-    TheSidebar,
     TheHeader,
     TheFooter,
     TheAside
@@ -54,33 +52,33 @@ export default {
     // this.notifyUser();
     this.showNotification();
 
-//     const socket = io("127.0.0.1:8082",{
-//       transports: ["websocket", "polling"],
-//       withCredentials: true,
-//       extraHeaders: {
-//         "my-custom-header": "abcd"
-//       }
-//     });
-//     socket.on("connect", () => {
-//       socket.emit('campus',{"sos":1122});
-//
-//       socket.on("campus", (reason) => {
-//         console.log(reason)
-//       })
-//
-//
-//     });
-//
-//
-//
-// // กรณีการเชื่อมต่อถูกตัดขาด
-//     socket.on("disconnect", (reason) => {
-//       console.log("[socket disconnected]: ", reason);
-//     });
-// // กรณีการเชื่อมต่อเกิดความผิดพลาด
-//     socket.on("connect_error", (error) => {
-//       console.error("[connect error]: ", error);
-//     });
+    //     const socket = io("127.0.0.1:8082",{
+    //       transports: ["websocket", "polling"],
+    //       withCredentials: true,
+    //       extraHeaders: {
+    //         "my-custom-header": "abcd"
+    //       }
+    //     });
+    //     socket.on("connect", () => {
+    //       socket.emit('campus',{"sos":1122});
+    //
+    //       socket.on("campus", (reason) => {
+    //         console.log(reason)
+    //       })
+    //
+    //
+    //     });
+    //
+    //
+    //
+    // // กรณีการเชื่อมต่อถูกตัดขาด
+    //     socket.on("disconnect", (reason) => {
+    //       console.log("[socket disconnected]: ", reason);
+    //     });
+    // // กรณีการเชื่อมต่อเกิดความผิดพลาด
+    //     socket.on("connect_error", (error) => {
+    //       console.error("[connect error]: ", error);
+    //     });
 
 
     // localStorage.setItem('test','123444')
@@ -145,6 +143,7 @@ export default {
 .fade-leave-active {
   transition: opacity 0.3s;
 }
+
 .fade-enter,
 .fade-leave-to {
   opacity: 0;

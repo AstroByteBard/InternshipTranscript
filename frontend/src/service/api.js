@@ -11,6 +11,23 @@ instance.defaults.headers = {
 
 export default {
 
+    email(method, data, configs) {
+        switch (method) {
+            case 'exp': 
+                return instance.post("/email/explorers", data);
+            case 'get':
+                return instance.get("/email", data);
+            case 'post':
+                return instance.post("/email", data);
+            case 'put':
+                return instance.put("/email", data);
+            case 'delete':
+                return instance.delete("/email", data);
+            default:
+                break;
+        }
+    },
+
     school(method, data, configs) {
         switch (method) {
             case 'exp': 
@@ -30,8 +47,8 @@ export default {
 
     major(method, data, configs) {
         switch (method) {
-            case 'exp': 
-                return instance.post("/academic/major/explorers", data);
+            case 'sendmail': 
+                return instance.post("/academic/major/sendmail", data);
             case 'get':
                 return instance.get("/academic/major", data);
             case 'post':

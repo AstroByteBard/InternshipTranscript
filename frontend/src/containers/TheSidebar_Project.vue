@@ -35,7 +35,7 @@
 
 <script>
 import nav from './_nav'
-// import TheSidebarProfile from "@/projects/components/Util/TheSidebarProfile";
+
 export default {
   name: 'TheSidebar_Project',
   components: {},
@@ -70,11 +70,11 @@ export default {
             items: [
               {
                 name: 'Email to advisors',
-                to: '/project/email/advice'
+                to: '/correspondence/Advisors'
               },
               {
                 name: 'Email to student',
-                to: '/project/email/student'
+                to: '/correspondence/Student'
               }
             ]
           },
