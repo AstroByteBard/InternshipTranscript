@@ -7,8 +7,10 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 // project 
 const Dashboard = () => import('@/projects/views/Dashboard')
-const Student = () => import('@/projects/views/Student')
 const Login = () => import('@/projects/views/Login')
+
+//administrator
+const Student = () => import('@/projects/views/administrator/Student')
 
 // competencies
 const general = () => import('@/projects/views/competencies/General/index')
@@ -17,7 +19,6 @@ const specific = () => import('@/projects/views/competencies/Specific')
 const suggestions = () => import('@/projects/views/competencies/Suggestions')
 
 //correspondence
-
 const Email_advisors = () => import('@/projects/views/correspondence/Advisors')
 const Email_student = () => import('@/projects/views/correspondence/Student')
 

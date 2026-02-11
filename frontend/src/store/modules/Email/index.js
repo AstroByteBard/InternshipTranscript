@@ -1,11 +1,11 @@
-import EmailAdviser from "./adviser";
-import EmailStudent from "./student";
+import emailAdviser from "./adviser";
+import emailStudent from "./student";
 
 const ServerModule = {
     namespaced: true,
     modules: {
-        EmailAdviser,
-        EmailStudent
+        emailAdviser,
+        emailStudent
     },
 
     state: {

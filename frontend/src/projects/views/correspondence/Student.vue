@@ -12,7 +12,7 @@
         </CRow>
 
         <div v-if="selected === 'Email Sending'">
-            <div v-if="!selectedMajor">
+            <div v-if="!selectedProgram">
                 <CRow class="my-3">
                     <CCol>
                         <h6> Schools </h6>
@@ -46,7 +46,7 @@
 
                 <CRow>
                     <CCol>
-                        <CDataTable class="custom-table" outlined :items="majorsTable" :fields=fields
+                        <CDataTable class="custom-table" outlined :items="programsTable" :fields=fields
                             :items-per-page="8" :pagination="{ doubleArrows: false, align: 'end' }">
 
                             <!-- Send Status -->
@@ -71,7 +71,7 @@
                             <!-- Students -->
                             <template #students="{ item }">
                                 <td class="text-center">
-                                    <CButton size="sm" color="info" @click="selectMajor(item)">
+                                    <CButton size="sm" color="info" @click="selectProgram(item)">
                                         <CIcon name="cil-user" />
                                     </CButton>
                                 </td>
@@ -102,7 +102,7 @@
                                         <div class="flex-grow-1 mx-4">
                                             <h5>{{ email.title }}</h5>
                                             <p>{{ email.description }}</p>
-                                            <p>{{ email.updatedAt }}</p>
+                                            <p class="mb-0">{{ email.updatedAt }}</p>
                                         </div>
                                         <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
                                             <template #toggler-content>
@@ -217,12 +217,13 @@ export default {
     data() {
         return {
             selected: 'Email Sending',
+            selectedProgram: null,
             selectionSchool: null,
             selectionAcademicYear: 2568,
             selectionSemester: 1,
             addEmailModel: null,
             fields: [
-                { key: 'majorTitle', label: 'Major Name', _style: 'min-width: 300px' },
+                { key: 'programTitle', label: 'Program Name', _style: 'min-width: 300px' },
                 { key: 'sendStatus', label: 'Send Status', _classes: 'text-center' },
                 { key: 'sendEmail', label: 'Send Email', _classes: 'text-center' },
                 { key: 'students', label: 'Students', _classes: 'text-center' },
@@ -248,9 +249,9 @@ export default {
 
     methods: {
         onInit() {
-            this.$store.dispatch("academic/school")
-            this.$store.dispatch("academic/major")
-            this.$store.dispatch("email/EmailStudent/email")
+            this.$store.dispatch("academic/schools/schools")
+            this.$store.dispatch("academic/programs/programs")
+            this.$store.dispatch("email/emailStudent/email")
         },
 
         sendStatusColor(status) {
@@ -264,11 +265,11 @@ export default {
         formatSendStatus(status) {
             return status.charAt(0) + status.slice(1).toLowerCase()
         },
-        selectMajor(major) {
-            this.selectedMajor = major
+        selectProgram(program) {
+            this.selectedProgram = program
         },
-        clearSelectedMajor() {
-            this.selectedMajor = null
+        clearSelectedProgram() {
+            this.selectedProgram = null
         },
 
         createForm() {
@@ -294,11 +295,11 @@ export default {
                     }
                 ],
                 "templete": this.template,
-                "activity": false,
+                "active": false,
                 "group": "69730cdf31640a4d402b0670"
             }
 
-            this.$store.dispatch('email/EmailStudent/createEmail', payload)
+            this.$store.dispatch('email/emailStudent/createEmail', payload)
                 .then(() => {
                     this.addEmailModel = false
                     this.title = ''
@@ -309,9 +310,9 @@ export default {
         useTemplate(_id) {
             const payload = {
                 "_id": _id,
-                "activity": true,
+                "active": true,
             }
-            this.$store.dispatch('email/EmailStudent/updateEmail', payload)
+            this.$store.dispatch('email/emailStudent/updateEmail', payload)
         },
 
         duplicateEmail(_id) {
@@ -327,9 +328,9 @@ export default {
                 delete payload.__v
 
                 // Reset status for the new copy
-                payload.activity = false
+                payload.active = false
 
-                this.$store.dispatch('email/EmailStudent/createEmail', payload)
+                this.$store.dispatch('email/emailStudent/createEmail', payload)
             }
         },
 
@@ -338,25 +339,26 @@ export default {
                 "_id": _id,
                 "templete": "6973168131640a4d402b0682"
             }
-            this.$store.dispatch('email/EmailStudent/sendEmail', payload)
+            this.$store.dispatch('email/emailStudent/sendEmail', payload)
         },
         removeEmail(_id) {
             const payload = {
                 "_id": _id,
             }
-            this.$store.dispatch('email/EmailStudent/deleteEmail', payload)
+            this.$store.dispatch('email/emailStudent/deleteEmail', payload)
         },
     },
 
     computed: {
-        ...mapGetters('academic', ['school', 'major']),
-        ...mapGetters('email/EmailStudent', ['emailStudent']),
+        ...mapGetters('academic/schools', { storedSchools: 'schools' }),
+        ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
+        ...mapGetters('email/emailStudent', ['emailStudent']),
 
-        majorsTable() {
+        programsTable() {
             const lang = this.$i18n.locale
-            let source = this.major
+            let source = this.storedPrograms
             if (this.selectionSchool) {
-                source = source.filter(major => major.school === this.selectionSchool._id)
+                source = source.filter(program => program.school === this.selectionSchool._id)
             }
 
             return source.map(item => {
@@ -366,7 +368,7 @@ export default {
 
                 return {
                     _id: item._id,
-                    majorTitle: title,
+                    programTitle: title,
                     sendStatus: 'PENDING',
                     sendEmail: true,
                     students: item.students || [],
@@ -376,7 +378,7 @@ export default {
 
         emailsData() {
             const lang = this.$i18n.locale
-            // Ensure emailStudent is available before mapping
+
             if (!this.emailStudent) return []
 
             return this.emailStudent.map(item => {
@@ -387,15 +389,16 @@ export default {
                     _id: item._id,
                     title: title,
                     description: description,
-                    activity: item.activity,
-                    template: item.description
+                    active: item.active,
+                    template: item.description,
+                    updatedAt: this.moment(item.updatedAt).format('DD/MM/YYYY HH:mm'),
                 }
             })
         },
 
         schools() {
             const lang = this.$i18n.locale
-            return this.school.map(item => ({
+            return this.storedSchools.map(item => ({
                 _id: item._id,
                 label: item.title.find(t => t.key === lang).value
             }))
@@ -416,11 +419,11 @@ export default {
         },
 
         activeEmails() {
-            return this.emailsData.filter(email => email.activity)
+            return this.emailsData.filter(email => email.active)
         },
 
         inactiveEmails() {
-            return this.emailsData.filter(email => !email.activity)
+            return this.emailsData.filter(email => !email.active)
         }
     },
 

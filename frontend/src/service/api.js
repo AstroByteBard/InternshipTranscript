@@ -143,13 +143,13 @@ export default {
     advisors(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/advisors", data);
+                return instance.get("/member/advisors", data);
             case 'post':
-                return instance.post("/advisors", data);
+                return instance.post("/member/advisors", data);
             case 'put':
-                return instance.put("/advisors", data);
+                return instance.put("/member/advisors", data);
             case 'delete':
-                return instance.delete("/advisors", { data: data });
+                return instance.delete("/member/advisors", { data: data });
             default:
                 break;
         }
@@ -158,13 +158,13 @@ export default {
     students(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/students", data);
+                return instance.get("/member/students", data);
             case 'post':
-                return instance.post("/students", data);
+                return instance.post("/member/students", data);
             case 'put':
-                return instance.put("/students", data);
+                return instance.put("/member/students", data);
             case 'delete':
-                return instance.delete("/students", { data: data });
+                return instance.delete("/member/students", { data: data });
             default:
                 break;
         }
