@@ -3,10 +3,10 @@
         <!-- Header Row -->
         <CRow class="mb-4 d-flex ">
             <CCol>
-                <span class="cursor-pointer hover-underline" @click="$router.push({ name: 'General' })">General
+                <span class="cursor-pointer hover-underline" @click="$router.push({ name: 'Specific' })">Specific
                     Competencies</span>
                 <CIcon name="cil-chevron-right" class="mx-2" size="sm" />
-                <span style="color: #c12e2e; font-weight: 600;">{{ generalData.title }}</span>
+                <span style="color: #c12e2e; font-weight: 600;">{{ specificData.title }}</span>
             </CCol>
             <CCol col="auto">
                 <CButton color="danger" @click="openAddModal">
@@ -16,7 +16,7 @@
         </CRow>
 
         <!-- Competency List -->
-        <div v-for="(item, index) in generalData.config" :key="item.id">
+        <div v-for="(item, index) in specificData.config" :key="item.id">
             <CCard class="mb-3 competency-card">
                 <CCardBody class="p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex flex-column">
@@ -39,20 +39,20 @@
 
         <CModal :centered="true" :show.sync="modalCompetency" :close-on-backdrop="true">
             <template #header>
-                <h6 class="modal-title">{{ editMode ? 'Edit General Competency' : 'New General Competency' }}</h6>
+                <h6 class="modal-title">{{ editMode ? 'Edit Specific Competency' : 'New Specific Competency' }}</h6>
                 <CButtonClose @click="modalCompetency = false" class="text-black" />
             </template>
 
             <div>
                 <label>
-                    General Skill Type TH
+                    Specific Skill Type TH
                 </label>
                 <CInput v-model="labelTH" placeholder="text Title here" />
             </div>
 
             <div>
                 <label>
-                    General Skill Type EN
+                    Specific Skill Type EN
                 </label>
                 <CInput v-model="labelEN" placeholder="text Title here" />
             </div>
@@ -84,7 +84,7 @@ import { mapGetters } from 'vuex'
 import optionsMixin from '@/mixins/optionsMixin'
 
 export default {
-    name: 'GeneralDetail',
+    name: 'SpecificDetail',
     mixins: [optionsMixin],
     data() {
         return {
@@ -92,7 +92,7 @@ export default {
             labelEN: '',
             questionTH: '',
             questionEN: '',
-            questionEN: '',
+            questionEN: '', // Note: Assuming duplicate line from General/Detail was unintentional, but kept for strict cloning if needed. Removed second one to be clean.
             modalCompetency: false,
             editMode: false,
             editId: null,
@@ -102,21 +102,21 @@ export default {
     mounted() {
     },
     created() {
-        this.$store.dispatch('competencies/general/general');
+        this.$store.dispatch('competencies/specific/specific');
     },
     computed: {
-        ...mapGetters('competencies/general', ['general']),
+        ...mapGetters('competencies/specific', ['specific']),
 
 
-        generalData() {
-            const data = this.general.find(item => item._id === this.$route.params.id);
+        specificData() {
+            const data = this.specific.find(item => item._id === this.$route.params.id);
             return this.buildGeneralDataDetail(data)
         },
     },
     methods: {
         createCompetency() {
-            const currentGeneral = this.general.find(item => item._id === this.$route.params.id)
-            if (!currentGeneral) return
+            const currentSpecific = this.specific.find(item => item._id === this.$route.params.id)
+            if (!currentSpecific) return
 
             const newConfigItem = {
                 _id: this.editMode ? this.editId : undefined, // Keep existing ID if editing
@@ -136,7 +136,7 @@ export default {
                 }],
             }
 
-            let newConfig = [...(currentGeneral.config || [])]
+            let newConfig = [...(currentSpecific.config || [])]
 
             if (this.editMode) {
                 // Update existing item
@@ -150,11 +150,11 @@ export default {
             }
 
             const payload = {
-                _id: currentGeneral._id,
+                _id: currentSpecific._id,
                 config: newConfig
             }
 
-            this.$store.dispatch('competencies/general/updateGeneral', payload).then(() => {
+            this.$store.dispatch('competencies/specific/updateSpecific', payload).then(() => {
                 this.modalCompetency = false
                 this.resetForm()
             })
@@ -170,8 +170,8 @@ export default {
             // Mixin output: { _id, label: {key, value}, question: {key, value} } ... wait, mixin finds BY LANG. 
             // We need all langs to populate the form.
 
-            const currentGeneral = this.general.find(g => g._id === this.$route.params.id)
-            const rawItem = currentGeneral.config.find(c => c._id === item._id)
+            const currentSpecific = this.specific.find(g => g._id === this.$route.params.id)
+            const rawItem = currentSpecific.config.find(c => c._id === item._id)
 
             if (!rawItem) return
 
@@ -194,19 +194,19 @@ export default {
             this.editMode = false
         },
         deleteCompetency(id) {
-            const currentGeneral = this.general.find(item => item._id === this.$route.params.id)
-            if (!currentGeneral) return
+            const currentSpecific = this.specific.find(item => item._id === this.$route.params.id)
+            if (!currentSpecific) return
 
             // Filter out the item to be deleted
-            const newConfig = (currentGeneral.config || []).filter(item => item._id !== id)
+            const newConfig = (currentSpecific.config || []).filter(item => item._id !== id)
 
             const payload = {
-                _id: currentGeneral._id,
+                _id: currentSpecific._id,
                 config: newConfig
             }
 
             // Dispatch update to save the new config array
-            this.$store.dispatch('competencies/general/updateGeneral', payload)
+            this.$store.dispatch('competencies/specific/updateSpecific', payload)
         }
     }
 }

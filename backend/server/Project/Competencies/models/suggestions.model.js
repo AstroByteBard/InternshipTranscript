@@ -12,7 +12,16 @@ var objsSchema  = new Schema({
         key            : {type: String, default: null},
         value          : {type: String, default: null},
     }],
-    config          : [{type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Question', default: null }],
+    config          : [{
+        label          : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
+        }],
+        question       : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
+        }]
+    }],
     active          : {type: Boolean, default: false}
 }, { timestamps: true});
 

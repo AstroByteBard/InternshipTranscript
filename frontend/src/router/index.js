@@ -15,8 +15,10 @@ const Student = () => import('@/projects/views/administrator/Student')
 // competencies
 const general = () => import('@/projects/views/competencies/General/index')
 const GeneralDetail = () => import('@/projects/views/competencies/General/Detail')
-const specific = () => import('@/projects/views/competencies/Specific')
-const suggestions = () => import('@/projects/views/competencies/Suggestions')
+const specific = () => import('@/projects/views/competencies/Specific/index')
+const SpecificDetail = () => import('@/projects/views/competencies/Specific/Detail')
+const suggestions = () => import('@/projects/views/competencies/Suggestions/index')
+const SuggestionDetail = () => import('@/projects/views/competencies/Suggestions/Detail')
 
 //correspondence
 const Email_advisors = () => import('@/projects/views/correspondence/Advisors')
@@ -28,7 +30,7 @@ Vue.use(Router)
 export default new Router({
     mode: 'history', // https://router.vuejs.org/api/#mode
     linkActiveClass: 'open active',
-    scrollBehavior: () => ({y: 0}),
+    scrollBehavior: () => ({ y: 0 }),
     routes: [
 
         {
@@ -92,10 +94,21 @@ export default new Router({
                             path: 'specific',
                             name: 'Specific',
                             component: specific
-                        }, {
+                        },
+                        {
+                            path: 'specific/:id',
+                            name: 'SpecificDetail',
+                            component: SpecificDetail
+                        },
+                        {
                             path: 'suggestions',
                             name: 'Suggestions',
                             component: suggestions
+                        },
+                        {
+                            path: 'suggestions/:id',
+                            name: 'SuggestionDetail',
+                            component: SuggestionDetail
                         }
                     ]
                 },
@@ -111,8 +124,8 @@ export default new Router({
                     },
                     children: [
                         {
-                            path:'student',
-                            name:'Student',
+                            path: 'student',
+                            name: 'Student',
                             component: Student
                         }
                     ]

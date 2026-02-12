@@ -12,8 +12,17 @@ var objsSchema  = new Schema({
         key            : {type: String, default: null},
         value          : {type: String, default: null},
     }],
-    major           : {type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Major', default: null },
-    config          : [{type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Question', default: null }],
+    program           : {type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Program', default: null },
+    config          : [{
+        label          : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
+        }],
+        question       : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
+        }]
+    }],
     active          : {type: Boolean, default: false}
 }, { timestamps: true});
 

@@ -51,7 +51,7 @@
                 </CCol>
 
                 <CCol col="auto">
-                    <CButton color="danger" @click="addGeneralForm = true">
+                    <CButton color="danger" @click="addSuggestionForm = true">
                         <CIcon name="cil-plus" />&nbsp;New
                     </CButton>
                 </CCol>
@@ -99,10 +99,10 @@
 
         <CPagination align="end" :active-page.sync="currentPage" :pages="10" />
 
-        <CModal :centered="true" :show.sync="addGeneralForm" :close-on-backdrop="true">
+        <CModal :centered="true" :show.sync="addSuggestionForm" :close-on-backdrop="true">
             <template #header>
-                <h6 class="modal-title">New General Competencies Form</h6>
-                <CButtonClose @click="addGeneralForm = false" class="text-black" />
+                <h6 class="modal-title">New Suggestion Competencies Form</h6>
+                <CButtonClose @click="addSuggestionForm = false" class="text-black" />
             </template>
 
             <div>
@@ -122,7 +122,7 @@
             </div>
 
             <template #footer>
-                <CButton @click="addGeneralForm = false">Close</CButton>
+                <CButton @click="addSuggestionForm = false">Close</CButton>
                 <CButton @click="createForm" color="danger">Save</CButton>
             </template>
         </CModal>
@@ -133,7 +133,7 @@
 import { mapGetters } from 'vuex'
 
 export default {
-    name: 'general',
+    name: 'suggestions',
     components: {
     },
     data() {
@@ -141,7 +141,7 @@ export default {
             title: '',
             description: '',
             currentPage: 1,
-            addGeneralForm: false,
+            addSuggestionForm: false,
         }
     },
 
@@ -159,7 +159,7 @@ export default {
 
     methods: {
         onInit() {
-            this.$store.dispatch('competencies/general/general')
+            this.$store.dispatch('competencies/proposition/proposition')
         },
 
         selectForm(_id) {
@@ -167,7 +167,7 @@ export default {
                 "_id": _id,
                 "active": true,
             }
-            this.$store.dispatch('competencies/general/updateGeneral', payload)
+            this.$store.dispatch('competencies/proposition/updateProposition', payload)
         },
 
         createForm() {
@@ -220,16 +220,16 @@ export default {
 
             }
 
-            this.$store.dispatch('competencies/general/createGeneral', payload)
+            this.$store.dispatch('competencies/proposition/createProposition', payload)
                 .then(() => {
-                    this.addGeneralForm = false
+                    this.addSuggestionForm = false
                     this.title = ''
                     this.description = ''
                 })
         },
 
         duplicateForm(_id) {
-            const payload = this.general.find(item => item._id === _id)
+            const payload = this.proposition.find(item => item._id === _id)
 
             delete payload._id
             delete payload.createdAt
@@ -238,28 +238,28 @@ export default {
 
             payload.active = false
 
-            this.$store.dispatch('competencies/general/createGeneral', payload)
+            this.$store.dispatch('competencies/proposition/createProposition', payload)
         },
 
         deleteForm(_id) {
             const payload = {
                 "_id": _id
             }
-            this.$store.dispatch('competencies/general/deleteGeneral', payload)
+            this.$store.dispatch('competencies/proposition/deleteProposition', payload)
         },
 
         editForm(_id) {
-            this.$router.push({ name: 'GeneralDetail', params: { id: _id } })
+            this.$router.push({ name: 'SuggestionDetail', params: { id: _id } })
         }
     },
 
     computed: {
-        ...mapGetters('competencies/general', ['general']),
+        ...mapGetters('competencies/proposition', ['proposition']),
 
         formsData() {
             const lang = this.$i18n.locale
 
-            return this.general.map(item => {
+            return this.proposition.map(item => {
                 // Handle potential missing keys gracefully
                 const titleObj = item.title.find(t => t.key === lang)
                 const descObj = item.description.find(d => d.key === lang)

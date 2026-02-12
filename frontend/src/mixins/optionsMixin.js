@@ -28,7 +28,9 @@ export default {
 
             const title = list.title?.find(t => t.key === lang)
             const description = list.description?.find(t => t.key === lang)
-            const config = list.config?.filter(item => item).map(item => {
+
+            // Map config array based on the structure: { _id, label: [], question: [] }
+            const config = (list.config || []).map(item => {
                 return {
                     _id: item._id,
                     label: item.label?.find(l => l.key === lang),
@@ -36,7 +38,10 @@ export default {
                 }
             })
 
+            console.log(config)
+
             return {
+                _id: list._id,
                 title: title?.value || '',
                 description: description?.value || '',
                 config: config,
