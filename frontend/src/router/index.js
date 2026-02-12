@@ -6,14 +6,14 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
 // project 
-const Dashboard = () => import('@/projects/views/Dashboard')
-const Student = () => import('@/projects/views/Student')
+const Dashboard = () => import('@/projects/views/dashboard')
+const Student = () => import('@/projects/views/administrator/Student')
 const Login = () => import('@/projects/views/Login')
 
 // competencies
-const general = () => import('@/projects/views/competencies/General')
-const specific = () => import('@/projects/views/competencies/Specific')
-const suggestions = () => import('@/projects/views/competencies/Suggestions')
+const general = () => import('@/projects/views/competencies/general')
+const specific = () => import('@/projects/views/competencies/specific')
+const suggestions = () => import('@/projects/views/competencies/suggestions')
 
 //correspondence
 
@@ -79,16 +79,16 @@ export default new Router({
                         {
                             path: 'general',
                             name: 'General',
-                            component:general
+                            component: general
                         },
                         {
                             path: 'specific',
                             name: 'Specific',
-                            component:specific
-                        },{
+                            component: specific
+                        }, {
                             path: 'suggestions',
                             name: 'Suggestions',
-                            component:suggestions
+                            component: suggestions
                         }
                     ]
                 },
@@ -104,8 +104,8 @@ export default new Router({
                     },
                     children: [
                         {
-                            path:'student',
-                            name:'Student',
+                            path: 'student',
+                            name: 'Student',
                             component: Student
                         }
                     ]
