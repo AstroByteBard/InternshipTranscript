@@ -27,12 +27,11 @@ export default {
     }
   },
   mounted() {
-    // Logic to fetch dynamic data could be added here
-    // this.onInit() 
+    this.onInit() 
   },
   methods: {
     onInit() {
-      // this.$store.dispatch("academic/school") 
+      this.$store.dispatch("administrator/student")
     }
   }
 }

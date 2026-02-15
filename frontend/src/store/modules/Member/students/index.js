@@ -1,0 +1,59 @@
+import Service from "../../../../service/api";
+
+const ServerModule = {
+    namespaced: true,
+    state: {
+        students: [],
+    },
+
+    mutations: {
+        students(state, objs) {
+            state.students = objs;
+        },
+    },
+
+    actions: {
+        students({ commit }, data) {
+            Service.students('get', data, {})
+                .then((response) => {
+                    commit('students', response.data.data)
+                }).catch((err) => {
+                    console.log(err)
+                });
+        },
+        createStudents({ dispatch }, data) {
+            Service.students('post', data, {})
+                .then((response) => {
+                    console.log('สถานนะการบันทึก : ', response.data)
+                    return dispatch('students')
+                }).catch((err) => {
+                    console.log(err)
+                });
+        },
+        updateStudents({ dispatch }, data) {
+            Service.students('put', data, {})
+                .then((response) => {
+                    console.log('สถานนะการแก้ไข : ', response.data)
+                    return dispatch('students')
+                }).catch((err) => {
+                    console.log(err)
+                });
+        },
+        deleteStudents({ dispatch }, data) {
+            Service.students('delete', data, {})
+                .then((response) => {
+                    console.log('สถานนะการลบ : ', response.data)
+                    return dispatch('students')
+                }).catch((err) => {
+                    console.log(err)
+                });
+        },
+    },
+
+    getters: {
+        students(state) {
+            return state.students;
+        },
+    },
+};
+export default ServerModule;

@@ -13,13 +13,25 @@ var objsSchema  = new Schema({
         value          : {type: String, default: null},
     }],
     config          : [{
-        key            : {type: String, default: null},
-        value          : [{
-            key           : {type:String, default: null },
-            value         : {type:String, default: null }
+        label          : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
+        }],
+        question       : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
         }]
     }],
-    active: {type: Boolean, default: false}
+    active          : {type: Boolean, default: false}
 }, { timestamps: true});
+
+objsSchema.pre('findOneAndUpdate', async function(next) {
+    const update = this.getUpdate();
+    if (update.active === true) {
+        await this.model.updateMany({ active: true }, { active: false });
+    }
+    next();
+}); 
+
 
 module.exports = mongoose.model('Competencies_Softskill', objsSchema, 'Competencies_Softskill');

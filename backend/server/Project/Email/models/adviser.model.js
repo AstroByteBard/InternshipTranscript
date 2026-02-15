@@ -12,19 +12,9 @@ var objsSchema  = new Schema({
         key            : {type: String, default: null},
         value          : {type: String, default: null},
     }],
-    program           : {type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Program', default: null },
-    config          : [{
-        label          : [{
-            key            : {type: String, default: null},
-            value          : {type: String, default: null},
-        }],
-        question       : [{
-            key            : {type: String, default: null},
-            value          : {type: String, default: null},
-        }]
-    }],
-    active          : {type: Boolean, default: false}
-}, { timestamps: true});
+    templete        : {type: String , default: null},
+    active          : {type: Boolean, default: false},
+}, { timestamps: true });
 
 objsSchema.pre('findOneAndUpdate', async function(next) {
     const update = this.getUpdate();
@@ -34,5 +24,4 @@ objsSchema.pre('findOneAndUpdate', async function(next) {
     next();
 });
 
-
-module.exports = mongoose.model('Competencies_Hardskill', objsSchema, 'Competencies_Hardskill');
+module.exports = mongoose.model('Email_Adviser', objsSchema, 'Email_Adviser');

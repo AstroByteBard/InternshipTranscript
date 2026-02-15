@@ -1,6 +1,6 @@
 const settingsRoutes = require("../Project/Settings/settings.routes");
 const AcademicRoutes = require("../Project/Academic/Academic.routes");
-const StudentsRoutes = require("../Project/Students/students.routes");
+const MemberRoutes = require("../Project/Member/Member.routes");
 const CompetenciesRoutes = require("../Project/Competencies/Competencies.routes");
 const EmailRoutes = require("../Project/Email/Email.routes")
 
@@ -13,7 +13,7 @@ module.exports = function (app) {
   app.use(path + '/email' , EmailRoutes)
   app.use(path + '/competencies', CompetenciesRoutes) // complete
   app.use(path + '/academic', AcademicRoutes); // complete
-  app.use(path + '/students', StudentsRoutes); // complete
+  app.use(path + '/member', MemberRoutes); // complete
   app.use(path + '/setting', settingsRoutes); // complete
   // app.use(path + '/address', addressRoutes); // complete
 

@@ -3,205 +3,177 @@
         <CRow>
             <CCol>
                 <CButtonGroup class="w-100">
-                    <CButton 
-                     v-for="(value, key) in ['Email Sending', 'Email Template']" 
-                     :key="key"
-                     :color="value === selected ? 'danger' : 'secondary'"
-                     :pressed="value === selected"
-                     @click="selected = value">
-                     {{ value }}
+                    <CButton v-for="(value, key) in ['Email Sending', 'Email Template']" :key="key" class="btn-tab"
+                        :class="{ 'active': value === selected }" @click="selected = value">
+                        {{ value }}
                     </CButton>
                 </CButtonGroup>
             </CCol>
         </CRow>
 
         <div v-if="selected === 'Email Sending'">
-            <CRow class="my-3">
-                <CCol>
-                    <h6> Schools </h6>
-                    <CDropdown 
-                    :togglerText="selectionSchool ? selectionSchool.label : 'Select School'"
-                    addTogglerClasses="w-100"
-                    color="secondary"
-                    >
-                    <CDropdownItem 
-                        v-for="SchoolTitle in schools" 
-                        :key="SchoolTitle._id"
-                        @click="selectionSchool = SchoolTitle"
-                    >
-                        {{ SchoolTitle.label }}
-                    </CDropdownItem>
-                    </CDropdown>
-                </CCol>
-                <CCol>
-                    <h6> Academic Year </h6>
-                    <CDropdown 
-                    :togglerText="`${selectionAcademicYear}`"
-                    addTogglerClasses="w-100"
-                    color="secondary"
-                    >
-                    <CDropdownItem 
-                        v-for="years in academicYears" 
-                        :key="years"
-                        @click="selectionAcademicYear = years"
-                    >
-                        {{ years }}
-                    </CDropdownItem>
-                    </CDropdown>
-                </CCol>
-                <CCol>
-                    <h6> Semester </h6>
-                    <CDropdown 
-                    :togglerText="`${selectionSemester}`"
-                    addTogglerClasses="w-100"
-                    color="secondary"
-                    >
-                    <CDropdownItem 
-                        v-for="sem in semesters" 
-                        :key="sem"
-                        @click="selectionSemester = sem"
-                    >
-                        {{ sem }}
-                    </CDropdownItem>
-                    </CDropdown>
-                </CCol>
-                <CCol class="d-flex flex-column justify-content-end text-end">
-                    <CButton block color="danger" @click="search"> Apply</CButton>
-                </CCol>
-            </CRow>
+            <div v-if="!selectedProgram">
+                <CRow class="my-3">
+                    <CCol>
+                        <h6> Schools </h6>
+                        <CDropdown :togglerText="selectionSchool ? selectionSchool.label : 'Select School'"
+                            addTogglerClasses="w-100" color="secondary">
+                            <CDropdownItem v-for="SchoolTitle in schools" :key="SchoolTitle._id"
+                                @click="selectionSchool = SchoolTitle">
+                                {{ SchoolTitle.label }}
+                            </CDropdownItem>
+                        </CDropdown>
+                    </CCol>
+                    <CCol>
+                        <h6> Academic Year </h6>
+                        <CDropdown :togglerText="`${selectionAcademicYear}`" addTogglerClasses="w-100"
+                            color="secondary">
+                            <CDropdownItem v-for="years in academicYears" :key="years"
+                                @click="selectionAcademicYear = years">
+                                {{ years }}
+                            </CDropdownItem>
+                        </CDropdown>
+                    </CCol>
+                    <CCol>
+                        <h6> Semester </h6>
+                        <CDropdown :togglerText="`${selectionSemester}`" addTogglerClasses="w-100" color="secondary">
+                            <CDropdownItem v-for="sem in semesters" :key="sem" @click="selectionSemester = sem">
+                                {{ sem }}
+                            </CDropdownItem>
+                        </CDropdown>
+                    </CCol>
+                </CRow>
 
-            <CRow>
-                <CCol>
-                    <CDataTable
-                        class="custom-table"
-                        striped
-                        outlined
-                        :items="majorsTable"
-                        :fields=fields
-                        :items-per-page="8"
-                        :pagination="{doubleArrows: false, align: 'end'}"
-                    >
-                        <!-- Evaluation Status -->
-                        <template #evaluationStatus="{ item }">
-                            <td>
-                                <CBadge
-                                :color="item.evaluationStatus === 'COMPLETE' ? 'success' : 'secondary'"
-                                >
-                                {{ item.evaluationStatus === 'COMPLETE' ? 'Complete' : 'Incomplete' }}
-                                </CBadge>
-                            </td>
-                        </template>
+                <CRow>
+                    <CCol>
+                        <CDataTable class="custom-table" outlined :items="programsTable" :fields=fields
+                            :items-per-page="8" :pagination="{ doubleArrows: false, align: 'end' }">
 
-                        <!-- Send Status -->
-                        <template #sendStatus="{ item }">
-                            <td>
-                                <CBadge
-                                :color="sendStatusColor(item.sendStatus)"
-                                >
-                                {{ formatSendStatus(item.sendStatus) }}
-                                </CBadge>
-                            </td>
-                        </template>
+                            <!-- Send Status -->
+                            <template #sendStatus="{ item }">
+                                <td class="text-center">
+                                    <CBadge :color="sendStatusColor(item.sendStatus)" class="px-3 py-2"
+                                        style="font-size: 12px;">
+                                        {{ formatSendStatus(item.sendStatus) }}
+                                    </CBadge>
+                                </td>
+                            </template>
 
-                        <!-- Send Email -->
-                        <template #sendEmail =" { item } ">
-                            <td>
-                                <CButton @click="sendEmail(item._id)">
-                                    <CIcon name="cil-envelope-closed" size="lg"  />
-                                </CButton>
-                            </td>
-                        </template>
+                            <!-- Send Email -->
+                            <template #sendEmail="{ item }">
+                                <td class="text-center">
+                                    <CButton size="sm" color="warning" @click="sendEmail(item._id)">
+                                        <CIcon name="cil-envelope-closed" />
+                                    </CButton>
+                                </td>
+                            </template>
 
-                        <!-- Advisors -->
-                        <template #detail>
-                            <td>
-                                <CIcon name="cil-user" size="lg" />
-                            </td>
-                        </template>
+                            <!-- Students -->
+                            <template #students="{ item }">
+                                <td class="text-center">
+                                    <CButton size="sm" color="info" @click="selectProgram(item)">
+                                        <CIcon name="cil-user" />
+                                    </CButton>
+                                </td>
+                            </template>
+                        </CDataTable>
+                    </CCol>
+                </CRow>
+            </div>
 
-                    </CDataTable>
-                </CCol>
-            </CRow>
         </div>
 
         <div v-if="selected === 'Email Template'">
 
             <!-- Email In Use -->
             <div class="mt-3">
-                <CRow class="mb-3"> 
+                <CRow class="mb-3">
                     <CCol>
-                        <h4>Email in Use </h4> 
+                        <h4>E-mail Template in Use</h4>
                     </CCol>
                 </CRow>
-                <CRow v-for="email in emailsData" :key="email._id">
-                    <CCol v-if="email.activity">
-                        <CCard class="form-card" accent-color="danger">
-                        <CCardBody class="py-3">
-                            <div class="d-flex align-items-center w-100 gap-3">
 
-                            <div class="flex-grow-1 mx-4">
-                                <h5>{{ email.title }}</h5>
-                                <p class="mb-0">{{ email.description }}</p>
-                            </div>
+                <div v-if="activeEmails.length > 0">
+                    <CRow v-for="email in activeEmails" :key="email._id">
+                        <CCol>
+                            <CCard class="form-card" accent-color="danger">
+                                <CCardBody class="py-3">
+                                    <div class="d-flex align-items-center w-100 gap-3">
+                                        <div class="flex-grow-1 mx-4">
+                                            <h5>{{ email.title }}</h5>
+                                            <p>{{ email.description }}</p>
+                                            <p class="mb-0">{{ email.updatedAt }}</p>
+                                        </div>
+                                        <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
+                                            <template #toggler-content>
+                                                <CIcon name="cil-options" />
+                                            </template>
+                                            <CDropdownItem>Edit</CDropdownItem>
+                                            <CDropdownItem @click="duplicateEmail(email._id)">Duplicate</CDropdownItem>
+                                            <CDropdownItem @click="removeEmail(email._id)">Delete</CDropdownItem>
+                                        </CDropdown>
+                                    </div>
+                                </CCardBody>
+                            </CCard>
+                        </CCol>
+                    </CRow>
+                </div>
 
-                            <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                <template #toggler-content>
-                                <CIcon name="cil-options" />
-                                </template>
-                                <CDropdownItem>Edit</CDropdownItem>
-                                <CDropdownItem>Duplicate</CDropdownItem>
-                                <CDropdownItem>Delete</CDropdownItem>
-                            </CDropdown>
-
-                            </div>
-                        </CCardBody>
-                        </CCard>
-                    </CCol>
-                </CRow>
+                <div v-else>
+                    <CCard class="py-5 text-center text-muted bg-light border-dashed">
+                        <div>No Email Template Is in Use</div>
+                    </CCard>
+                </div>
             </div>
 
             <!-- Form In Not Use -->
             <div>
                 <CRow class="d-flex align-items-center mb-3">
                     <CCol>
-                        <h4> Create Forms</h4>
+                        <h4>E-mail Template Created</h4>
                     </CCol>
 
                     <CCol col="auto">
                         <CButton color="danger" @click="addEmailModel = true">
-                            <CIcon name="cil-plus" />&nbsp;New
+                            <CIcon name="cil-plus" />&nbsp;Add
                         </CButton>
                     </CCol>
                 </CRow>
 
-                <CRow v-for="email in emailsData" :key="email._id">
-                    <CCol v-if="!email.activity">
-                        <CCard class="form-card">
-                        <CCardBody class="py-3">
-                            <div class="d-flex align-items-center w-100 gap-3">
+                <div v-if="inactiveEmails.length > 0">
+                    <CRow v-for="email in inactiveEmails" :key="email._id">
+                        <CCol>
+                            <CCard class="form-card">
+                                <CCardBody class="py-3">
+                                    <div class="d-flex align-items-center w-100 gap-3">
+                                        <div class="flex-grow-1 mx-4">
+                                            <h5>{{ email.title }}</h5>
+                                            <p>{{ email.description }}</p>
+                                            <p class="mb-0">{{ email.updatedAt }}</p>
+                                        </div>
+                                        <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
+                                            <template #toggler-content>
+                                                <CIcon name="cil-options" />
+                                            </template>
+                                            <CDropdownItem @click="useTemplate(email._id)">
+                                                Use
+                                            </CDropdownItem>
+                                            <CDropdownItem>Edit</CDropdownItem>
+                                            <CDropdownItem @click="duplicateEmail(email._id)">Duplicate</CDropdownItem>
+                                            <CDropdownItem @click="removeEmail(email._id)">Delete</CDropdownItem>
+                                        </CDropdown>
+                                    </div>
+                                </CCardBody>
+                            </CCard>
+                        </CCol>
+                    </CRow>
+                </div>
 
-                            <div class="flex-grow-1 mx-4">
-                                <h5>{{ email.title }}</h5>
-                                <p class="mb-0">{{ email.description }}</p>
-                            </div>
-
-                            <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                <template #toggler-content>
-                                <CIcon name="cil-options" />
-                                </template>
-                                <CDropdownItem @click="useTemplate(email._id)">
-                                Use
-                                </CDropdownItem>
-                                <CDropdownItem>Edit</CDropdownItem>
-                                <CDropdownItem>Duplicate</CDropdownItem>
-                                <CDropdownItem>Delete</CDropdownItem>
-                            </CDropdown>
-
-                            </div>
-                        </CCardBody>
-                        </CCard>
-                    </CCol>
-                </CRow>
+                <div v-else>
+                    <CCard class="py-5 text-center text-muted bg-light border-dashed">
+                        <div>No Email Template Is Created</div>
+                    </CCard>
+                </div>
             </div>
 
         </div>
@@ -212,14 +184,14 @@
                     Title
                 </label>
 
-                <CInput v-model="title" placeholder="text Title here" />
+                <CInput v-model.lazy="title" placeholder="text Title here" />
             </div>
             <div>
                 <label>
                     template
                 </label>
 
-                <CTextarea v-model="template" :rows="4" :maxlength="200"
+                <CTextarea v-model.lazy="template" :rows="4" :maxlength="200"
                     placeholder="Description of the form questions written to help user use the correct form" />
                 <div class="d-flex justify-content-end">{{ (template || '').length }}/200</div>
             </div>
@@ -229,10 +201,9 @@
             </template>
             <template #footer>
                 <CButton @click="addEmailModel = false">Close</CButton>
-                <CButton @click="submitForm" color="danger">Save</CButton>
+                <CButton @click="createForm" color="danger">Save</CButton>
             </template>
         </CModal>
-
     </div>
 </template>
 
@@ -244,24 +215,23 @@ export default {
     components: {
     },
     data() {
-          return {
+        return {
             selected: 'Email Sending',
+            selectedProgram: null,
             selectionSchool: null,
             selectionAcademicYear: 2568,
             selectionSemester: 1,
             addEmailModel: null,
-            filteredMajors: [],
             fields: [
-                { key: 'majorTitle', label: 'Major' },
-                { key: 'evaluationStatus', label: 'Evaluation Status' },
-                { key: 'sendStatus', label: 'Send Status' },
-                { key: 'sendEmail', label: 'Send Email' },
-                { key: 'detail', label: 'Students' }
+                { key: 'programTitle', label: 'Program Name', _style: 'min-width: 300px' },
+                { key: 'sendStatus', label: 'Send Status', _classes: 'text-center' },
+                { key: 'sendEmail', label: 'Send Email', _classes: 'text-center' },
+                { key: 'students', label: 'Students', _classes: 'text-center' },
             ],
 
             title: '',
             template: '',
-            
+
         }
     },
 
@@ -279,97 +249,129 @@ export default {
 
     methods: {
         onInit() {
-            this.$store.dispatch("academic/school"),
-            this.$store.dispatch("academic/major"),
-            this.$store.dispatch("email/email")
+            this.$store.dispatch("academic/schools/schools")
+            this.$store.dispatch("academic/programs/programs")
+            this.$store.dispatch("email/emailStudent/email")
         },
+
         sendStatusColor(status) {
             switch (status) {
-            case 'SENT': return 'success'
-            case 'FAILED': return 'danger'
-            case 'PENDING': return 'secondary'
-            default: return 'light'
+                case 'SENT': return 'success'
+                case 'FAILED': return 'danger'
+                case 'PENDING': return 'secondary'
+                default: return 'light'
             }
         },
         formatSendStatus(status) {
             return status.charAt(0) + status.slice(1).toLowerCase()
         },
-
-        search() {
-            this.filteredMajors = this.major.filter( major => major.school === this.selectionSchool._id )
+        selectProgram(program) {
+            this.selectedProgram = program
+        },
+        clearSelectedProgram() {
+            this.selectedProgram = null
         },
 
-        submitForm() {
-
+        createForm() {
             const payload = {
                 "title": [
                     {
-                    "key": "th",
-                    "value": "ทดสอบ"
+                        "key": "th",
+                        "value": "ทดสอบ"
                     },
                     {
-                    "key": "en",
-                    "value": this.title
+                        "key": "en",
+                        "value": this.title
                     }
                 ],
                 "description": [
                     {
-                    "key": "th",
-                    "value": "test"
+                        "key": "th",
+                        "value": "test"
                     },
                     {
-                    "key": "en",
-                    "value": "test"
+                        "key": "en",
+                        "value": "test"
                     }
                 ],
                 "templete": this.template,
-                "activity": false,
+                "active": false,
                 "group": "69730cdf31640a4d402b0670"
             }
 
-            this.$store.dispatch('email/createEmail', payload)
-            .then(() => {
-                this.addEmailModel = false
-                this.title = ''
-                this.template = ''
-            })
-
+            this.$store.dispatch('email/emailStudent/createEmail', payload)
+                .then(() => {
+                    this.addEmailModel = false
+                    this.title = ''
+                    this.template = ''
+                })
         },
 
-        sendEmail(_id){
-            const activeEmailTemplate = this.emailStudent.find(
-                email => email.activity === true
-            )
-
+        useTemplate(_id) {
             const payload = {
-                "_id": _id ,
-                "templete" : activeEmailTemplate._id
+                "_id": _id,
+                "active": true,
             }
+            this.$store.dispatch('email/emailStudent/updateEmail', payload)
+        },
 
-            console.log(payload)
-            this.$store.dispatch('academic/sendMajor', payload)
-        }
+        duplicateEmail(_id) {
+            const email = this.emailStudent.find(email => email._id === _id)
+            if (email) {
+                // Clone the object
+                const payload = JSON.parse(JSON.stringify(email))
+
+                // Remove keys that should not be duplicated
+                delete payload._id
+                delete payload.createdAt
+                delete payload.updatedAt
+                delete payload.__v
+
+                // Reset status for the new copy
+                payload.active = false
+
+                this.$store.dispatch('email/emailStudent/createEmail', payload)
+            }
+        },
+
+        sendEmail(_id) {
+            const payload = {
+                "_id": _id,
+                "templete": "6973168131640a4d402b0682"
+            }
+            this.$store.dispatch('email/emailStudent/sendEmail', payload)
+        },
+        removeEmail(_id) {
+            const payload = {
+                "_id": _id,
+            }
+            this.$store.dispatch('email/emailStudent/deleteEmail', payload)
+        },
     },
 
     computed: {
-        ...mapGetters('academic', ['school','major']),
-        ...mapGetters('email',['emailStudent']),
+        ...mapGetters('academic/schools', { storedSchools: 'schools' }),
+        ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
+        ...mapGetters('email/emailStudent', ['emailStudent']),
 
-        majorsTable() {
+        programsTable() {
             const lang = this.$i18n.locale
-            const source = this.filteredMajors.length ? this.filteredMajors : this.major
+            let source = this.storedPrograms
+            if (this.selectionSchool) {
+                source = source.filter(program => program.school === this.selectionSchool._id)
+            }
 
             return source.map(item => {
-                
-                const title = item.title.find(t => t.key === lang).value
+
+                const foundTitle = item.title.find(t => t.key === lang)
+                const title = foundTitle ? foundTitle.value : ''
 
                 return {
-                _id: item._id,
-                majorTitle: title,
-                evaluationStatus: 'Incomplete', // มาจาก backend
-                sendStatus: 'Pending',             // มาจาก backend
-                sendEmail: true,
-                detail: true
+                    _id: item._id,
+                    programTitle: title,
+                    sendStatus: 'PENDING',
+                    sendEmail: true,
+                    students: item.students || [],
                 }
             })
         },
@@ -377,23 +379,26 @@ export default {
         emailsData() {
             const lang = this.$i18n.locale
 
+            if (!this.emailStudent) return []
+
             return this.emailStudent.map(item => {
                 const title = item.title.find(t => t.key === lang).value
                 const description = item.description.find(d => d.key === lang).value
-                
+
                 return {
                     _id: item._id,
                     title: title,
                     description: description,
-                    activity: item.activity,
-                    template: item.description
+                    active: item.active,
+                    template: item.description,
+                    updatedAt: this.moment(item.updatedAt).format('DD/MM/YYYY HH:mm'),
                 }
             })
         },
 
-        schools(){
+        schools() {
             const lang = this.$i18n.locale
-            return this.school.map(item => ({
+            return this.storedSchools.map(item => ({
                 _id: item._id,
                 label: item.title.find(t => t.key === lang).value
             }))
@@ -404,13 +409,21 @@ export default {
             const current = new Date().getFullYear() + 543  // พ.ศ.
             const years = []
             for (let y = start; y <= current; y++) {
-            years.push(y)
+                years.push(y)
             }
             return years.reverse() // ปีล่าสุดขึ้นก่อน
         },
 
         semesters() {
-            return ['1','2','3']
+            return ['1', '2', '3']
+        },
+
+        activeEmails() {
+            return this.emailsData.filter(email => email.active)
+        },
+
+        inactiveEmails() {
+            return this.emailsData.filter(email => !email.active)
         }
     },
 
@@ -421,10 +434,45 @@ export default {
 </script>
 
 <style>
+.custom-table tbody {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
 
 .custom-table thead th {
-    background-color: #343a40; /* สีพื้นหลัง header */
-    color: #ffffff;           /* สีตัวอักษร */
+    background-color: #8c4646;
+    color: #ffffff;
     font-weight: 600;
+    text-align: center;
+    border: 1px solid #d8dbe0;
+    vertical-align: middle;
+}
+
+.custom-table thead th:first-child {
+    text-align: left;
+    padding-left: 20px;
+}
+
+.custom-table tbody td {
+    vertical-align: middle;
+}
+
+.btn-tab {
+    background-color: #fff;
+    color: #3c4b64;
+    border: solid #d8dbe0;
+    padding: 10px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-tab:hover {
+    background-color: #f0f0f0;
+}
+
+.btn-tab.active {
+    background-color: #8c4646 !important;
+    color: #fff !important;
+    border-color: #8c4646 !important;
 }
 </style>

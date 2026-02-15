@@ -1,18 +1,20 @@
-import emailAdviser from "./adviser";
-import emailStudent from "./student";
+import students from "./students";
+import advisors from "./advisors";
+import admin from "./admin";
 
 const ServerModule = {
     namespaced: true,
     modules: {
-        emailAdviser,
-        emailStudent
+        students,
+        advisors,
+        admin,
     },
 
     state: {
     },
 
     mutations: {
-    
+
     },
 
     actions: {
@@ -20,7 +22,7 @@ const ServerModule = {
     },
 
     getters: {
-        
+
     },
 };
 

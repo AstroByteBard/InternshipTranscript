@@ -1,11 +1,13 @@
-import emailAdviser from "./adviser";
-import emailStudent from "./student";
+import general from "./general";
+import specific from "./specific";
+import proposition from "./proposition";
 
 const ServerModule = {
     namespaced: true,
     modules: {
-        emailAdviser,
-        emailStudent
+        general,
+        specific,
+        proposition,
     },
 
     state: {
