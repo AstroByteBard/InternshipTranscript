@@ -1,5 +1,4 @@
-import
-{
+import {
   cib500px5,
   cib500px,
   cibAboutMe,
@@ -2037,7 +2036,8 @@ export const iconsSet = Object.assign({}, { logo }, {
   cilWrapText,
   cilZoomIn,
   cilZoomOut
-}, {cifAe,
+}, {
+  cifAe,
   cifAg,
   cifAo,
   cifAm,

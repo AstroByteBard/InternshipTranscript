@@ -1,35 +1,46 @@
 <template>
   <CRow>
+    <!-- Total Student -->
     <CCol sm="6" lg="4">
-      <CCard>
-        <CCardBody class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-volume">Total Students</div>
-            <div class="text-value-lg mt-2">4000</div>
+      <CCard class="border-0 shadow-sm rounded-lg" style="border-radius: 12px;">
+        <CCardBody class="p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="p-3 rounded-circle" style="background-color: #fee2e2;">
+              <CIcon name="cil-graduation-cap" height="32" style="color: #b91c1c;" />
+            </div>
           </div>
-          <CIcon name="cil-people" height="24" class="text-info" />
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Student</div>
+          <div class="h2 font-weight-bold mb-0 text-dark">1,245</div>
         </CCardBody>
       </CCard>
     </CCol>
+
+    <!-- Total Evaluated -->
     <CCol sm="6" lg="4">
-      <CCard>
-        <CCardBody class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-volume">Evaluated</div>
-            <div class="text-value-lg mt-2">2500</div>
+      <CCard class="border-0 shadow-sm rounded-lg" style="border-radius: 12px;">
+        <CCardBody class="p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="p-3 rounded-circle" style="background-color: #dcfce7;">
+              <CIcon name="cil-check-circle" height="32" style="color: #15803d;" />
+            </div>
           </div>
-          <CIcon name="cil-user-follow" height="24" class="text-success" />
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Evaluated</div>
+          <div class="h2 font-weight-bold mb-0 text-dark">856</div>
         </CCardBody>
       </CCard>
     </CCol>
+
+    <!-- Total Not Evaluated -->
     <CCol sm="6" lg="4">
-      <CCard>
-        <CCardBody class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="text-volume">Not Evaluated</div>
-            <div class="text-value-lg mt-2">1500</div>
+      <CCard class="border-0 shadow-sm rounded-lg" style="border-radius: 12px;">
+        <CCardBody class="p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="p-3 rounded-circle" style="background-color: #fee2e2;">
+              <CIcon name="cil-x-circle" height="32" style="color: #b91c1c;" />
+            </div>
           </div>
-          <CIcon name="cil-user-unfollow" height="24" class="text-danger" />
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Not Evaluated</div>
+          <div class="h2 font-weight-bold mb-0 text-dark">389</div>
         </CCardBody>
       </CCard>
     </CCol>
@@ -46,14 +57,11 @@ export default {
 </script>
 
 <style scoped>
-.text-volume {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #3c4b64;
-}
-
-.text-value-lg {
-  font-size: 2.5rem;
-  font-weight: 500;
+.rounded-circle {
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

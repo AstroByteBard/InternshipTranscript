@@ -16,31 +16,15 @@
                 <CRow class="my-3">
                     <CCol>
                         <h6> Schools </h6>
-                        <CDropdown :togglerText="selectionSchool ? selectionSchool.label : 'Select School'"
-                            addTogglerClasses="w-100" color="secondary">
-                            <CDropdownItem v-for="SchoolTitle in schools" :key="SchoolTitle._id"
-                                @click="selectionSchool = SchoolTitle">
-                                {{ SchoolTitle.label }}
-                            </CDropdownItem>
-                        </CDropdown>
+                        <CSelect :options="schools" :value.sync="selectionSchool" placeholder="Select School" />
                     </CCol>
                     <CCol>
                         <h6> Academic Year </h6>
-                        <CDropdown :togglerText="`${selectionAcademicYear}`" addTogglerClasses="w-100"
-                            color="secondary">
-                            <CDropdownItem v-for="years in academicYears" :key="years"
-                                @click="selectionAcademicYear = years">
-                                {{ years }}
-                            </CDropdownItem>
-                        </CDropdown>
+                        <CSelect :options="academicYears" :value.sync="selectionAcademicYear" />
                     </CCol>
                     <CCol>
                         <h6> Semester </h6>
-                        <CDropdown :togglerText="`${selectionSemester}`" addTogglerClasses="w-100" color="secondary">
-                            <CDropdownItem v-for="sem in semesters" :key="sem" @click="selectionSemester = sem">
-                                {{ sem }}
-                            </CDropdownItem>
-                        </CDropdown>
+                        <CSelect :options="semesters" :value.sync="selectionSemester" />
                     </CCol>
                 </CRow>
 
@@ -363,7 +347,7 @@ export default {
             const lang = this.$i18n.locale
             let source = this.storedPrograms
             if (this.selectionSchool) {
-                source = source.filter(program => program.school === this.selectionSchool._id)
+                source = source.filter(program => program.school === this.selectionSchool)
             }
 
             return source.map(item => {
@@ -404,7 +388,7 @@ export default {
         schools() {
             const lang = this.$i18n.locale
             return this.storedSchools.map(item => ({
-                _id: item._id,
+                value: item._id,
                 label: item.title.find(t => t.key === lang).value
             }))
         },

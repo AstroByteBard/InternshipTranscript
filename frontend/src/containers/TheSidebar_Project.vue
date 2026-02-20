@@ -90,7 +90,7 @@ export default {
               },
               {
                 name: 'Specific',
-                to: '/Competencies/Specific' 
+                to: '/Competencies/Specific'
               },
               {
                 name: 'Suggestions',
@@ -105,24 +105,10 @@ export default {
             to: '/documents'
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Administrator',
-            to: '/administrator',
             icon: 'cil-lightbulb',
-            items: [
-              {
-                name: 'Admin',
-                to: '/administrator/admin'
-              },
-              {
-                name: 'Advisor',
-                to: '/administrator/advisor'
-              },
-              {
-                name: 'Student',
-                to: '/administrator/student'
-              }
-            ]
+            to: '/administrator'
           },
 
           {

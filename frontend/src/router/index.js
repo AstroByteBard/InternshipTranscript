@@ -10,7 +10,10 @@ const Dashboard = () => import('@/projects/views/Dashboard')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
-const Student = () => import('@/projects/views/administrator/Student')
+const Administrator = () => import('@/projects/views/administrator')
+
+//documents
+const Documents = () => import('@/projects/views/Documents/index')
 
 // competencies
 const general = () => import('@/projects/views/competencies/General/index')
@@ -114,21 +117,15 @@ export default new Router({
                 },
 
                 {
+                    path: 'documents',
+                    name: 'Documents',
+                    component: Documents
+                },
+
+                {
                     path: 'administrator',
-                    redirect: '/administrator/student',
                     name: 'administrator',
-                    component: {
-                        render(c) {
-                            return c('router-view')
-                        }
-                    },
-                    children: [
-                        {
-                            path: 'student',
-                            name: 'Student',
-                            component: Student
-                        }
-                    ]
+                    component: Administrator
                 },
             ]
         }
