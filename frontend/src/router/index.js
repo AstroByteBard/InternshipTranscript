@@ -6,26 +6,27 @@ const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
 
 // project 
-const Dashboard = () => import('@/projects/views/Dashboard')
+const Dashboard = () => import('@/projects/views/administration/Dashboard')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
-const Administrator = () => import('@/projects/views/administrator')
+const Administrator = () => import('@/projects/views/administration/Administrator')
+const AdminForm = () => import('@/projects/views/administration/Form')
 
 //documents
-const Documents = () => import('@/projects/views/Documents/index')
+const Documents = () => import('@/projects/views/administration/documents/index')
 
 // competencies
-const general = () => import('@/projects/views/competencies/General/index')
-const GeneralDetail = () => import('@/projects/views/competencies/General/Detail')
-const specific = () => import('@/projects/views/competencies/Specific/index')
-const SpecificDetail = () => import('@/projects/views/competencies/Specific/Detail')
-const suggestions = () => import('@/projects/views/competencies/Suggestions/index')
-const SuggestionDetail = () => import('@/projects/views/competencies/Suggestions/Detail')
+const general = () => import('@/projects/views/administration/competencies/General/index')
+const GeneralDetail = () => import('@/projects/views/administration/competencies/General/Detail')
+const specific = () => import('@/projects/views/administration/competencies/Specific/index')
+const SpecificDetail = () => import('@/projects/views/administration/competencies/Specific/Detail')
+const suggestions = () => import('@/projects/views/administration/competencies/Suggestions/index')
+const SuggestionDetail = () => import('@/projects/views/administration/competencies/Suggestions/Detail')
 
 //correspondence
-const Email_advisors = () => import('@/projects/views/correspondence/Advisors')
-const Email_student = () => import('@/projects/views/correspondence/Student')
+const Email_advisors = () => import('@/projects/views/administration/correspondence/Advisors')
+const Email_student = () => import('@/projects/views/administration/correspondence/Student')
 
 
 Vue.use(Router)
@@ -126,6 +127,11 @@ export default new Router({
                     path: 'administrator',
                     name: 'administrator',
                     component: Administrator
+                },
+                {
+                    path: 'administration/form',
+                    name: 'AdministrationForm',
+                    component: AdminForm
                 },
             ]
         }

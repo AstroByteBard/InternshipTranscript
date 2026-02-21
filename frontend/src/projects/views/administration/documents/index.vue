@@ -1,6 +1,6 @@
 <template>
     <div>
-        <CRow class="mb-4">
+        <CRow class="mb-4 align-items-center">
             <CCol sm="6">
                 <div class="custom-segmented-control">
                     <CButtonGroup class="w-100 h-100">
@@ -12,6 +12,11 @@
                     </CButtonGroup>
                 </div>
             </CCol>
+            <CCol sm="6" class="d-flex justify-content-end">
+                <CButton class="btn-filter-action btn-filter-red">
+                    <CIcon name="cil-plus" class="mr-2" /> Create New Document
+                </CButton>
+            </CCol>
         </CRow>
 
         <div v-if="selected === 'Document'">
@@ -20,34 +25,19 @@
                     <CCard class="mb-4 filter-card">
                         <CCardBody class="p-3">
                             <CRow class="align-items-center mb-3">
-                                <CCol md="8">
+                                <CCol md="12">
                                     <div class="search-input-wrapper">
                                         <CIcon name="cil-search" class="search-icon" />
                                         <input type="text" class="form-control search-input"
                                             placeholder="Search Document..." />
                                     </div>
                                 </CCol>
-                                <CCol md="4" class="d-flex justify-content-end align-items-center">
-                                    <CButton class="btn-filter-action btn-filter-red">
-                                        <CIcon name="cil-envelope-closed" class="mr-2" /> Compose New Document
-                                    </CButton>
-                                </CCol>
                             </CRow>
                         </CCardBody>
                     </CCard>
 
                     <CCard class="mb-4">
-                        <div class="custom-tabs-wrapper">
-                            <div class="custom-tab px-4" :class="{ 'active': subTab === 'useDocument' }"
-                                @click="subTab = 'useDocument'">
-                                Use Document Format
-                            </div>
-                            <div class="custom-tab px-4" :class="{ 'active': subTab === 'notUseDocument' }"
-                                @click="subTab = 'notUseDocument'">
-                                Not Use Document Format
-                            </div>
-                        </div>
-                        <CCardBody v-if="subTab === 'useDocument'" class="p-0">
+                        <CCardBody class="p-0">
                             <CDataTable class="custom-table mb-0" :items="documentsData" :fields="documentFields"
                                 :items-per-page="5" hover>
                                 <template #nameContent="{ item }">
@@ -60,33 +50,18 @@
                                                 <div class="font-weight-bold" style="color: #1f2937; font-size: 14px;">
                                                     {{ item.name }}</div>
                                                 <div class="text-muted small">{{ item.type }} &bull; {{ item.downloads
-                                                    }} downloads</div>
+                                                }} downloads</div>
                                             </div>
                                         </div>
                                     </td>
                                 </template>
 
-                                <template #category="{ item }">
+                                <template #status="{ item }">
                                     <td class="align-middle">
-                                        <CBadge class="custom-badge">{{ item.category }}</CBadge>
-                                    </td>
-                                </template>
-
-                                <template #size="{ item }">
-                                    <td class="align-middle text-muted" style="font-size: 13px; font-weight: 500;">
-                                        {{ item.size }}
-                                    </td>
-                                </template>
-
-                                <template #uploadedBy="{ item }">
-                                    <td class="align-middle text-muted" style="font-size: 13px; font-weight: 500;">
-                                        {{ item.uploadedBy }}
-                                    </td>
-                                </template>
-
-                                <template #uploadDate="{ item }">
-                                    <td class="align-middle text-muted" style="font-size: 13px; font-weight: 500;">
-                                        {{ item.uploadDate }}
+                                        <CBadge :color="item.status === 'Active' ? 'success' : 'secondary'"
+                                            class="custom-badge">
+                                            {{ item.status }}
+                                        </CBadge>
                                     </td>
                                 </template>
 
@@ -101,9 +76,6 @@
                                     </td>
                                 </template>
                             </CDataTable>
-                        </CCardBody>
-                        <CCardBody v-if="subTab === 'notUseDocument'">
-                            <p>Not Use Document Format Data Table Placeholder</p>
                         </CCardBody>
                     </CCard>
                 </CCol>
@@ -133,21 +105,17 @@ export default {
     data() {
         return {
             selected: 'Document',
-            subTab: 'useDocument',
             documentFields: [
                 { key: 'nameContent', label: 'NAME' },
-                { key: 'category', label: 'CATEGORY' },
-                { key: 'size', label: 'SIZE' },
-                { key: 'uploadedBy', label: 'UPLOADED BY' },
-                { key: 'uploadDate', label: 'UPLOAD DATE' },
+                { key: 'status', label: 'STATUS' },
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-right pe-4', sorter: false, filter: false },
             ],
             documentsData: [
-                { id: 1, name: 'Student Handbook 2023-2024.pdf', type: 'PDF', downloads: 1245, category: 'Policy', size: '2.4 MB', uploadedBy: 'Admin Office', uploadDate: '2023-08-15' },
-                { id: 2, name: 'Academic Calendar 2024.pdf', type: 'PDF', downloads: 856, category: 'Policy', size: '1.1 MB', uploadedBy: 'Registrar', uploadDate: '2023-09-01' },
-                { id: 3, name: 'Enrollment Form.docx', type: 'Word', downloads: 2300, category: 'Form', size: '45 KB', uploadedBy: 'Registrar', uploadDate: '2023-07-20' },
-                { id: 4, name: 'Q3 Financial Report.xlsx', type: 'Excel', downloads: 12, category: 'Report', size: '850 KB', uploadedBy: 'Finance Dept', uploadDate: '2023-10-15' },
-                { id: 5, name: 'BSCS Curriculum.pdf', type: 'PDF', downloads: 560, category: 'Curriculum', size: '3.2 MB', uploadedBy: 'Dean of Computing', uploadDate: '2022-05-10' },
+                { id: 1, name: 'Student Handbook 2023-2024.pdf', type: 'PDF', downloads: 1245, status: 'Active' },
+                { id: 2, name: 'Academic Calendar 2024.pdf', type: 'PDF', downloads: 856, status: 'Active' },
+                { id: 3, name: 'Enrollment Form.docx', type: 'Word', downloads: 2300, status: 'Inactive' },
+                { id: 4, name: 'Q3 Financial Report.xlsx', type: 'Excel', downloads: 12, status: 'Active' },
+                { id: 5, name: 'BSCS Curriculum.pdf', type: 'PDF', downloads: 560, status: 'Active' },
             ]
         }
     },
@@ -271,36 +239,6 @@ export default {
     background-color: #b91c1c;
     border-color: #b91c1c;
     color: #ffffff;
-}
-
-.custom-tabs-wrapper {
-    display: flex;
-    border-bottom: 2px solid #f3f4f6;
-    background-color: #ffffff;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    padding-top: 12px;
-}
-
-.custom-tab {
-    cursor: pointer;
-    padding-bottom: 12px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #6b7280;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: all 0.2s ease-in-out;
-}
-
-.custom-tab:hover {
-    color: #4b5563;
-}
-
-.custom-tab.active {
-    color: #dc2626;
-    border-bottom: 2px solid #dc2626;
-    font-weight: 600;
 }
 
 /* Data Table Overrides */

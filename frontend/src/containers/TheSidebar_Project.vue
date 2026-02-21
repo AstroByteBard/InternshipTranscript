@@ -110,6 +110,12 @@ export default {
             icon: 'cil-lightbulb',
             to: '/administrator'
           },
+          {
+            _name: 'CSidebarNavItem',
+            name: 'Form',
+            icon: 'cil-pencil',
+            to: '/administration/form'
+          },
 
           {
             _name: 'CSidebarNavTitle',

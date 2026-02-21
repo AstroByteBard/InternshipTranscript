@@ -1,8 +1,8 @@
 <template>
     <div>
-        <CRow>
-            <CCol>
-                <div class="custom-segmented-control mb-4">
+        <CRow class="mb-4 align-items-center">
+            <CCol md="6">
+                <div class="custom-segmented-control">
                     <CButtonGroup class="w-100 h-100">
                         <CButton v-for="(value, key) in ['StudentData', 'Email Template']" :key="key"
                             class="segment-btn font-weight-bold" :class="{ 'active': value === selected }"
@@ -11,6 +11,14 @@
                         </CButton>
                     </CButtonGroup>
                 </div>
+            </CCol>
+            <CCol md="6" class="d-flex justify-content-end">
+                <CButton class="btn-filter-action mr-2">
+                    <CIcon name="cil-file" class="mr-2" /> PreviewForm
+                </CButton>
+                <CButton class="btn-filter-action btn-filter-red">
+                    <CIcon name="cil-envelope-open" class="mr-2" /> PreviewEmail
+                </CButton>
             </CCol>
         </CRow>
 
