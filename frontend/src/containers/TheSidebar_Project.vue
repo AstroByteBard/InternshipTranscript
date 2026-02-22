@@ -63,20 +63,10 @@ export default {
             icon: 'cil-window-restore'
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Correspondence',
-            to: '/Correspondence',
+            to: '/correspondence',
             icon: 'cil-envelope-closed',
-            items: [
-              {
-                name: 'Email to advisors',
-                to: '/correspondence/Advisors'
-              },
-              {
-                name: 'Email to student',
-                to: '/correspondence/Student'
-              }
-            ]
           },
           {
             _name: 'CSidebarNavDropdown',

@@ -4,10 +4,11 @@
             <CCol md="6">
                 <div class="custom-segmented-control">
                     <CButtonGroup class="w-100 h-100">
-                        <CButton v-for="(value, key) in ['StudentData', 'Email Template']" :key="key"
-                            class="segment-btn font-weight-bold" :class="{ 'active': value === selected }"
-                            @click="selected = value">
-                            {{ value }}
+                        <CButton class="segment-btn font-weight-bold active" @click="selected = 'StudentData'">
+                            Student
+                        </CButton>
+                        <CButton class="segment-btn font-weight-bold" @click="selected = 'AdviserData'">
+                            Adviser
                         </CButton>
                     </CButtonGroup>
                 </div>
@@ -21,7 +22,6 @@
                 </CButton>
             </CCol>
         </CRow>
-
         <div v-if="selected === 'StudentData'">
             <div v-if="!selectedProgram">
                 <CCard class="mb-4 filter-card">
@@ -78,175 +78,236 @@
                     </CCardBody>
                 </CCard>
 
-                <CRow>
-                    <CCol>
-                        <CCard class="table-card border-0 shadow-sm mb-4">
-                            <CDataTable class="custom-table mb-0" :items="programsTable" :fields=fields
-                                :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePage">
+                <CTabs variant="tabs" class="custom-tabs mt-4">
+                    <CTab title="StudentData" active>
+                        <CRow class="mt-3">
+                            <CCol>
+                                <CCard class="table-card border-0 shadow-sm mb-4">
+                                    <CDataTable class="custom-table mb-0" :items="programsTable" :fields=fields
+                                        :items-per-page="itemsPerPage" :pagination="false" hover
+                                        :activePage.sync="activePage">
 
-                                <!-- Under Table Pagination & Info -->
-                                <template #under-table>
-                                    <div class="d-flex justify-content-between align-items-center px-4 py-3"
-                                        style="border-top: 1px solid #f3f4f6;">
-                                        <div class="text-muted" style="font-size: 13px;">
-                                            Showing {{ tableStartItem }} to {{ tableEndItem }} of {{
-                                                programsTable.length }} results
-                                        </div>
-                                        <CPagination :activePage.sync="activePage" :pages="totalPages"
-                                            :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
+                                        <!-- Under Table Pagination & Info -->
+                                        <template #under-table>
+                                            <div class="d-flex justify-content-between align-items-center px-4 py-3"
+                                                style="border-top: 1px solid #f3f4f6;">
+                                                <div class="text-muted" style="font-size: 13px;">
+                                                    Showing {{ tableStartItem }} to {{ tableEndItem }} of {{
+                                                        programsTable.length }} results
+                                                </div>
+                                                <CPagination :activePage.sync="activePage" :pages="totalPages"
+                                                    :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
+                                            </div>
+                                        </template>
+
+                                        <!-- Send Status -->
+                                        <template #sendStatus="{ item }">
+                                            <td class="text-center align-middle">
+                                                <div class="status-pill" :class="getStatusClass(item.sendStatus)">
+                                                    <CIcon :name="getStatusIcon(item.sendStatus)" size="sm"
+                                                        class="mr-1" />
+                                                    {{ formatSendStatus(item.sendStatus) }}
+                                                </div>
+                                            </td>
+                                        </template>
+
+                                        <!-- Actions -->
+                                        <template #actions="{ item }">
+                                            <td class="text-center align-middle">
+                                                <CButton class="btn-action-icon mr-2" @click="sendEmail(item._id)"
+                                                    title="Send Email">
+                                                    <CIcon name="cil-envelope-closed" />
+                                                </CButton>
+                                                <CButton class="btn-action-icon" @click="selectProgram(item)"
+                                                    title="View Details">
+                                                    <CIcon name="cil-options" />
+                                                </CButton>
+                                            </td>
+                                        </template>
+                                    </CDataTable>
+                                </CCard>
+                            </CCol>
+                        </CRow>
+                    </CTab>
+
+                    <CTab title="Email">
+                        <!-- Entire Email Tab Empty State -->
+                        <div v-if="emailsData.length === 0" class="mt-4">
+                            <CCard class="text-center border-0 shadow-sm" style="border-radius: 8px;">
+                                <CCardBody class="d-flex flex-column justify-content-center align-items-center"
+                                    style="min-height: 400px; padding: 3rem;">
+                                    <div class="mb-3">
+                                        <CIcon name="cil-description"
+                                            style="width: 48px; height: 48px; color: #cbd5e1;" />
                                     </div>
-                                </template>
+                                    <h5 class="font-weight-bold mb-2" style="color: #1e293b;">Email Templates</h5>
+                                    <p class="mb-4"
+                                        style="max-width: 450px; font-size: 14px; color: #64748b; line-height: 1.5;">
+                                        Manage your standard response templates here. This feature is currently under
+                                        development.
+                                    </p>
+                                    <CButton color="danger" class="font-weight-bold px-4"
+                                        style="border-radius: 6px; padding-top: 8px; padding-bottom: 8px;"
+                                        @click="addEmailModel = true">
+                                        Create New Template
+                                    </CButton>
+                                </CCardBody>
+                            </CCard>
+                        </div>
 
-                                <!-- Send Status -->
-                                <template #sendStatus="{ item }">
-                                    <td class="text-center align-middle">
-                                        <div class="status-pill" :class="getStatusClass(item.sendStatus)">
-                                            <CIcon :name="getStatusIcon(item.sendStatus)" size="sm" class="mr-1" />
-                                            {{ formatSendStatus(item.sendStatus) }}
-                                        </div>
-                                    </td>
-                                </template>
-
-                                <!-- Actions -->
-                                <template #actions="{ item }">
-                                    <td class="text-center align-middle">
-                                        <CButton class="btn-action-icon mr-2" @click="sendEmail(item._id)"
-                                            title="Send Email">
-                                            <CIcon name="cil-envelope-closed" />
-                                        </CButton>
-                                        <CButton class="btn-action-icon" @click="selectProgram(item)"
-                                            title="View Details">
-                                            <CIcon name="cil-options" />
-                                        </CButton>
-                                    </td>
-                                </template>
-                            </CDataTable>
-                        </CCard>
-                    </CCol>
-                </CRow>
+                        <div v-else>
+                            <CCard class="table-card border-0 shadow-sm mt-4">
+                                <CCardHeader
+                                    class="d-flex justify-content-between align-items-center bg-white border-bottom-0 pt-4 pb-3 px-4">
+                                    <h5 class="mb-0 font-weight-bold" style="color: #1e293b;">Available Templates</h5>
+                                    <CButton color="danger" size="sm" class="font-weight-bold px-3 py-2"
+                                        style="border-radius: 6px;" @click="addEmailModel = true">
+                                        <CIcon name="cil-file" class="mr-2" /> Create New Template
+                                    </CButton>
+                                </CCardHeader>
+                                <CCardBody class="p-0">
+                                    <div class="table-responsive">
+                                        <table class="table custom-template-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th class="pl-4" style="width: 40%;">TEMPLATE DETAILS</th>
+                                                    <th style="width: 20%;" class="text-center">CREATED DATE</th>
+                                                    <th style="width: 20%;" class="text-center">ACTIVE STATUS</th>
+                                                    <th style="width: 20%;" class="text-right pr-4">ACTIONS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="email in emailsData" :key="email._id">
+                                                    <td class="pl-4">
+                                                        <div class="font-weight-bold"
+                                                            style="color: #1e293b; font-size: 15px;">{{
+                                                                email.title }}</div>
+                                                        <div class="text-muted mt-1" style="font-size: 13px;">{{
+                                                            email.description }}</div>
+                                                    </td>
+                                                    <td class="text-center text-muted" style="font-size: 14px;">
+                                                        <CIcon name="cil-clock" size="sm" class="mr-1" /> {{
+                                                            email.updatedAt.split(' ')[0]
+                                                        }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div v-if="email.active"
+                                                            class="d-inline-flex align-items-center font-weight-bold"
+                                                            style="color: #dc2626;">
+                                                            <CIcon name="cil-check-circle" class="mr-1"
+                                                                style="color: #dc2626; width: 16px; height: 16px;" />
+                                                            Active
+                                                        </div>
+                                                        <div v-else
+                                                            class="d-inline-flex align-items-center text-muted cursor-pointer"
+                                                            @click="useTemplate(email._id)"
+                                                            title="Click to make active">
+                                                            <div class="mr-2"
+                                                                style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
+                                                            </div> Inactive
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-right pr-4">
+                                                        <CButton variant="ghost" color="secondary" size="sm"
+                                                            class="btn-action-icon mr-2" @click="openEditModal(email)"
+                                                            title="Edit">
+                                                            <CIcon name="cil-pencil" />
+                                                        </CButton>
+                                                        <CButton variant="ghost" color="secondary" size="sm"
+                                                            class="btn-action-icon" @click="removeEmail(email._id)"
+                                                            title="Delete">
+                                                            <CIcon name="cil-trash" />
+                                                        </CButton>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </CCardBody>
+                            </CCard>
+                        </div>
+                    </CTab>
+                </CTabs>
             </div>
 
         </div>
 
-        <div v-if="selected === 'Email Template'">
-
-            <!-- Email In Use -->
-            <div class="mt-3">
-                <CRow class="mb-3">
-                    <CCol>
-                        <h4>E-mail Template in Use</h4>
-                    </CCol>
-                </CRow>
-
-                <div v-if="activeEmails.length > 0">
-                    <CRow v-for="email in activeEmails" :key="email._id">
-                        <CCol>
-                            <CCard class="form-card" accent-color="danger">
-                                <CCardBody class="py-3">
-                                    <div class="d-flex align-items-center w-100 gap-3">
-                                        <div class="flex-grow-1 mx-4">
-                                            <h5>{{ email.title }}</h5>
-                                            <p>{{ email.description }}</p>
-                                            <p class="mb-0">{{ email.updatedAt }}</p>
-                                        </div>
-                                        <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                            <template #toggler-content>
-                                                <CIcon name="cil-options" />
-                                            </template>
-                                            <CDropdownItem>Edit</CDropdownItem>
-                                            <CDropdownItem @click="duplicateEmail(email._id)">Duplicate</CDropdownItem>
-                                            <CDropdownItem @click="removeEmail(email._id)">Delete</CDropdownItem>
-                                        </CDropdown>
-                                    </div>
-                                </CCardBody>
-                            </CCard>
-                        </CCol>
-                    </CRow>
-                </div>
-
-                <div v-else>
-                    <CCard class="py-5 text-center text-muted bg-light border-dashed">
-                        <div>No Email Template Is in Use</div>
-                    </CCard>
-                </div>
-            </div>
-
-            <!-- Form In Not Use -->
-            <div>
-                <CRow class="d-flex align-items-center mb-3">
-                    <CCol>
-                        <h4>E-mail Template Created</h4>
-                    </CCol>
-
-                    <CCol col="auto">
-                        <CButton color="danger" @click="addEmailModel = true">
-                            <CIcon name="cil-plus" />&nbsp;Add
-                        </CButton>
-                    </CCol>
-                </CRow>
-
-                <div v-if="inactiveEmails.length > 0">
-                    <CRow v-for="email in inactiveEmails" :key="email._id">
-                        <CCol>
-                            <CCard class="form-card">
-                                <CCardBody class="py-3">
-                                    <div class="d-flex align-items-center w-100 gap-3">
-                                        <div class="flex-grow-1 mx-4">
-                                            <h5>{{ email.title }}</h5>
-                                            <p>{{ email.description }}</p>
-                                            <p class="mb-0">{{ email.updatedAt }}</p>
-                                        </div>
-                                        <CDropdown class="ms-auto" color="link" size="sm" :caret="false">
-                                            <template #toggler-content>
-                                                <CIcon name="cil-options" />
-                                            </template>
-                                            <CDropdownItem @click="useTemplate(email._id)">
-                                                Use
-                                            </CDropdownItem>
-                                            <CDropdownItem>Edit</CDropdownItem>
-                                            <CDropdownItem @click="duplicateEmail(email._id)">Duplicate</CDropdownItem>
-                                            <CDropdownItem @click="removeEmail(email._id)">Delete</CDropdownItem>
-                                        </CDropdown>
-                                    </div>
-                                </CCardBody>
-                            </CCard>
-                        </CCol>
-                    </CRow>
-                </div>
-
-                <div v-else>
-                    <CCard class="py-5 text-center text-muted bg-light border-dashed">
-                        <div>No Email Template Is Created</div>
-                    </CCard>
-                </div>
-            </div>
-
-        </div>
-
-        <CModal :centered="true" :show.sync="addEmailModel" :close-on-backdrop="true">
-            <div>
-                <label>
-                    Title
-                </label>
-
-                <CInput v-model.lazy="title" placeholder="text Title here" />
-            </div>
-            <div>
-                <label>
-                    template
-                </label>
-
-                <CTextarea v-model.lazy="template" :rows="4" :maxlength="200"
-                    placeholder="Description of the form questions written to help user use the correct form" />
-                <div class="d-flex justify-content-end">{{ (template || '').length }}/200</div>
-            </div>
+        <CModal :centered="true" :show.sync="addEmailModel" :close-on-backdrop="true" size="lg"
+            @update:show="handleModalClose">
             <template #header>
-                <h6 class="modal-title">New Email Form</h6>
-                <CButtonClose @click="addEmailModel = false" class="text-black" />
+                <h5 
+                  class="modal-title font-weight-bold" 
+                  style="color: #111827;"
+                >
+                    {{ editingEmailId ? 'EditEmailTemplate' : 'Create Email Template' }}
+                </h5>
+                <CButtonClose 
+                  @click="addEmailModel = false" 
+                  class="text-black" 
+                />
             </template>
+            <div class="px-3 py-2">
+                <div class="mb-4">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Template Name <span class="text-danger">*</span>
+                    </label>
+                    <CInput v-model="title" placeholder="e.g. Acceptance Letter" class="custom-input shadow-sm" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Subject <span class="text-danger">*</span>
+                    </label>
+                    <CInput v-model="subject" placeholder="e.g. Regarding your application"
+                        class="custom-input shadow-sm" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Insert Variables
+                    </label>
+                    <div class="d-flex flex-wrap" style="gap: 16px;">
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student Name')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Student Name
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student ID')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Student ID
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('School')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> School
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Program')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Program
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Academic Year')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Academic Year
+                        </CButton>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Content <span class="text-danger">*</span>
+                    </label>
+                    <CTextarea v-model="template" :rows="8" class="custom-textarea shadow-sm"
+                        placeholder="Write your email content here..." style="border-color: #ef4444;" />
+                    <!-- Note: The red border is hard-coded to match the screenshot focus/error state -->
+                </div>
+            </div>
+
             <template #footer>
-                <CButton @click="addEmailModel = false">Close</CButton>
-                <CButton @click="createForm" color="danger">Save</CButton>
+                <div class="w-100 d-flex justify-content-end px-3 py-2">
+                    <CButton color="light" class="mr-3 filter-card font-weight-bold"
+                        style="color: #4b5563; padding: 8px 24px;" @click="addEmailModel = false">
+                        Cancel
+                    </CButton>
+                    <CButton color="danger" class="font-weight-bold px-4 d-flex align-items-center"
+                        style="padding: 8px 24px; border-radius: 6px;"
+                        @click="editingEmailId ? updateForm() : createForm()">
+                        <CIcon name="cil-save" class="mr-2" /> {{ editingEmailId ? 'Update Template' : 'Save Template'
+                        }}
+                    </CButton>
+                </div>
             </template>
         </CModal>
     </div>
@@ -281,7 +342,9 @@ export default {
             ],
 
             title: '',
+            subject: '',
             template: '',
+            editingEmailId: null,
             activePage: 1,
             itemsPerPage: 5,
 
@@ -334,6 +397,30 @@ export default {
             this.selectedProgram = null
         },
 
+        insertVariable(variableName) {
+            const tag = `{{${variableName}}}`
+            this.template = this.template ? this.template + ' ' + tag : tag
+        },
+
+        handleModalClose(val) {
+            if (!val) {
+                this.editingEmailId = null;
+                this.title = '';
+                this.subject = '';
+                this.template = '';
+            }
+        },
+
+        openEditModal(email) {
+            this.editingEmailId = email._id;
+            this.title = email.title;
+            // Assuming subject isn't natively bound yet, but we'll prepare the field
+            this.subject = email.subject || '';
+            // Depending on how templete vs description maps
+            this.template = email.templete || email.description || '';
+            this.addEmailModel = true;
+        },
+
         createForm() {
             const payload = {
                 "title": [
@@ -364,8 +451,40 @@ export default {
             this.$store.dispatch('email/emailStudent/createEmail', payload)
                 .then(() => {
                     this.addEmailModel = false
-                    this.title = ''
-                    this.template = ''
+                })
+        },
+
+        updateForm() {
+            const payload = {
+                "_id": this.editingEmailId,
+                "title": [
+                    {
+                        "key": "th",
+                        "value": "ทดสอบ"
+                    },
+                    {
+                        "key": "en",
+                        "value": this.title
+                    }
+                ],
+                "description": [
+                    {
+                        "key": "th",
+                        "value": "test"
+                    },
+                    {
+                        "key": "en",
+                        "value": this.subject || "test"
+                    }
+                ],
+                "templete": this.template,
+                "active": false,
+                "group": "69730cdf31640a4d402b0670"
+            }
+
+            this.$store.dispatch('email/emailStudent/updateEmail', payload)
+                .then(() => {
+                    this.addEmailModel = false
                 })
         },
 
@@ -785,6 +904,91 @@ export default {
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
     background-color: #ffffff;
+}
+
+::v-deep .custom-tabs .nav-tabs {
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 1rem;
+}
+
+::v-deep .custom-tabs .nav-link {
+    color: #6b7280;
+    font-weight: 600;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    margin-bottom: -2px;
+}
+
+/* Modal Form Customizing */
+::v-deep .custom-input .form-control,
+::v-deep .custom-textarea .form-control {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    color: #374151;
+    font-size: 14px;
+}
+
+::v-deep .custom-input .form-control:focus,
+::v-deep .custom-textarea .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
+    border-color: #ef4444;
+}
+
+.variable-btn {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 6px 12px;
+    transition: all 0.2s;
+}
+
+.variable-btn:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+::v-deep .custom-tabs .nav-link.active {
+    color: #db2777;
+    /* Or your preferred theme color */
+    background: transparent;
+    border-bottom: 2px solid #db2777;
+}
+
+/* Template Table Styling */
+.custom-template-table thead th {
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em;
+    border-top: 1px solid #f1f5f9 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 12px 16px !important;
+    vertical-align: middle;
+}
+
+.custom-template-table tbody td {
+    padding: 20px 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    vertical-align: middle;
+}
+
+.custom-template-table tbody tr:hover td {
+    background-color: #f8fafc !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+::v-deep .custom-tabs .nav-link:hover:not(.active) {
+    color: #374151;
+    border-bottom: 2px solid #d1d5db;
 }
 
 .search-input-wrapper {

@@ -13,7 +13,7 @@
                 </div>
             </CCol>
             <CCol sm="6" class="d-flex justify-content-end">
-                <CButton class="btn-filter-action btn-filter-red">
+                <CButton class="btn-filter-action btn-filter-red" @click="$router.push('/documents/create')">
                     <CIcon name="cil-plus" class="mr-2" /> Create New Document
                 </CButton>
             </CCol>
@@ -50,7 +50,7 @@
                                                 <div class="font-weight-bold" style="color: #1f2937; font-size: 14px;">
                                                     {{ item.name }}</div>
                                                 <div class="text-muted small">{{ item.type }} &bull; {{ item.downloads
-                                                }} downloads</div>
+                                                    }} downloads</div>
                                             </div>
                                         </div>
                                     </td>

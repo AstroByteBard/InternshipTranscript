@@ -15,6 +15,7 @@ const AdminForm = () => import('@/projects/views/administration/Form')
 
 //documents
 const Documents = () => import('@/projects/views/administration/documents/index')
+const CreateDocument = () => import('@/projects/views/administration/documents/CreateDocument')
 
 // competencies
 const general = () => import('@/projects/views/administration/competencies/General/index')
@@ -25,8 +26,7 @@ const suggestions = () => import('@/projects/views/administration/competencies/S
 const SuggestionDetail = () => import('@/projects/views/administration/competencies/Suggestions/Detail')
 
 //correspondence
-const Email_advisors = () => import('@/projects/views/administration/correspondence/Advisors')
-const Email_student = () => import('@/projects/views/administration/correspondence/Student')
+const Correspondence = () => import('@/projects/views/administration/Correspondence')
 
 
 Vue.use(Router)
@@ -53,25 +53,8 @@ export default new Router({
 
                 {
                     path: 'correspondence',
-                    redirect: '/correspondence/advisors',
                     name: 'Correspondence',
-                    component: {
-                        render(c) {
-                            return c('router-view')
-                        }
-                    },
-                    children: [
-                        {
-                            path: 'advisors',
-                            name: 'Advisors',
-                            component: Email_advisors
-                        },
-                        {
-                            path: 'student',
-                            name: 'Student',
-                            component: Email_student
-                        }
-                    ]
+                    component: Correspondence
                 },
 
                 {
@@ -121,6 +104,11 @@ export default new Router({
                     path: 'documents',
                     name: 'Documents',
                     component: Documents
+                },
+                {
+                    path: 'documents/create',
+                    name: 'CreateDocument',
+                    component: CreateDocument
                 },
 
                 {
