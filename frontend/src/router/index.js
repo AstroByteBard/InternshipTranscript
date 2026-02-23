@@ -18,12 +18,7 @@ const Documents = () => import('@/projects/views/administration/documents/index'
 const CreateDocument = () => import('@/projects/views/administration/documents/CreateDocument')
 
 // competencies
-const general = () => import('@/projects/views/administration/competencies/General/index')
-const GeneralDetail = () => import('@/projects/views/administration/competencies/General/Detail')
-const specific = () => import('@/projects/views/administration/competencies/Specific/index')
-const SpecificDetail = () => import('@/projects/views/administration/competencies/Specific/Detail')
-const suggestions = () => import('@/projects/views/administration/competencies/Suggestions/index')
-const SuggestionDetail = () => import('@/projects/views/administration/competencies/Suggestions/Detail')
+const Competencies = () => import('@/projects/views/administration/Competencies')
 
 //correspondence
 const Correspondence = () => import('@/projects/views/administration/Correspondence')
@@ -59,45 +54,8 @@ export default new Router({
 
                 {
                     path: 'competencies',
-                    redirect: '/competencies/general',
                     name: 'Competencies',
-                    component: {
-                        render(c) {
-                            return c('router-view')
-                        }
-                    },
-                    children: [
-                        {
-                            path: 'general',
-                            name: 'General',
-                            component: general
-                        },
-                        {
-                            path: 'general/:id',
-                            name: 'GeneralDetail',
-                            component: GeneralDetail
-                        },
-                        {
-                            path: 'specific',
-                            name: 'Specific',
-                            component: specific
-                        },
-                        {
-                            path: 'specific/:id',
-                            name: 'SpecificDetail',
-                            component: SpecificDetail
-                        },
-                        {
-                            path: 'suggestions',
-                            name: 'Suggestions',
-                            component: suggestions
-                        },
-                        {
-                            path: 'suggestions/:id',
-                            name: 'SuggestionDetail',
-                            component: SuggestionDetail
-                        }
-                    ]
+                    component: Competencies
                 },
 
                 {
