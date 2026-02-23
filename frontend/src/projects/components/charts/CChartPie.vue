@@ -1,18 +1,25 @@
 <template>
     <div>
-        <CCard>
-            <CCardBody>
-                <CRow>
-                    <CCol sm="10">
-                        <h4 class="card-title">Pie Chart for the Count of Students' Internships Evaluated or Not
-                            Evaluated</h4>
-                    </CCol>
-                    <CCol sm="2" class="text-right">
-                        <span class="text-muted">Unit: 4000</span>
+        <CCard class="rounded shadow-sm mb-4" style="border: 1px solid #e5e7eb;">
+            <CCardBody class="p-4">
+                <CRow class="mb-4">
+                    <CCol sm="12">
+                        <h4 class="card-title mb-1" style="font-weight: bold; color: #111827; font-size: 1.25rem;">
+                            Evaluation Status</h4>
+                        <div class="small text-muted" style="font-size: 0.9rem; color: #6b7280;">Completion ratio</div>
                     </CCol>
                 </CRow>
-                <div>
-                    <CChartPie :datasets="datasets" :options="options" :labels="labels" />
+                <div class="position-relative d-flex justify-content-center align-items-center"
+                    style="height: 400px; margin-top: 10px;">
+                    <CChartPie :datasets="datasets" :options="options" :labels="labels"
+                        style="height: 100%; width: 100%;" />
+                    <!-- Center Text Overlay -->
+                    <div class="position-absolute text-center d-flex flex-column justify-content-center align-items-center"
+                        style="pointer-events: none;">
+                        <div class="font-weight-bold mb-0" style="color: #111827; font-size: 2.5rem; line-height: 1.2;">
+                            68%</div>
+                        <div class="font-weight-bold" style="font-size: 0.85rem; color: #4b5563;">Completed</div>
+                    </div>
                 </div>
             </CCardBody>
         </CCard>
@@ -24,43 +31,33 @@ import { CChartPie } from '@coreui/vue-chartjs'
 
 export default {
     name: 'ChartPie',
-    components: {
-        CChartPie
-    },
+    components: { CChartPie },
     data() {
         return {
-            labels: ['Evaluated', 'Not Evaluated'],
+            labels: ['Completed', 'Not Completed'],
             datasets: [
                 {
-                    backgroundColor: ['#868bf6', '#f69790'],
-                    data: [2500, 1500]
+                    backgroundColor: ['#b0352d', '#f8d2d2'], // Match bar chart tone
+                    data: [68, 32],
+                    borderWidth: 0,
+                    hoverBorderWidth: 0
                 }
             ],
             options: {
                 maintainAspectRatio: false,
+                cutoutPercentage: 85, // Makes it a thin doughnut
                 legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
-                    }
+                    display: false // Hide legend
                 },
                 tooltips: {
-                    callbacks: {
-                        label: function (tooltipItem, data) {
-                            var dataset = data.datasets[tooltipItem.datasetIndex];
-                            var total = dataset.data.reduce(function (previousValue, currentValue) {
-                                return previousValue + currentValue;
-                            });
-                            var currentValue = dataset.data[tooltipItem.index];
-                            var percentage = Math.floor(((currentValue / total) * 100) + 0.5);
-                            return data.labels[tooltipItem.index] + ': ' + currentValue + ' (' + percentage + '%)';
-                        }
-                    }
+                    enabled: true
                 }
             }
         }
     }
 }
 </script>
+
+<style scoped>
+/* Custom styles if needed */
+</style>

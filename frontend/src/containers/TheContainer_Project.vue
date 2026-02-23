@@ -5,7 +5,7 @@
     <CWrapper>
       <TheHeader />
       <div class="c-body">
-        <main class="c-main">
+        <main class="c-main bg-gray-50">
           <CContainer fluid>
             <transition name="fade">
               <router-view></router-view>
@@ -147,5 +147,9 @@ export default {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb !important;
 }
 </style>

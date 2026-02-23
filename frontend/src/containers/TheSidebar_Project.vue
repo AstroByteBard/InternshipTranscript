@@ -63,20 +63,10 @@ export default {
             icon: 'cil-window-restore'
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Correspondence',
-            to: '/Correspondence',
+            to: '/correspondence',
             icon: 'cil-envelope-closed',
-            items: [
-              {
-                name: 'Email to advisors',
-                to: '/correspondence/Advisors'
-              },
-              {
-                name: 'Email to student',
-                to: '/correspondence/Student'
-              }
-            ]
           },
           {
             _name: 'CSidebarNavDropdown',
@@ -90,7 +80,7 @@ export default {
               },
               {
                 name: 'Specific',
-                to: '/Competencies/Specific' 
+                to: '/Competencies/Specific'
               },
               {
                 name: 'Suggestions',
@@ -105,24 +95,16 @@ export default {
             to: '/documents'
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Administrator',
-            to: '/administrator',
             icon: 'cil-lightbulb',
-            items: [
-              {
-                name: 'Admin',
-                to: '/administrator/admin'
-              },
-              {
-                name: 'Advisor',
-                to: '/administrator/advisor'
-              },
-              {
-                name: 'Student',
-                to: '/administrator/student'
-              }
-            ]
+            to: '/administrator'
+          },
+          {
+            _name: 'CSidebarNavItem',
+            name: 'Form',
+            icon: 'cil-pencil',
+            to: '/administration/form'
           },
 
           {
