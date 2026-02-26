@@ -3,41 +3,44 @@
 
         <CRow class="mb-4">
             <CCol sm="6">
+                <!-- View Toggles -->
                 <div class="custom-segmented-control">
                     <CButtonGroup class="w-100 h-100">
-                        <CButton v-for="(value, key) in ['Student', 'Advisor']" :key="key"
-                            class="segment-btn font-weight-bold" :class="{ 'active': value === selected }"
-                            @click="selected = value">
-                            {{ value }}
+                        <CButton class="segment-btn font-weight-bold" :class="{ 'active': selected === 'Student' }"
+                            @click="selected = 'Student'">
+                            Student
+                        </CButton>
+                        <CButton class="segment-btn font-weight-bold" :class="{ 'active': selected === 'Advisor' }"
+                            @click="selected = 'Advisor'">
+                            Advisor
                         </CButton>
                     </CButtonGroup>
                 </div>
             </CCol>
 
-
             <CCol sm="6" class="text-right align-self-center d-flex justify-content-end align-items-center">
-                <div v-if="selected === 'Student'">
-                    <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls, .csv"
-                        @change="onFileChange" />
-
-                    <CButton class="btn-import mr-2" @click="$refs.fileInput.click()">
-                        <CIcon name="cil-cloud-upload" class="mr-2" /> Import
-                    </CButton>
-                    <CButton class="btn-add-student" @click="openAddStudentModal">
-                        <CIcon name="cil-user" class="mr-2" /> Add Student
-                    </CButton>
-                </div>
-
-                <div v-if="selected === 'Advisor'">
-                    <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls, .csv"
-                        @change="onFileChange" />
-
-                    <CButton class="btn-import mr-2" @click="$refs.fileInput.click()">
-                        <CIcon name="cil-cloud-upload" class="mr-2" /> Import
-                    </CButton>
-                    <CButton class="btn-add-student">
-                        <CIcon name="cil-user" class="mr-2" /> Add Advisor
-                    </CButton>
+                <!-- Add Buttons (Conditional) -->
+                <div class="d-flex align-items-center">
+                    <template v-if="selected === 'Student'">
+                        <input type="file" ref="fileInput" @change="onFileChangeStudent" accept=".xlsx, .xls, .csv"
+                            style="display: none;" />
+                        <CButton class="btn-import mr-2" @click="$refs.fileInput.click()">
+                            <CIcon name="cil-cloud-upload" class="mr-2" /> Import
+                        </CButton>
+                        <CButton class="btn-filter-action btn-filter-red" @click="openAddStudentModal">
+                            <CIcon name="cil-plus" class="mr-2" /> Add Student
+                        </CButton>
+                    </template>
+                    <template v-if="selected === 'Advisor'">
+                        <input type="file" ref="fileInputAdvisor" @change="onFileChangeAdviser"
+                            accept=".xlsx, .xls, .csv" style="display: none;" />
+                        <CButton class="btn-import mr-2" @click="$refs.fileInputAdvisor.click()">
+                            <CIcon name="cil-cloud-upload" class="mr-2" /> Import
+                        </CButton>
+                        <CButton class="btn-filter-action btn-filter-red" @click="openAddAdvisorModal">
+                            <CIcon name="cil-plus" class="mr-2" /> Add Advisor
+                        </CButton>
+                    </template>
                 </div>
             </CCol>
         </CRow>
@@ -152,7 +155,6 @@
             </CRow>
         </div>
 
-        <!-- Advisor View Context -->
         <div v-if="selected === 'Advisor'">
             <CCard class="mb-4 filter-card">
                 <CCardBody class="p-3">
@@ -170,6 +172,34 @@
                             </CButton>
                         </CCol>
                     </CRow>
+
+                    <transition name="slide">
+                        <div v-show="showFilters">
+                            <hr class="filter-divider" />
+                            <CRow>
+                                <CCol md="3">
+                                    <label class="filter-label">SCHOOL</label>
+                                    <CSelect class="custom-select-ui mb-0" :options="schoolOptions" :value.sync="school"
+                                        placeholder="Select School" />
+                                </CCol>
+                                <CCol md="3">
+                                    <label class="filter-label">PROGRAM</label>
+                                    <CSelect class="custom-select-ui mb-0" :options="programOptions"
+                                        :value.sync="program" placeholder="Select Program" />
+                                </CCol>
+                                <CCol md="3">
+                                    <label class="filter-label">ACADEMIC YEAR</label>
+                                    <CSelect class="custom-select-ui mb-0" :options="academicOptions"
+                                        :value.sync="academic" placeholder="Select Academic" />
+                                </CCol>
+                                <CCol md="3">
+                                    <label class="filter-label">Province</label>
+                                    <CSelect class="custom-select-ui mb-0" :options="provinceOptions"
+                                        :value.sync="province" placeholder="Select Province" />
+                                </CCol>
+                            </CRow>
+                        </div>
+                    </transition>
                 </CCardBody>
             </CCard>
 
@@ -188,7 +218,15 @@
                                 </td>
                             </template>
 
-                            <!-- Actions -->
+                            <!-- Organization Combo -->
+                            <template #organizationCombo="{ item }">
+                                <td class="align-middle">
+                                    <div><strong>{{ item.organizationName || '-' }}</strong></div>
+                                    <div class="text-muted small">{{ item.organizationAddress || '-' }}</div>
+                                </td>
+                            </template>
+
+                            <!-- actions -->
                             <template #actions="{ item }">
                                 <td class="text-center align-middle">
                                     <CButton class="btn-action-icon mr-2" @click="editAdvisor(item)" title="Edit">
@@ -200,13 +238,21 @@
                                 </td>
                             </template>
 
+                            <!-- Student Combo -->
+                            <template #studentCombo="{ item }">
+                                <td class="align-middle">
+                                    <div><strong>{{ item.studentName || '-' }}</strong></div>
+                                    <div class="text-muted small">{{ item.studentID || '-' }}</div>
+                                </td>
+                            </template>
+
                             <!-- Under Table Pagination & Info -->
                             <template #under-table>
                                 <div class="d-flex justify-content-between align-items-center px-4 py-3"
                                     style="border-top: 1px solid #f3f4f6;">
                                     <div class="text-muted" style="font-size: 13px;">
                                         Showing {{ tableStartItemAdvisor }} to {{ tableEndItemAdvisor }} of {{
-                                        filteredAdvisors.length }}
+                                            filteredAdvisors.length }}
                                         results
                                     </div>
                                     <CPagination :activePage.sync="activePageAdvisor" :pages="totalPagesAdvisor"
@@ -220,7 +266,6 @@
             </CRow>
         </div>
 
-        <!-- Add/Edit Student Modal -->
         <CModal :title="isEditingStudent ? 'Edit Student' : 'Add New Student'" :show.sync="showAddStudentModal"
             color="danger" size="lg">
             <CRow>
@@ -258,7 +303,39 @@
 
             <template #footer>
                 <CButton color="secondary" @click="showAddStudentModal = false">Cancel</CButton>
-                <CButton color="danger" @click="submitAddStudent">{{ isEditingStudent ? 'Update Student' : 'SaveStudent' }}</CButton>
+                <CButton color="danger" @click="submitAddStudent">{{ isEditingStudent ? 'Update' : 'Save'
+                    }}</CButton>
+            </template>
+        </CModal>
+
+        <CModal :title="isEditingAdvisor ? 'Edit Advisor' : 'Add New Advisor'" :show.sync="showAddAdvisorModal"
+            color="danger" size="lg">
+            <CRow>
+                <CCol sm="6">
+                    <CInput label="Evaluator's Email *" placeholder="Enter Evaluator Email" type="email"
+                        v-model="formAdvisor.email" />
+                </CCol>
+                <CCol sm="6">
+                    <CInput label="Student ID Linked" placeholder="Enter Student ID" v-model="formAdvisor.studentID" />
+                </CCol>
+                <CCol sm="12">
+                    <CInput label="Organisation Name" placeholder="Organization Name"
+                        v-model="formAdvisor.organizationName" />
+                </CCol>
+                <CCol sm="12">
+                    <CInput label="Organisation Address" placeholder="Organization Address"
+                        v-model="formAdvisor.organizationAddress" />
+                </CCol>
+                <CCol sm="6">
+                    <CSelect label="Province" :options="provinceOptions" :value.sync="formAdvisor.province" />
+                </CCol>
+                <CCol sm="6">
+                    <CInput label="Academic Year" placeholder="Year" v-model="formAdvisor.year" />
+                </CCol>
+            </CRow>
+            <template #footer>
+                <CButton color="secondary" @click="showAddAdvisorModal = false">Cancel</CButton>
+                <CButton color="danger" @click="submitAddAdvisor">{{ isEditingAdvisor ? 'Update' : 'Save' }}</CButton>
             </template>
         </CModal>
 
@@ -279,6 +356,9 @@ export default {
             isEditingStudent: false,
             editStudentID: null,
             showAddStudentModal: false,
+            isEditingAdvisor: false,
+            editAdvisorID: null,
+            showAddAdvisorModal: false,
             formStudent: {
                 studentID: '',
                 nameThai: '',
@@ -289,6 +369,14 @@ export default {
                 program: '',
                 course: '',
                 semester: '',
+                year: ''
+            },
+            formAdvisor: {
+                email: '',
+                studentID: '',
+                organizationName: '',
+                organizationAddress: '',
+                province: '',
                 year: ''
             },
             showFilters: false,
@@ -313,10 +401,10 @@ export default {
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
             ],
             advisorFields: [
-                { key: 'advisorID', label: 'advisorID' },
-                { key: 'nameCombo', label: 'NAME' },
-                { key: 'email', label: 'EMAIL' },
-                { key: 'department', label: 'DEPARTMENT' },
+                { key: 'organizationCombo', label: 'ORGANISATION INFO' },
+                { key: 'province', label: 'PROVINCE' },
+                { key: 'email', label: 'EVALUATOR\'S EMAIL' },
+                { key: 'studentCombo', label: 'STUDENT NAME / ID' },
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
             ],
         }
@@ -336,8 +424,9 @@ export default {
             this.$store.dispatch("academic/schools/schools")
             this.$store.dispatch("academic/course/course")
             this.$store.dispatch("member/students/students")
+            this.$store.dispatch("member/advisors/advisors")
         },
-        onFileChange(e) {
+        onFileChangeStudent(e) {
             const files = e.target.files;
             if (!files.length) return;
 
@@ -409,11 +498,86 @@ export default {
                         alert(`Imported ${payload.length} students successfully.`);
                     });
                 }
-
                 this.$refs.fileInput.value = '';
             };
             reader.readAsArrayBuffer(file);
         },
+        onFileChangeAdviser(e) {
+            const files = e.target.files;
+            if (!files.length) return;
+
+            const file = files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                if (jsonData.length < 2) return;
+
+                const headers = jsonData[1].map(h => h ? h.toString().toLowerCase().trim() : '');
+                const rows = jsonData.slice(1);
+                console.log(headers)
+                const payload = [];
+
+                rows.forEach(row => {
+                    if (row.length === 0) return;
+
+                    const getValue = (headerName) => {
+                        const index = headers.indexOf(headerName.toLowerCase());
+                        return index !== -1 ? row[index] : null;
+                    };
+
+                    const organizationName = getValue('ชื่อสถานประกอบการ\r\norganisation name');
+                    const organizationAddress = getValue('ที่อยู่สถานประกอบการ\r\norganisation adress');
+                    const province = getValue('จังหวัด\r\nprovince');
+                    const email = getValue("อีเมลผู้ประเมิน\r\nevaluator's email");
+                    const studentID = getValue('รหัสประจำตัว\r\nstudent id');
+
+                    if (!email) return;
+
+                    let studentRefId = null;
+                    if (studentID) {
+                        const foundStudent = this.storedStudents.find(s => s.studentID === String(studentID));
+                        if (foundStudent) {
+                            studentRefId = foundStudent._id;
+                        } else {
+                            console.warn(`Student ID ${studentID} not found in database. Advisor ${email} will have no student linked.`);
+                        }
+                    }
+
+                    const advisorData = {
+                        organizationName: organizationName || null,
+                        organizationAddress: organizationAddress || null,
+                        email: email,
+                        province: province || null,
+                        student: studentRefId,
+                        year: new Date().getFullYear().toString()
+                    };
+
+                    payload.push(advisorData);
+                });
+
+                if (payload.length > 0) {
+                    this.$store.dispatch("member/advisors/createAdvisors", payload).then(() => {
+                        this.onInit();
+                        alert(`Imported ${payload.length} advisors successfully.`);
+                    }).catch(err => {
+                        console.error('Error importing advisors:', err);
+                        alert('Failed to import advisors.');
+                    });
+                } else {
+                    alert('No valid advisor data found to import. Ensure emails are provided.');
+                }
+
+                this.$refs.fileInputAdvisor.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        },
+
         openAddStudentModal() {
             this.isEditingStudent = false;
             this.editStudentID = null;
@@ -422,6 +586,89 @@ export default {
                 school: '', program: '', course: '', semester: '', year: ''
             };
             this.showAddStudentModal = true;
+        },
+
+        openAddAdvisorModal() {
+            this.isEditingAdvisor = false;
+            this.editAdvisorID = null;
+            this.formAdvisor = {
+                email: '', studentID: '', organizationName: '', organizationAddress: '', province: '', year: ''
+            };
+            this.showAddAdvisorModal = true;
+        },
+
+        editAdvisor(item) {
+            this.isEditingAdvisor = true;
+            this.editAdvisorID = item._id;
+            this.formAdvisor = {
+                email: item.email || '',
+                studentID: item.student ? item.student.studentID : '',
+                organizationName: item.organizationName || '',
+                organizationAddress: item.organizationAddress || '',
+                province: item.province || '',
+                year: item.year || ''
+            };
+            this.showAddAdvisorModal = true;
+        },
+
+        submitAddAdvisor() {
+            if (!this.formAdvisor.email) {
+                alert("Evaluator's Email is required");
+                return;
+            }
+
+            let studentRefId = null;
+            if (this.formAdvisor.studentID) {
+                const foundStudent = this.storedStudents.find(s => s.studentID === String(this.formAdvisor.studentID));
+                if (foundStudent) {
+                    studentRefId = foundStudent._id;
+                } else {
+                    alert(`Student ID ${this.formAdvisor.studentID} not found. Cannot link to student.`);
+                    return; // Prevent saving if they typed a wrong ID
+                }
+            }
+
+            const advisorData = {
+                organizationName: this.formAdvisor.organizationName || null,
+                organizationAddress: this.formAdvisor.organizationAddress || null,
+                email: this.formAdvisor.email,
+                province: this.formAdvisor.province || null,
+                student: studentRefId,
+                year: this.formAdvisor.year ? String(this.formAdvisor.year) : new Date().getFullYear().toString()
+            };
+
+            if (this.isEditingAdvisor) {
+                advisorData._id = this.editAdvisorID;
+                this.$store.dispatch("member/advisors/updateAdvisors", [advisorData]).then(() => {
+                    this.onInit();
+                    this.showAddAdvisorModal = false;
+                    alert(`Advisor updated successfully!`);
+                }).catch(err => {
+                    console.error("Failed to update advisor:", err);
+                    alert("Failed to update advisor.");
+                });
+            } else {
+                this.$store.dispatch("member/advisors/createAdvisors", [advisorData]).then(() => {
+                    this.onInit();
+                    this.showAddAdvisorModal = false;
+                    alert(`Advisor created successfully!`);
+                }).catch(err => {
+                    console.error("Failed to create advisor:", err);
+                    alert("Failed to create advisor.");
+                });
+            }
+        },
+
+        deleteAdvisor(item) {
+            if (confirm(`Are you sure you want to delete advisor ${item.email}?`)) {
+                this.$store.dispatch("member/advisors/deleteAdvisors", item._id).then(() => {
+                    this.onInit();
+                    alert(`Advisor deleted successfully!`);
+                }).catch(err => {
+                    console.error("Failed to delete advisor:", err);
+                    alert("Failed to delete advisor.");
+                });
+            }
         },
         submitAddStudent() {
             if (!this.formStudent.studentID || !this.formStudent.email) {
@@ -514,6 +761,7 @@ export default {
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('academic/course', { storedCourses: 'course' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
+        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
 
         formattedStudents() {
             if (!this.storedStudents || !this.storedStudents.length) return [];
@@ -655,16 +903,48 @@ export default {
         },
 
         // Advisor Computeds
+        formattedAdvisors() {
+            if (!this.storedAdvisors || !this.storedAdvisors.length) return [];
+
+            return this.storedAdvisors.map(adv => {
+                const getVal = (arr, k) => {
+                    if (!Array.isArray(arr)) return '';
+                    const item = arr.find(i => i.key === k);
+                    return item ? item.value : '';
+                };
+
+                let studentName = '-';
+                let studentID = '-';
+
+                if (adv.student) {
+                    studentID = adv.student.studentID || '-';
+                    const nameThai = adv.student.name ? getVal(adv.student.name, 'th') : '';
+                    const nameEnglish = adv.student.name ? getVal(adv.student.name, 'en') : '';
+                    studentName = nameThai || nameEnglish || '-';
+                }
+
+                return {
+                    ...adv,
+                    studentName,
+                    studentID
+                };
+            });
+        },
+
         filteredAdvisors() {
-            // Placeholder: Return empty array or filter from a Vuex state later
-            const dummyAdvisors = [];
             const searchLower = this.searchAdvisor.toLowerCase();
-            return dummyAdvisors.filter(adv => {
-                const matches = (adv.nameThai && adv.nameThai.toLowerCase().includes(searchLower)) ||
-                    (adv.nameEnglish && adv.nameEnglish.toLowerCase().includes(searchLower)) ||
-                    (adv.advisorID && adv.advisorID.toLowerCase().includes(searchLower)) ||
-                    (adv.email && adv.email.toLowerCase().includes(searchLower));
-                return matches;
+            return this.formattedAdvisors.filter(adv => {
+                const matches =
+                    (adv.organizationName && adv.organizationName.toLowerCase().includes(searchLower)) ||
+                    (adv.email && adv.email.toLowerCase().includes(searchLower)) ||
+                    (adv.studentName && adv.studentName.toLowerCase().includes(searchLower)) ||
+                    (adv.studentID && adv.studentID.toLowerCase().includes(searchLower));
+
+                if (!matches) return false;
+
+                if (this.province && adv.province !== this.province) return false;
+
+                return true;
             });
         },
 
@@ -827,7 +1107,7 @@ export default {
     box-shadow: none !important;
 }
 
-/* Action Buttons (Import & Add Student) */
+
 .btn-import {
     background-color: #ffffff;
     border: 1px solid #d1d5db;
