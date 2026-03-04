@@ -291,7 +291,6 @@
                     </label>
                     <CTextarea v-model="template" :rows="8" class="custom-textarea shadow-sm"
                         placeholder="Write your email content here..." style="border-color: #ef4444;" />
-                    <!-- Note: The red border is hard-coded to match the screenshot focus/error state -->
                 </div>
             </div>
 

@@ -2,6 +2,7 @@ import messages from "@/store/modules/Setting/messages/index";
 import status from "@/store/modules/Setting/status/index";
 import verification from  "@/store/modules/Setting/verification/index";
 import authen from  "@/store/modules/Setting/authen/index";
+import province from  "@/store/modules/Setting/province/index";
 
 
 
@@ -11,7 +12,8 @@ const module = {
         messages,
         status,
         verification,
-        authen
+        authen,
+        province
 
     },
     state: {

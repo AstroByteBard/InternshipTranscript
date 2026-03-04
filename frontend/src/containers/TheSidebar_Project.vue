@@ -69,42 +69,28 @@ export default {
             icon: 'cil-envelope-closed',
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Competencies',
             to: '/Competencies',
             icon: 'cil-lightbulb',
-            items: [
-              {
-                name: 'General',
-                to: '/Competencies/General'
-              },
-              {
-                name: 'Specific',
-                to: '/Competencies/Specific'
-              },
-              {
-                name: 'Suggestions',
-                to: '/Competencies/Suggestions'
-              }
-            ]
           },
           {
             _name: 'CSidebarNavItem',
             name: 'Documents',
+            to: '/documents',
             icon: 'cil-description',
-            to: '/documents'
           },
           {
             _name: 'CSidebarNavItem',
             name: 'Administrator',
+            to: '/administrator',
             icon: 'cil-lightbulb',
-            to: '/administrator'
           },
           {
             _name: 'CSidebarNavItem',
             name: 'Form',
+            to: '/administration/form',
             icon: 'cil-pencil',
-            to: '/administration/form'
           },
 
           {
