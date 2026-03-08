@@ -14,14 +14,15 @@ var objsSchema  = new Schema({
     }],
     program           : {type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Program', default: null },
     config          : [{
-        label          : [{
-            key            : {type: String, default: null},
-            value          : {type: String, default: null},
-        }],
         question       : [{
             key            : {type: String, default: null},
             value          : {type: String, default: null},
-        }]
+        }],
+        variable          : [{
+            key            : {type: String, default: null},
+            value          : {type: String, default: null},
+        }],
+
     }],
     active          : {type: Boolean, default: false}
 }, { timestamps: true});

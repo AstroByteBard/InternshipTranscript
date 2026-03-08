@@ -6,7 +6,7 @@
         <CCardBody class="p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="p-3 rounded-circle" style="background-color: #fee2e2;">
-              <CIcon name="cil-graduation-cap" height="32" style="color: #b91c1c;" />
+              <CIcon name="cilPeople" height="32" style="color: #b91c1c;" />
             </div>
           </div>
           <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Student</div>

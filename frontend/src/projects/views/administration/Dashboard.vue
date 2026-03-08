@@ -17,7 +17,7 @@
             <CSelect custom class="mb-0" :options="programOptions" :value.sync="selectedProgram" />
           </CCol>
           <CCol md="4">
-            <CSelect custom class="mb-0" :options="yearOptions" :value.sync="s2electedYear" />
+            <CSelect custom class="mb-0" :options="yearOptions" :value.sync="selectedYear" />
           </CCol>
         </CRow>
       </CCardBody>
