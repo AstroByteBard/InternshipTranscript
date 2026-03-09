@@ -68,6 +68,7 @@ export default {
         ...mapGetters('academic/schools', { storedSchools: 'schools' }),
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
+        ...mapGetters('setting/province', { storedProvinces: 'province' }),
 
         schoolOptions() {
             if (!this.storedSchools) return [];
@@ -112,13 +113,22 @@ export default {
             ];
         },
         provinceOptions() {
-            if (!this.storedAdvisors) return [];
-            const provinces = new Set(this.storedAdvisors.map(a => a.province).filter(p => p));
+            const lang = this.$i18n.locale;
+            let source = this.storedProvinces || [];
+
             return [
                 { value: '', label: 'Select Province' },
-                ...Array.from(provinces).sort().map(p => ({ value: p, label: p }))
+                ...source.map(item => {
+                    const titleObj = item.title.find(t => t.key === lang);
+                    return {
+                        value: item._id,
+                        label: titleObj ? titleObj.value : ''
+                    };
+                })
             ];
         },
+
+
         internalSearch: {
             get() { return this.search; },
             set(val) { this.$emit('update:search', val); }

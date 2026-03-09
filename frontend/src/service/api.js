@@ -173,15 +173,30 @@ export default {
     status(method, data, configs) {
         switch (method) {
             case 'exp':
-                return instance.post("/api/v1/setting/status/explorers", data);
+                return instance.post("/setting/status/explorers", data);
             case 'get':
-                return instance.get("/api/v1/setting/status");
+                return instance.get("/setting/status");
             case 'post':
-                return instance.post("/api/v1/setting/status", data);
+                return instance.post("/setting/status", data);
             case 'put':
-                return instance.put("/api/v1/setting/status", data);
+                return instance.put("/setting/status", data);
             case 'delete':
-                return instance.delete("/api/v1/setting/status");
+                return instance.delete("/setting/status");
+            default:
+                break;
+        }
+    },
+
+    province(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/setting/province");
+            case 'post':
+                return instance.post("/setting/province", data);
+            case 'put':
+                return instance.put("/setting/province", data);
+            case 'delete':
+                return instance.delete("/setting/province");
             default:
                 break;
         }

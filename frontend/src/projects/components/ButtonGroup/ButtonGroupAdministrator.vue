@@ -59,7 +59,8 @@ export default {
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('academic/course', { storedCourses: 'course' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
-        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' })
+        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
+        ...mapGetters('setting/province', { storedProvinces: 'province' })
     },
     methods: {
         onFileChangeStudent(e) {
@@ -185,11 +186,13 @@ export default {
                         }
                     }
 
+                    const foundProvince = this.storedProvinces.find(p => Array.isArray(p.title) && p.title.some(t => t.key === 'en' && t.value === province));
+
                     const advisorData = {
                         organizationName: organizationName || null,
                         organizationAddress: organizationAddress || null,
                         email: email,
-                        province: province || null,
+                        province: foundProvince ? foundProvince._id : null,
                         student: studentRefId,
                         year: new Date().getFullYear().toString()
                     };

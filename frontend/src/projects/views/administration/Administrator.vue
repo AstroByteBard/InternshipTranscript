@@ -1,43 +1,23 @@
 <template>
     <div>
-        <ButtonGroupAdministrator 
-            v-model="selected" 
-            @add-student="$refs.modalStudent.openAdd()"
-            @add-advisor="$refs.modalAdvisor.openAdd()"
-            @refresh="onInit" 
-        />
-        
-        <div v-if="selected === 'Student'">
-            <FilterStudent 
-                :search.sync="search" 
-                :school.sync="school" 
-                :program.sync="program" 
-                :academic.sync="academic" 
-                :semester.sync="semester" 
-            />
+        <ButtonGroupAdministrator v-model="selected" @add-student="$refs.modalStudent.openAdd()"
+            @add-advisor="$refs.modalAdvisor.openAdd()" @refresh="onInit" />
 
-            <TableAdministratorStudent 
-                :filteredStudents="filteredStudents"
-                @edit-student="$refs.modalStudent.openEdit($event)" 
-                @refresh="onInit" 
-            />
+        <div v-if="selected === 'Student'">
+            <FilterStudent :search.sync="search" :school.sync="school" :program.sync="program" :academic.sync="academic"
+                :semester.sync="semester" />
+
+            <TableAdministratorStudent :filteredStudents="filteredStudents"
+                @edit-student="$refs.modalStudent.openEdit($event)" @refresh="onInit" />
 
         </div>
 
         <div v-if="selected === 'Advisor'">
-            <FilterAdvisor 
-                :search.sync="searchAdvisor" 
-                :school.sync="school" 
-                :program.sync="program"
-                :academic.sync="academic" 
-                :province.sync="province" 
-            />
+            <FilterAdvisor :search.sync="searchAdvisor" :school.sync="school" :program.sync="program"
+                :academic.sync="academic" :province.sync="province" />
 
-            <TableAdminstratorAdviser 
-                :filteredAdvisors="filteredAdvisors"
-                @edit-advisor="$refs.modalAdvisor.openEdit($event)" 
-                @refresh="onInit" 
-            />
+            <TableAdminstratorAdviser :filteredAdvisors="filteredAdvisors"
+                @edit-advisor="$refs.modalAdvisor.openEdit($event)" @refresh="onInit" />
         </div>
 
         <ModalEditStudent ref="modalStudent" @refresh="onInit" />
@@ -94,6 +74,7 @@ export default {
             this.$store.dispatch("academic/course/course")
             this.$store.dispatch("member/students/students")
             this.$store.dispatch("member/advisors/advisors")
+            this.$store.dispatch("setting/province/province")
         }
     },
 
