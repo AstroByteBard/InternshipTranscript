@@ -5,10 +5,15 @@ const message = require("./service/message");
 const status = require("./service/status");
 const group = require("./service/group")
 const verification = require("./service/verification");
+const province = require("./service/province")
 // const auth_message = require("./service/auth_message");
 // const Role = require("../Accounts/service/role");
 // const Authen_Type = require("../Accounts/service/authen_type");
 
+router.get("/province", province.onQuerys);
+router.post("/province", province.onCreate);
+router.put("/province", province.onUpdate);
+router.delete("/province", province.onDelete);
 
 router.get("/message", message.onQuerys);
 router.post("/message", message.onCreate);

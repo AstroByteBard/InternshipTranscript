@@ -4,10 +4,12 @@
             <CCol md="6">
                 <div class="custom-segmented-control">
                     <CButtonGroup class="w-100 h-100">
-                        <CButton class="segment-btn font-weight-bold active" @click="selected = 'StudentData'">
+                        <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'StudentData' }"
+                            @click="selected = 'StudentData'">
                             Student
                         </CButton>
-                        <CButton class="segment-btn font-weight-bold" @click="selected = 'AdviserData'">
+                        <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'AdviserData' }"
+                            @click="selected = 'AdviserData'">
                             Adviser
                         </CButton>
                     </CButtonGroup>
@@ -232,19 +234,237 @@
 
         </div>
 
+        <!-- Adviser Data Section -->
+        <div v-else-if="selected === 'AdviserData'">
+            <div v-if="!selectedProgram">
+                <CCard class="mb-4 filter-card">
+                    <CCardBody class="p-3">
+                        <CRow class="align-items-center mb-3">
+                            <CCol md="5">
+                                <div class="search-input-wrapper">
+                                    <CIcon name="cil-search" class="search-icon" />
+                                    <input type="text" class="form-control search-input"
+                                        placeholder="Search by name, organization, or student..."
+                                        v-model="searchQueryAdviser" />
+                                </div>
+                            </CCol>
+                            <CCol md="7" class="d-flex justify-content-end align-items-center">
+                                <CButton class="btn-filter-action mr-2">
+                                    <CIcon name="cil-envelope-closed" class="mr-2" /> Send Email Organization
+                                </CButton>
+                                <CButton class="btn-filter-action btn-filter-red" @click="showFilters = !showFilters">
+                                    <CIcon name="cil-filter" class="mr-2" /> Filters
+                                </CButton>
+                            </CCol>
+                        </CRow>
+
+                        <transition name="slide">
+                            <div v-show="showFilters">
+                                <hr class="filter-divider" />
+
+                                <CRow>
+                                    <CCol md="3">
+                                        <label class="filter-label">SCHOOL</label>
+                                        <CSelect class="custom-select-ui mb-0" :options="schools"
+                                            :value.sync="selectionSchoolAdviser" placeholder="All Schools" />
+                                    </CCol>
+                                    <CCol md="3">
+                                        <label class="filter-label">PROGRAM</label>
+                                        <CSelect class="custom-select-ui mb-0" :options="programs"
+                                            :value.sync="selectionProgramAdviser" placeholder="All Programs" />
+                                    </CCol>
+                                    <CCol md="3">
+                                        <label class="filter-label">ACADEMIC YEAR</label>
+                                        <CSelect class="custom-select-ui mb-0" :options="academicYears"
+                                            :value.sync="selectionAcademicYearAdviser" placeholder="All Years" />
+                                    </CCol>
+                                    <CCol md="3">
+                                        <label class="filter-label">STATUS</label>
+                                        <CSelect class="custom-select-ui mb-0" :options="statuses"
+                                            :value.sync="selectionStatusAdviser" placeholder="All Status" />
+                                    </CCol>
+                                </CRow>
+                            </div>
+                        </transition>
+                    </CCardBody>
+                </CCard>
+
+                <CTabs variant="tabs" class="custom-tabs mt-4">
+                    <CTab title="AdviserData" active>
+                        <CRow class="mt-3">
+                            <CCol>
+                                <CCard class="table-card border-0 shadow-sm mb-4">
+                                    <CDataTable class="custom-table mb-0" :items="advisersTable" :fields=fieldsAdviser
+                                        :items-per-page="itemsPerPage" :pagination="false" hover
+                                        :activePage.sync="activePageAdviser">
+
+                                        <!-- Under Table Pagination & Info -->
+                                        <template #under-table>
+                                            <div class="d-flex justify-content-between align-items-center px-4 py-3"
+                                                style="border-top: 1px solid #f3f4f6;">
+                                                <div class="text-muted" style="font-size: 13px;">
+                                                    Showing {{ tableStartItemAdviser }} to {{ tableEndItemAdviser }} of
+                                                    {{
+                                                        advisersTable.length }} results
+                                                </div>
+                                                <CPagination :activePage.sync="activePageAdviser"
+                                                    :pages="totalPagesAdviser" :doubleArrows="false" align="end"
+                                                    class="mb-0 custom-pagination" />
+                                            </div>
+                                        </template>
+
+                                        <!-- Organization Name and Address -->
+                                        <template #organizationName="{ item }">
+                                            <td class="align-middle">
+                                                <div class="font-weight-bold" style="color: #1e293b;">
+                                                    {{ item.organizationName }}
+                                                </div>
+                                                <div v-if="item.organizationAddress" class="text-muted mt-1"
+                                                    style="font-size: 13px;">
+                                                    {{ item.organizationAddress }}
+                                                </div>
+                                            </td>
+                                        </template>
+
+                                        <!-- Send Status -->
+                                        <template #sendStatus="{ item }">
+                                            <td class="text-center align-middle">
+                                                <div class="status-pill" :class="getStatusClass(item.sendStatus)">
+                                                    <CIcon :name="getStatusIcon(item.sendStatus)" size="sm"
+                                                        class="mr-1" />
+                                                    {{ formatSendStatus(item.sendStatus) }}
+                                                </div>
+                                            </td>
+                                        </template>
+
+                                        <!-- Actions -->
+                                        <template #actions="{ item }">
+                                            <td class="text-center align-middle">
+                                                <CButton class="btn-action-icon mr-2" @click="sendEmail(item._id)"
+                                                    title="Send Email">
+                                                    <CIcon name="cil-envelope-closed" />
+                                                </CButton>
+                                                <CButton class="btn-action-icon" @click="selectProgram(item)"
+                                                    title="View Details">
+                                                    <CIcon name="cil-options" />
+                                                </CButton>
+                                            </td>
+                                        </template>
+                                    </CDataTable>
+                                </CCard>
+                            </CCol>
+                        </CRow>
+                    </CTab>
+
+                    <CTab title="Email">
+                        <!-- Entire Email Tab Empty State -->
+                        <div v-if="emailsDataAdviser.length === 0" class="mt-4">
+                            <CCard class="text-center border-0 shadow-sm" style="border-radius: 8px;">
+                                <CCardBody class="d-flex flex-column justify-content-center align-items-center"
+                                    style="min-height: 400px; padding: 3rem;">
+                                    <div class="mb-3">
+                                        <CIcon name="cil-description"
+                                            style="width: 48px; height: 48px; color: #cbd5e1;" />
+                                    </div>
+                                    <h5 class="font-weight-bold mb-2" style="color: #1e293b;">Email Templates</h5>
+                                    <p class="mb-4"
+                                        style="max-width: 450px; font-size: 14px; color: #64748b; line-height: 1.5;">
+                                        Manage your standard response templates here. This feature is currently under
+                                        development.
+                                    </p>
+                                    <CButton color="danger" class="font-weight-bold px-4"
+                                        style="border-radius: 6px; padding-top: 8px; padding-bottom: 8px;"
+                                        @click="addEmailModelAdviser = true">
+                                        Create New Template
+                                    </CButton>
+                                </CCardBody>
+                            </CCard>
+                        </div>
+
+                        <div v-else>
+                            <CCard class="table-card border-0 shadow-sm mt-4">
+                                <CCardHeader
+                                    class="d-flex justify-content-between align-items-center bg-white border-bottom-0 pt-4 pb-3 px-4">
+                                    <h5 class="mb-0 font-weight-bold" style="color: #1e293b;">Available Templates</h5>
+                                    <CButton color="danger" size="sm" class="font-weight-bold px-3 py-2"
+                                        style="border-radius: 6px;" @click="addEmailModelAdviser = true">
+                                        <CIcon name="cil-file" class="mr-2" /> Create New Template
+                                    </CButton>
+                                </CCardHeader>
+                                <CCardBody class="p-0">
+                                    <div class="table-responsive">
+                                        <table class="table custom-template-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th class="pl-4" style="width: 40%;">TEMPLATE DETAILS</th>
+                                                    <th style="width: 20%;" class="text-center">CREATED DATE</th>
+                                                    <th style="width: 20%;" class="text-center">ACTIVE STATUS</th>
+                                                    <th style="width: 20%;" class="text-right pr-4">ACTIONS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="email in emailsDataAdviser" :key="email._id">
+                                                    <td class="pl-4">
+                                                        <div class="font-weight-bold"
+                                                            style="color: #1e293b; font-size: 15px;">
+                                                            {{
+                                                                email.title }}</div>
+                                                        <div class="text-muted mt-1" style="font-size: 13px;">{{
+                                                            email.description }}</div>
+                                                    </td>
+                                                    <td class="text-center text-muted" style="font-size: 14px;">
+                                                        <CIcon name="cil-clock" size="sm" class="mr-1" /> {{
+                                                            email.updatedAt.split(' ')[0]
+                                                        }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div v-if="email.active"
+                                                            class="d-inline-flex align-items-center font-weight-bold"
+                                                            style="color: #dc2626;">
+                                                            <CIcon name="cil-check-circle" class="mr-1"
+                                                                style="color: #dc2626; width: 16px; height: 16px;" />
+                                                            Active
+                                                        </div>
+                                                        <div v-else
+                                                            class="d-inline-flex align-items-center text-muted cursor-pointer"
+                                                            @click="useTemplateAdviser(email._id)"
+                                                            title="Click to make active">
+                                                            <div class="mr-2"
+                                                                style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
+                                                            </div> Inactive
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-right pr-4">
+                                                        <CButton variant="ghost" color="secondary" size="sm"
+                                                            class="btn-action-icon mr-2"
+                                                            @click="openEditModalAdviser(email)" title="Edit">
+                                                            <CIcon name="cil-pencil" />
+                                                        </CButton>
+                                                        <CButton variant="ghost" color="secondary" size="sm"
+                                                            class="btn-action-icon"
+                                                            @click="removeEmailAdviser(email._id)" title="Delete">
+                                                            <CIcon name="cil-trash" />
+                                                        </CButton>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </CCardBody>
+                            </CCard>
+                        </div>
+                    </CTab>
+                </CTabs>
+            </div>
+        </div>
+
         <CModal :centered="true" :show.sync="addEmailModel" :close-on-backdrop="true" size="lg"
             @update:show="handleModalClose">
             <template #header>
-                <h5 
-                  class="modal-title font-weight-bold" 
-                  style="color: #111827;"
-                >
+                <h5 class="modal-title font-weight-bold" style="color: #111827;">
                     {{ editingEmailId ? 'EditEmailTemplate' : 'Create Email Template' }}
                 </h5>
-                <CButtonClose 
-                  @click="addEmailModel = false" 
-                  class="text-black" 
-                />
+                <CButtonClose @click="addEmailModel = false" class="text-black" />
             </template>
             <div class="px-3 py-2">
                 <div class="mb-4">
@@ -309,6 +529,83 @@
                 </div>
             </template>
         </CModal>
+
+        <!-- Adviser Email Modal -->
+        <CModal :centered="true" :show.sync="addEmailModelAdviser" :close-on-backdrop="true" size="lg"
+            @update:show="handleModalCloseAdviser">
+            <template #header>
+                <h5 class="modal-title font-weight-bold" style="color: #111827;">
+                    {{ editingEmailIdAdviser ? 'EditEmailTemplate' : 'Create Email Template' }}
+                </h5>
+                <CButtonClose @click="addEmailModelAdviser = false" class="text-black" />
+            </template>
+            <div class="px-3 py-2">
+                <div class="mb-4">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Template Name <span class="text-danger">*</span>
+                    </label>
+                    <CInput v-model="titleAdviser" placeholder="e.g. Acceptance Letter"
+                        class="custom-input shadow-sm" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Subject <span class="text-danger">*</span>
+                    </label>
+                    <CInput v-model="subjectAdviser" placeholder="e.g. Regarding your application"
+                        class="custom-input shadow-sm" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Insert Variables
+                    </label>
+                    <div class="d-flex flex-wrap" style="gap: 16px;">
+                        <CButton class="variable-btn shadow-sm" size="sm"
+                            @click="insertVariableAdviser('Adviser Name')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Adviser Name
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm"
+                            @click="insertVariableAdviser('Student Name')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Student Name
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariableAdviser('School')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> School
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariableAdviser('Program')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Program
+                        </CButton>
+                        <CButton class="variable-btn shadow-sm" size="sm"
+                            @click="insertVariableAdviser('Academic Year')">
+                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Academic Year
+                        </CButton>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                        Content <span class="text-danger">*</span>
+                    </label>
+                    <CTextarea v-model="templateAdviser" :rows="8" class="custom-textarea shadow-sm"
+                        placeholder="Write your email content here..." style="border-color: #ef4444;" />
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="w-100 d-flex justify-content-end px-3 py-2">
+                    <CButton color="light" class="mr-3 filter-card font-weight-bold"
+                        style="color: #4b5563; padding: 8px 24px;" @click="addEmailModelAdviser = false">
+                        Cancel
+                    </CButton>
+                    <CButton color="danger" class="font-weight-bold px-4 d-flex align-items-center"
+                        style="padding: 8px 24px; border-radius: 6px;"
+                        @click="editingEmailIdAdviser ? updateFormAdviser() : createFormAdviser()">
+                        <CIcon name="cil-save" class="mr-2" /> {{ editingEmailIdAdviser ? 'Update Template' :
+                        'SaveTemplate' }}
+                    </CButton>
+                </div>
+            </template>
+        </CModal>
     </div>
 </template>
 
@@ -347,6 +644,26 @@ export default {
             activePage: 1,
             itemsPerPage: 5,
 
+            // Adviser State
+            selectionSchoolAdviser: null,
+            selectionProgramAdviser: null,
+            selectionAcademicYearAdviser: null,
+            selectionStatusAdviser: null,
+            searchQueryAdviser: '',
+            addEmailModelAdviser: false,
+            fieldsAdviser: [
+                { key: 'organizationName', label: 'ORGANIZATION NAME', _style: 'min-width: 250px' },
+                { key: 'email', label: 'EMAIL', _style: 'min-width: 200px' },
+                { key: 'student', label: 'STUDENT NAME', _style: 'min-width: 200px' },
+                { key: 'sendStatus', label: 'STATUS', _classes: 'text-center' },
+                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
+            ],
+            titleAdviser: '',
+            subjectAdviser: '',
+            templateAdviser: '',
+            editingEmailIdAdviser: null,
+            activePageAdviser: 1,
+
         }
     },
 
@@ -368,6 +685,10 @@ export default {
             this.$store.dispatch("academic/programs/programs")
             this.$store.dispatch("email/emailStudent/email")
             this.$store.dispatch("member/students/students")
+
+            // Adviser
+            this.$store.dispatch("email/emailAdviser/email")
+            this.$store.dispatch("member/advisors/advisors")
         },
 
         getStatusClass(status) {
@@ -387,6 +708,7 @@ export default {
             }
         },
         formatSendStatus(status) {
+            if (!status) return 'Pending'
             return status.charAt(0) + status.slice(1).toLowerCase()
         },
         selectProgram(program) {
@@ -413,9 +735,7 @@ export default {
         openEditModal(email) {
             this.editingEmailId = email._id;
             this.title = email.title;
-            // Assuming subject isn't natively bound yet, but we'll prepare the field
             this.subject = email.subject || '';
-            // Depending on how templete vs description maps
             this.template = email.templete || email.description || '';
             this.addEmailModel = true;
         },
@@ -469,7 +789,7 @@ export default {
                 "description": [
                     {
                         "key": "th",
-                        "value": "test"
+                        "value": this.subject || "test"
                     },
                     {
                         "key": "en",
@@ -527,6 +847,87 @@ export default {
             }
             this.$store.dispatch('email/emailStudent/deleteEmail', payload)
         },
+
+        // Adviser Methods
+        insertVariableAdviser(variableName) {
+            const tag = `{{${variableName}}}`
+            this.templateAdviser = this.templateAdviser ? this.templateAdviser + ' ' + tag : tag
+        },
+
+        handleModalCloseAdviser(val) {
+            if (!val) {
+                this.editingEmailIdAdviser = null;
+                this.titleAdviser = '';
+                this.subjectAdviser = '';
+                this.templateAdviser = '';
+            }
+        },
+
+        openEditModalAdviser(email) {
+            this.editingEmailIdAdviser = email._id;
+            this.titleAdviser = email.title;
+            this.subjectAdviser = email.subject || '';
+            this.templateAdviser = email.templete || email.description || '';
+            this.addEmailModelAdviser = true;
+        },
+
+        createFormAdviser() {
+            const payload = {
+                "title": [
+                    { "key": "th", "value": "ทดสอบ" },
+                    { "key": "en", "value": this.titleAdviser }
+                ],
+                "description": [
+                    { "key": "th", "value": "test" },
+                    { "key": "en", "value": "test" }
+                ],
+                "templete": this.templateAdviser,
+                "active": false,
+                "group": "69730cdf31640a4d402b0670" // Assume same group for now, or update if specific one exists
+            }
+
+            this.$store.dispatch('email/emailAdviser/createEmail', payload)
+                .then(() => {
+                    this.addEmailModelAdviser = false
+                })
+        },
+
+        updateFormAdviser() {
+            const payload = {
+                "_id": this.editingEmailIdAdviser,
+                "title": [
+                    { "key": "th", "value": "ทดสอบ" },
+                    { "key": "en", "value": this.titleAdviser }
+                ],
+                "description": [
+                    { "key": "th", "value": "test" },
+                    { "key": "en", "value": this.subjectAdviser || "test" }
+                ],
+                "templete": this.templateAdviser,
+                "active": false,
+                "group": "69730cdf31640a4d402b0670"
+            }
+
+            this.$store.dispatch('email/emailAdviser/updateEmail', payload)
+                .then(() => {
+                    this.addEmailModelAdviser = false
+                })
+        },
+
+        useTemplateAdviser(_id) {
+            const payload = {
+                "_id": _id,
+                "active": true,
+            }
+            this.$store.dispatch('email/emailAdviser/updateEmail', payload)
+        },
+
+        removeEmailAdviser(_id) {
+            const payload = {
+                "_id": _id,
+            }
+            this.$store.dispatch('email/emailAdviser/deleteEmail', payload)
+        },
     },
 
     computed: {
@@ -534,6 +935,8 @@ export default {
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('email/emailStudent', ['emailStudent']),
         ...mapGetters('member/students', { storedStudents: 'students' }),
+        ...mapGetters('email/emailAdviser', ['emailAdviser']),
+        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
 
         programsTable() {
             const lang = this.$i18n.locale
@@ -717,6 +1120,119 @@ export default {
         tableEndItem() {
             const end = this.activePage * this.itemsPerPage
             return end > this.programsTable.length ? this.programsTable.length : end
+        },
+
+        // ---------- Adviser Computeds ----------
+
+        advisersTable() {
+            const lang = this.$i18n.locale
+            let source = this.storedAdvisors || []
+
+            // Filter logic for adviser depending on what properties we have
+            if (this.selectionSchoolAdviser) {
+                // Adjust this if adviser data structure is different. Example assumes string or structured obj
+                source = source.filter(adviser => {
+                    const studentInfo = adviser.student ? adviser.student.info : null;
+                    const schoolId = studentInfo && studentInfo.school && studentInfo.school._id
+                        ? studentInfo.school._id
+                        : (studentInfo ? studentInfo.school : null)
+                    return schoolId === this.selectionSchoolAdviser
+                })
+            }
+
+            if (this.selectionProgramAdviser) {
+                source = source.filter(adviser => {
+                    const studentInfo = adviser.student ? adviser.student.info : null;
+                    const programId = studentInfo && studentInfo.program && studentInfo.program._id
+                        ? studentInfo.program._id
+                        : (studentInfo ? studentInfo.program : null)
+                    return programId === this.selectionProgramAdviser
+                })
+            }
+
+            if (this.selectionAcademicYearAdviser) {
+                source = source.filter(adviser => adviser.student && adviser.student.info && adviser.student.info.year === this.selectionAcademicYearAdviser.toString())
+            }
+
+            if (this.selectionStatusAdviser) {
+                const rowStatus = 'PENDING'
+                source = source.filter(adviser => rowStatus === this.selectionStatusAdviser)
+            }
+
+            if (this.searchQueryAdviser && this.searchQueryAdviser.trim() !== '') {
+                const query = this.searchQueryAdviser.toLowerCase().trim()
+                source = source.filter(adviser => {
+                    const getTitle = (titles) => {
+                        if (!titles || !Array.isArray(titles)) return 'N/A'
+                        const found = titles.find(t => t.key === lang)
+                        return found ? found.value : (titles[0] ? titles[0].value : 'N/A')
+                    }
+                    // Search in adviser name or student name
+                    const advName = (adviser.name || adviser.organizationName || '').toLowerCase()
+                    const stuName = adviser.student && adviser.student.name ? getTitle(adviser.student.name).toLowerCase() : ''
+
+                    return advName.includes(query) || stuName.includes(query)
+                })
+            }
+
+            return source.map((item, index) => {
+                const getTitle = (titles) => {
+                    if (!titles || !Array.isArray(titles)) return 'N/A'
+                    const found = titles.find(t => t.key === lang)
+                    return found ? found.value : (titles[0] ? titles[0].value : 'N/A')
+                }
+
+                const studentObj = item.student || {}
+                const info = studentObj.info || {}
+
+                const studentName = studentObj.name ? getTitle(studentObj.name) : 'N/A'
+                const adviserName = item.organizationName || item.name || 'N/A'
+
+                return {
+                    _id: item._id,
+                    id: `ADV-00${index + 1}`,
+                    organizationName: adviserName,
+                    organizationAddress: item.organizationAddress || '',
+                    email: item.email || 'N/A',
+                    student: studentName,
+                    sendStatus: 'PENDING',
+                }
+            })
+        },
+
+        emailsDataAdviser() {
+            const lang = this.$i18n.locale
+
+            if (!this.emailAdviser) return []
+
+            return this.emailAdviser.map(item => {
+                const titleObj = item.title ? item.title.find(t => t.key === lang) : null;
+                const descObj = item.description ? item.description.find(d => d.key === lang) : null;
+
+                const title = titleObj ? titleObj.value : 'No Title';
+                const description = descObj ? descObj.value : 'No Description';
+
+                return {
+                    _id: item._id,
+                    title: title,
+                    description: description,
+                    active: item.active,
+                    template: item.description,
+                    updatedAt: this.moment(item.updatedAt).format('DD/MM/YYYY HH:mm'),
+                }
+            })
+        },
+
+        totalPagesAdviser() {
+            return Math.ceil(this.advisersTable.length / this.itemsPerPage) || 1
+        },
+        tableStartItemAdviser() {
+            if (this.advisersTable.length === 0) return 0
+            return ((this.activePageAdviser - 1) * this.itemsPerPage) + 1
+        },
+        tableEndItemAdviser() {
+            const end = this.activePageAdviser * this.itemsPerPage
+            return end > this.advisersTable.length ? this.advisersTable.length : end
         }
     },
 
