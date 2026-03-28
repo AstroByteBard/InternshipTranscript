@@ -47,7 +47,7 @@ export default {
     }),
     routeTitle() {
       // Return the current route name like 'Dashboard' or fallback
-      const name = this.$route.name;
+      const name = (this.$route && this.$route.name) ? this.$route.name : null;
       if (name) {
         return name.charAt(0).toUpperCase() + name.slice(1);
       }

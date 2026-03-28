@@ -186,4 +186,22 @@ export default {
                 break;
         }
     },
+
+    documents(method, data, configs) {
+        switch (method) {
+            case 'get':
+                if (!data) return instance.get("/documents");
+                if (typeof data === 'string') return instance.get(`/documents/${data}`);
+                if (data._id) return instance.get(`/documents/${data._id}`);
+                return instance.get("/documents", { params: data });
+            case 'post':
+                return instance.post("/documents", data);
+            case 'put':
+                return instance.put("/documents", data);
+            case 'delete':
+                return instance.delete("/documents", { data: data });
+            default:
+                break;
+        }
+    },
 }

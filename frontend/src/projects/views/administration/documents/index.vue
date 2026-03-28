@@ -2,15 +2,7 @@
     <div>
         <CRow class="mb-4 align-items-center">
             <CCol sm="6">
-                <div class="custom-segmented-control">
-                    <CButtonGroup class="w-100 h-100">
-                        <CButton v-for="(value, key) in ['Document', 'Certificate']" :key="key"
-                            class="segment-btn font-weight-bold" :class="{ 'active': value === selected }"
-                            @click="selected = value">
-                            {{ value }}
-                        </CButton>
-                    </CButtonGroup>
-                </div>
+                <DocsSegmentControl v-model="selected" />
             </CCol>
             <CCol sm="6" class="d-flex justify-content-end">
                 <CButton class="btn-filter-action btn-filter-red" @click="$router.push('/documents/create')">
@@ -22,62 +14,10 @@
         <div v-if="selected === 'Document'">
             <CRow>
                 <CCol>
-                    <CCard class="mb-4 filter-card">
-                        <CCardBody class="p-3">
-                            <CRow class="align-items-center mb-3">
-                                <CCol md="12">
-                                    <div class="search-input-wrapper">
-                                        <CIcon name="cil-search" class="search-icon" />
-                                        <input type="text" class="form-control search-input"
-                                            placeholder="Search Document..." />
-                                    </div>
-                                </CCol>
-                            </CRow>
-                        </CCardBody>
-                    </CCard>
+                    <DocsFilterCard @search="(q) => { }" />
 
-                    <CCard class="mb-4">
-                        <CCardBody class="p-0">
-                            <CDataTable class="custom-table mb-0" :items="documentsData" :fields="documentFields"
-                                :items-per-page="5" hover>
-                                <template #nameContent="{ item }">
-                                    <td class="align-middle px-4 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="mr-3 doc-icon-wrapper" :class="getIconClass(item.type)">
-                                                <CIcon :name="getIconName(item.type)" class="doc-icon-svg" />
-                                            </div>
-                                            <div>
-                                                <div class="font-weight-bold" style="color: #1f2937; font-size: 14px;">
-                                                    {{ item.name }}</div>
-                                                <div class="text-muted small">{{ item.type }} &bull; {{ item.downloads
-                                                    }} downloads</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </template>
-
-                                <template #status="{ item }">
-                                    <td class="align-middle">
-                                        <CBadge :color="item.status === 'Active' ? 'success' : 'secondary'"
-                                            class="custom-badge">
-                                            {{ item.status }}
-                                        </CBadge>
-                                    </td>
-                                </template>
-
-                                <template #actions="{ item }">
-                                    <td class="align-middle text-right px-4 py-3">
-                                        <CButton class="btn-action-icon mr-1" title="Download">
-                                            <CIcon name="cil-data-transfer-down" />
-                                        </CButton>
-                                        <CButton class="btn-action-icon" title="Options">
-                                            <CIcon name="cil-options" />
-                                        </CButton>
-                                    </td>
-                                </template>
-                            </CDataTable>
-                        </CCardBody>
-                    </CCard>
+                    <DocumentsTable :items="documentsData" :fields="documentFields" @download="onDownload"
+                        @edit="onEdit" @copy="onCopy" @delete="onDelete" />
                 </CCol>
             </CRow>
         </div>
@@ -100,8 +40,17 @@
 </template>
 
 <script>
+import DocsSegmentControl from '../../../components/documents/list/DocsSegmentControl.vue'
+import DocsFilterCard from '../../../components/documents/list/DocsFilterCard.vue'
+import DocumentsTable from '../../../components/documents/list/DocumentsTable.vue'
+
 export default {
     name: 'DocumentsIndex',
+    components: {
+        DocsSegmentControl,
+        DocsFilterCard,
+        DocumentsTable
+    },
     data() {
         return {
             selected: 'Document',
@@ -110,14 +59,11 @@ export default {
                 { key: 'status', label: 'STATUS' },
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-right pe-4', sorter: false, filter: false },
             ],
-            documentsData: [
-                { id: 1, name: 'Student Handbook 2023-2024.pdf', type: 'PDF', downloads: 1245, status: 'Active' },
-                { id: 2, name: 'Academic Calendar 2024.pdf', type: 'PDF', downloads: 856, status: 'Active' },
-                { id: 3, name: 'Enrollment Form.docx', type: 'Word', downloads: 2300, status: 'Inactive' },
-                { id: 4, name: 'Q3 Financial Report.xlsx', type: 'Excel', downloads: 12, status: 'Active' },
-                { id: 5, name: 'BSCS Curriculum.pdf', type: 'PDF', downloads: 560, status: 'Active' },
-            ]
+            documentsData: []
         }
+    },
+    mounted() {
+        this.loadDocuments();
     },
     methods: {
         getIconClass(type) {
@@ -131,86 +77,52 @@ export default {
             if (type === 'Word') return 'cil-description';
             if (type === 'Excel') return 'cil-spreadsheet';
             return 'cil-file';
+        },
+        async loadDocuments() {
+            try {
+                const res = await this.$api.documents('get');
+                if (res.data && res.data.data) {
+                    this.documentsData = res.data.data;
+                }
+            } catch (err) {
+                console.error('Failed to load documents', err);
+            }
+        },
+        onDownload(item) {
+            console.log('download', item)
+        },
+        onEdit(item) {
+            this.$router.push(`/documents/edit/${item._id}`);
+        },
+        onCopy(item) {
+            if (!confirm(`Copy "${item.title}"?`)) return;
+            const payload = {
+                title: item.title + ' (Copy)',
+                status: 'Draft',
+                content: item.content,
+            };
+            this.$api.documents('post', payload)
+                .then(() => this.loadDocuments())
+                .catch(err => console.error('Copy failed', err));
+        },
+        async onDelete(item) {
+            if (!confirm(`Delete "${item.title}"? This cannot be undone.`)) return;
+            try {
+                await this.$api.documents('delete', { _id: item._id });
+                this.loadDocuments();
+            } catch (err) {
+                console.error('Delete failed', err);
+            }
+        },
+        onOptions(item) {
+            this.$router.push(`/administration/documents/edit/${item._id}`);
         }
     }
 }
 </script>
 
 <style scoped>
-.custom-segmented-control {
-    background-color: #f3f4f6;
-    border-radius: 8px;
-    padding: 4px;
-    display: inline-block;
-    width: 100%;
-    max-width: 250px;
-}
-
-.segment-btn {
-    background-color: transparent;
-    color: #6b7280;
-    border: none;
-    padding: 7px 18px;
-    font-size: 14px;
-    border-radius: 6px;
-    transition: all 0.2s ease-in-out;
-    box-shadow: none;
-}
-
-.segment-btn:hover {
-    color: #374151;
-    background-color: transparent;
-}
-
-.segment-btn.active {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
-    border: none !important;
-}
-
-.segment-btn:focus,
-.segment-btn.focus {
-    box-shadow: none !important;
-}
-
-.filter-card {
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    background-color: #ffffff;
-}
-
-.search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-icon {
-    position: absolute;
-    left: 12px;
-    color: #9ca3af;
-    width: 16px;
-    height: 16px;
-    pointer-events: none;
-}
-
-.search-input {
-    padding-left: 36px;
-    height: 38px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    background-color: #f9fafb;
-    color: #4b5563;
-    font-size: 14px;
-}
-
-.search-input:focus {
-    background-color: #ffffff;
-    border-color: #d1d5db;
-    box-shadow: 0 0 0 2px rgba(229, 231, 235, 0.5);
-}
+/* segment, filter and action button styles moved into component files */
 
 .btn-filter-action {
     background-color: #ffffff;
@@ -279,67 +191,5 @@ export default {
     border-bottom: none !important;
 }
 
-/* Badges and Icons */
-.custom-badge {
-    background-color: #f3f4f6;
-    color: #4b5563;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 11px;
-}
-
-.doc-icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-}
-
-.doc-icon-svg {
-    width: 18px;
-    height: 18px;
-}
-
-.doc-icon-pdf {
-    background-color: #fef2f2;
-    color: #dc2626;
-}
-
-.doc-icon-word {
-    background-color: #eff6ff;
-    color: #2563eb;
-}
-
-.doc-icon-excel {
-    background-color: #f0fdf4;
-    color: #16a34a;
-}
-
-.doc-icon-default {
-    background-color: #f3f4f6;
-    color: #6b7280;
-}
-
-/* Actions */
-.btn-action-icon {
-    background-color: transparent !important;
-    border: none !important;
-    color: #9ca3af !important;
-    border-radius: 6px;
-    padding: 6px 8px;
-    transition: all 0.2s;
-    box-shadow: none !important;
-}
-
-.btn-action-icon:hover {
-    color: #4b5563 !important;
-    background-color: #f3f4f6 !important;
-}
-
-.btn-action-icon:focus {
-    box-shadow: none !important;
-}
+/* table row / icon styles moved to DocumentsTable.vue */
 </style>

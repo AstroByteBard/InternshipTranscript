@@ -13,28 +13,29 @@ module.exports = function () {
   // Swagger setup
   swagger(app);
 
+  // Load Middlewares and Routes IMMEDIATELY
+  middlewares(app);
+  
+  app.use(function (req, res, next) {
+    if (req.method === "OPTIONS") {
+      const headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Headers, X-Access-Token"
+      };
+      res.writeHead(200, headers);
+      res.end();
+    } else {
+      res.header("Access-Control-Allow-Origin", "*");
+      next();
+    }
+  });
+
+  // Load routes
+  routes(app);
+
   initialize.init(function (status) {
     if (status) {
-      middlewares(app);
-
-      app.use(function (req, res, next) {
-        if (req.method === "OPTIONS") {
-          const headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Headers, X-Access-Token"
-          };
-          res.writeHead(200, headers);
-          res.end();
-        } else {
-          res.header("Access-Control-Allow-Origin", "*");
-          next();
-        }
-      });
-
-      // Load routes
-      routes(app);
-
       app.get('/healthz', (req, res) => {
         if (isReady) {
           res.status(200).send('OK');

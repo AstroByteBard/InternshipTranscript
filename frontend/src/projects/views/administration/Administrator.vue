@@ -139,10 +139,10 @@ export default {
                 if (!matchesSearch) return false;
 
                 // Dropdown Filters
-                if (this.school && student.info?.school?._id !== this.school) return false;
-                if (this.program && student.info?.program?._id !== this.program) return false;
-                if (this.academic && String(student.year) !== String(this.academic)) return false;
-                if (this.semester && String(student.semester) !== String(this.semester)) return false;
+                if (this.studentFilters.school && student.info?.school?._id !== this.studentFilters.school) return false;
+                if (this.studentFilters.program && student.info?.program?._id !== this.studentFilters.program) return false;
+                if (this.studentFilters.academic && String(student.year) !== String(this.studentFilters.academic)) return false;
+                if (this.studentFilters.semester && String(student.semester) !== String(this.studentFilters.semester)) return false;
 
                 return true;
             });
@@ -163,8 +163,8 @@ export default {
             const lang = this.$i18n.locale;
             let source = this.storedPrograms || [];
 
-            if (this.school) {
-                source = source.filter(program => program.school === this.school);
+            if (this.studentFilters.school) {
+                source = source.filter(program => program.school === this.studentFilters.school);
             }
 
             return [

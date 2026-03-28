@@ -87,13 +87,6 @@ export default {
             icon: 'cil-lightbulb',
           },
           {
-            _name: 'CSidebarNavItem',
-            name: 'Form',
-            to: '/administration/form',
-            icon: 'cil-pencil',
-          },
-
-          {
             _name: 'CSidebarNavTitle',
             _children: ['Project shortcuts']
           },
