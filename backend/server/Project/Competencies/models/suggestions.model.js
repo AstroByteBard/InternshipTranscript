@@ -4,6 +4,7 @@ var mongoose    = require('mongoose');
 var Schema      = mongoose.Schema;
 
 var objsSchema  = new Schema({
+    year            : {type: String, default: null},
     title           : [{
         key            : {type: String, default: null},
         value          : {type: String, default: null},

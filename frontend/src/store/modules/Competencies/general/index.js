@@ -34,6 +34,7 @@ const ServerModule = {
             Service.general('put', data, {})
                 .then((response) => {
                     console.log('สถานนะการแก้ไข : ', response.data)
+                    alert('Updated successfully')
                     return dispatch ('general')
                 }).catch((err) => {
                         console.log(err)

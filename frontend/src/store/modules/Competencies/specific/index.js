@@ -33,11 +33,12 @@ const ServerModule = {
         updateSpecific({ dispatch },data) {
             Service.specific('put', data, {})
                 .then((response) => {
-                    console.log('สถานนะการแก้ไข : ', response.data)
+                    alert('Updated successfully')
                     return dispatch ('specific')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    alert('Update failed: ' + err.message)
+                    console.log(err)
+                });
         },
         deleteSpecific({ dispatch },data) {
             Service.specific('delete', data, {})

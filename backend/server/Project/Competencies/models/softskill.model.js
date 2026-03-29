@@ -1,9 +1,10 @@
-'use strict';
+    'use strict';
 
 var mongoose    = require('mongoose');
 var Schema      = mongoose.Schema;
 
 var objsSchema  = new Schema({
+    year            : {type: String, default: null},
     title           : [{
         key            : {type: String, default: null},
         value          : {type: String, default: null},
@@ -32,6 +33,5 @@ objsSchema.pre('findOneAndUpdate', async function(next) {
     }
     next();
 }); 
-
 
 module.exports = mongoose.model('Competencies_Softskill', objsSchema, 'Competencies_Softskill');

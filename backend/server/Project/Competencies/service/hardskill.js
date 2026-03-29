@@ -39,7 +39,10 @@ exports.onUpdate = async function (request, response) {
         let query = {}
         query._id = new mongo.ObjectId(request.body._id);
 
-        const doc = await Hardskill.onUpdate(query, request.body);
+        const updateData = { ...request.body }
+        delete updateData._id
+
+        const doc = await Hardskill.onUpdate(query, updateData);
         return ResMessage.sendResponse(response, 0, 20000, doc);
     } catch (err) {
         console.error(err);

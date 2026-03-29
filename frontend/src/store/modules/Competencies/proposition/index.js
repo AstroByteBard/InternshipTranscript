@@ -33,11 +33,12 @@ const ServerModule = {
         updateProposition({ dispatch },data) {
             Service.proposition('put', data, {})
                 .then((response) => {
-                    console.log('สถานนะการแก้ไข : ', response.data)
+                    alert('Updated successfully')
                     return dispatch ('proposition')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    alert('Update failed: ' + err.message)
+                    console.log(err)
+                });
         },
         deleteProposition({ dispatch },data) {
             Service.proposition('delete', data, {})
