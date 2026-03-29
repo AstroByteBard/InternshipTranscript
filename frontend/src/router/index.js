@@ -11,7 +11,7 @@ const Login = () => import('@/projects/views/Login')
 
 //administrator
 const Administrator = () => import('@/projects/views/administration/Administrator')
-const AdminForm = () => import('@/projects/views/administration/Form')
+
 
 //documents
 const Documents = () => import('@/projects/views/administration/documents/index')
@@ -32,6 +32,11 @@ export default new Router({
     scrollBehavior: () => ({ y: 0 }),
     routes: [
 
+        {
+            path: '/login',
+            name: 'Login',
+            component: Login
+        },
         {
             path: '/',
             redirect: '/dashboard',
@@ -68,17 +73,18 @@ export default new Router({
                     name: 'CreateDocument',
                     component: CreateDocument
                 },
+                {
+                    path: 'documents/edit/:id',
+                    name: 'EditDocument',
+                    component: CreateDocument
+                },
 
                 {
                     path: 'administrator',
                     name: 'administrator',
                     component: Administrator
                 },
-                {
-                    path: 'administration/form',
-                    name: 'AdministrationForm',
-                    component: AdminForm
-                },
+
             ]
         }
     ]

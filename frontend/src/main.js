@@ -15,6 +15,9 @@ Vue.component("v-otp-input", OtpInput);
 Vue.use(CoreuiVuePro)
 Vue.prototype.$log = console.log.bind(console)
 
+import api from './service/api'
+Vue.prototype.$api = api
+
 import VueQRCodeComponent from 'vue-qrcode-component'
 Vue.component('qr-code', VueQRCodeComponent)
 

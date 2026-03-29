@@ -3,13 +3,18 @@ const AcademicRoutes = require("../Project/Academic/Academic.routes");
 const MemberRoutes = require("../Project/Member/Member.routes");
 const CompetenciesRoutes = require("../Project/Competencies/Competencies.routes");
 const EmailRoutes = require("../Project/Email/Email.routes")
+const DocumentRoutes = require("../Project/Documents/documents.routes");
 
 
 // const sync = require("../sync/mis");
 module.exports = function (app) {
 
   var path = "/api/v1";
+  console.log("Loading routes with path:", path);
   // app.use(path, googleRoutes.onDistance )
+  app.use(path + '/documents', DocumentRoutes)
+  console.log("Documents route registered at:", path + '/documents');
+  app.get(path + '/test', (req, res) => res.send("OK"));
   app.use(path + '/email' , EmailRoutes)
   app.use(path + '/competencies', CompetenciesRoutes) // complete
   app.use(path + '/academic', AcademicRoutes); // complete
