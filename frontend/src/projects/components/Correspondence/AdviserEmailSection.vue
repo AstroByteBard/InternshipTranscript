@@ -1,57 +1,8 @@
 <template>
     <div>
         <div v-if="!selectedProgram">
-            <CCard class="mb-4 filter-card">
-                <CCardBody class="p-3">
-                    <CRow class="align-items-center mb-3">
-                        <CCol md="5">
-                            <div class="search-input-wrapper">
-                                <CIcon name="cil-search" class="search-icon" />
-                                <input type="text" class="form-control search-input"
-                                    placeholder="Search by name, organization, or student..." v-model="searchQuery" />
-                            </div>
-                        </CCol>
-                        <CCol md="7" class="d-flex justify-content-end align-items-center">
-                            <CButton class="btn-filter-action mr-2">
-                                <CIcon name="cil-envelope-closed" class="mr-2" /> Send Email Organization
-                            </CButton>
-                            <CButton class="btn-filter-action btn-filter-red" @click="showFilters = !showFilters">
-                                <CIcon name="cil-filter" class="mr-2" /> Filters
-                            </CButton>
-                        </CCol>
-                    </CRow>
-                    <transition name="slide">
-                        <div v-show="showFilters">
-                            <hr class="filter-divider" />
-                            <CRow>
-                                <CCol md="3">
-                                    <label class="filter-label">SCHOOL</label>
-                                    <CSelect class="custom-select-ui mb-0" :options="schools"
-                                        :value.sync="selectionSchool" placeholder="All Schools" />
-                                </CCol>
-                                <CCol md="3">
-                                    <label class="filter-label">PROGRAM</label>
-                                    <CSelect class="custom-select-ui mb-0" :options="programs"
-                                        :value.sync="selectionProgram" placeholder="All Programs" />
-                                </CCol>
-                                <CCol md="3">
-                                    <label class="filter-label">ACADEMIC YEAR</label>
-                                    <CSelect class="custom-select-ui mb-0" :options="academicYears"
-                                        :value.sync="selectionAcademicYear" placeholder="All Years" />
-                                </CCol>
-                                <CCol md="3">
-                                    <label class="filter-label">STATUS</label>
-                                    <CSelect class="custom-select-ui mb-0" :options="statuses"
-                                        :value.sync="selectionStatus" placeholder="All Status" />
-                                </CCol>
-                            </CRow>
-                        </div>
-                    </transition>
-                </CCardBody>
-            </CCard>
-
-            <CTabs variant="tabs" class="custom-tabs mt-4">
-                <CTab title="AdviserData" active>
+            <CTabs variant="tabs" class="custom-tabs mt-0">
+                <CTab title="Adviser Email List" active>
                     <CRow class="mt-3">
                         <CCol>
                             <CCard class="table-card border-0 shadow-sm mb-4">
@@ -212,15 +163,16 @@ import ModalEmailTemplateAdviser from '@/projects/components/Modal/ModalEmailTem
 export default {
     name: 'AdviserEmailSection',
     components: { ModalEmailTemplateAdviser },
+    props: {
+        searchQuery: { type: String, default: '' },
+        school: { type: String, default: null },
+        program: { type: String, default: null },
+        year: { type: [String, Number], default: null },
+        status: { type: String, default: null },
+    },
     data() {
         return {
             selectedProgram: null,
-            selectionSchool: null,
-            selectionProgram: null,
-            selectionAcademicYear: null,
-            selectionStatus: null,
-            searchQuery: '',
-            showFilters: false,
             fields: [
                 { key: 'organizationName', label: 'ORGANIZATION NAME', _style: 'min-width: 250px' },
                 { key: 'email', label: 'EMAIL', _style: 'min-width: 200px' },
@@ -237,8 +189,6 @@ export default {
     },
     methods: {
         loadData() {
-            this.$store.dispatch('academic/schools/schools')
-            this.$store.dispatch('academic/programs/programs')
             this.$store.dispatch('email/emailAdviser/email')
             this.$store.dispatch('member/advisors/advisors')
             this.$store.dispatch('member/students/students')
@@ -278,25 +228,25 @@ export default {
             const lang = this.$i18n.locale
             let source = this.storedAdvisors || []
 
-            if (this.selectionSchool) {
+            if (this.school) {
                 source = source.filter(adviser => {
                     const info = adviser.student?.info ?? null
                     const id = info?.school?._id ?? info?.school ?? null
-                    return id === this.selectionSchool
+                    return id === this.school
                 })
             }
-            if (this.selectionProgram) {
+            if (this.program) {
                 source = source.filter(adviser => {
                     const info = adviser.student?.info ?? null
                     const id = info?.program?._id ?? info?.program ?? null
-                    return id === this.selectionProgram
+                    return id === this.program
                 })
             }
-            if (this.selectionAcademicYear) {
-                source = source.filter(adviser => adviser.student?.info?.year === this.selectionAcademicYear.toString())
+            if (this.year) {
+                source = source.filter(adviser => adviser.student?.info?.year === this.year.toString())
             }
-            if (this.selectionStatus) {
-                source = source.filter(() => 'PENDING' === this.selectionStatus)
+            if (this.status) {
+                source = source.filter(() => 'PENDING' === this.status)
             }
             if (this.searchQuery.trim()) {
                 const q = this.searchQuery.toLowerCase().trim()

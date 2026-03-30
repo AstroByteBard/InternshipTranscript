@@ -26,24 +26,24 @@ export default {
     components: {
         CChartBar
     },
-    data() {
-        return {
-            labels: [
-                'Engineering', 'Business', 'Arts', 'Science', 'Medicine',
-                'Law', 'Education', 'Tech', 'Arch', 'Nursing',
-                'Music', 'Psych', 'Comm', 'Social'
-            ],
-            datasets: [
-                {
-                    label: 'Metrics',
-                    backgroundColor: '#c83f36',
-                    hoverBackgroundColor: '#b0352d',
-                    data: [4000, 3500, 2000, 2800, 1900, 2400, 3500, 3200, 2100, 2800, 1500, 2600, 2900, 3100],
-                    barPercentage: 0.6,
-                    categoryPercentage: 1.0
-                }
-            ],
-            options: {
+    props: {
+        labels: {
+            type: Array,
+            default: () => []
+        },
+        datasets: {
+            type: Array,
+            default: () => []
+        }
+    },
+    computed: {
+        maxCount() {
+            if (!this.datasets || !this.datasets[0] || !this.datasets[0].data.length) return 100;
+            const max = Math.max(...this.datasets[0].data);
+            return Math.ceil(max / 10) * 10 || 10;
+        },
+        options() {
+            return {
                 maintainAspectRatio: false,
                 legend: {
                     display: false
@@ -66,9 +66,9 @@ export default {
                     yAxes: [{
                         ticks: {
                             beginAtZero: true,
-                            max: 4000,
+                            max: this.maxCount,
                             min: 0,
-                            stepSize: 1000,
+                            stepSize: Math.ceil(this.maxCount / 4) || 1,
                             fontColor: '#9ca3af',
                             padding: 15
                         },

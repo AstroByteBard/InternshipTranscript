@@ -17,8 +17,8 @@
                     <div class="position-absolute text-center d-flex flex-column justify-content-center align-items-center"
                         style="pointer-events: none;">
                         <div class="font-weight-bold mb-0" style="color: #111827; font-size: 2.5rem; line-height: 1.2;">
-                            68%</div>
-                        <div class="font-weight-bold" style="font-size: 0.85rem; color: #4b5563;">Completed</div>
+                            {{ percentage }}%</div>
+                        <div class="font-weight-bold" style="font-size: 0.85rem; color: #4b5563;">{{ labels[0] }}</div>
                     </div>
                 </div>
             </CCardBody>
@@ -32,22 +32,37 @@ import { CChartPie } from '@coreui/vue-chartjs'
 export default {
     name: 'ChartPie',
     components: { CChartPie },
-    data() {
-        return {
-            labels: ['Completed', 'Not Completed'],
-            datasets: [
+    props: {
+        labels: {
+            type: Array,
+            default: () => ['Completed', 'Not Completed']
+        },
+        datasets: {
+            type: Array,
+            default: () => [
                 {
-                    backgroundColor: ['#b0352d', '#f8d2d2'], // Match bar chart tone
-                    data: [68, 32],
+                    backgroundColor: ['#b0352d', '#f8d2d2'],
+                    data: [0, 0],
                     borderWidth: 0,
                     hoverBorderWidth: 0
                 }
-            ],
-            options: {
+            ]
+        }
+    },
+    computed: {
+        percentage() {
+            if (!this.datasets || !this.datasets[0] || !this.datasets[0].data) return 0;
+            const data = this.datasets[0].data;
+            const total = data.reduce((a, b) => a + b, 0);
+            if (total === 0) return 0;
+            return Math.round((data[0] / total) * 100);
+        },
+        options() {
+            return {
                 maintainAspectRatio: false,
-                cutoutPercentage: 85, // Makes it a thin doughnut
+                cutoutPercentage: 85,
                 legend: {
-                    display: false // Hide legend
+                    display: false
                 },
                 tooltips: {
                     enabled: true

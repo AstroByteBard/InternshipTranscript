@@ -1,93 +1,140 @@
 <template>
     <div>
-        <CRow class="mb-4 align-items-center">
-            <CCol md="8">
-                <div class="custom-segmented-control">
-                    <CButtonGroup class="w-100 h-100">
-                        <CButton class="segment-btn font-weight-bold" :class="selected === 'Softskill' ? 'active' : ''"
-                            @click="selected = 'Softskill'">
-                            Softskill
-                        </CButton>
-                        <CButton class="segment-btn font-weight-bold" :class="selected === 'Hardskill' ? 'active' : ''"
-                            @click="selected = 'Hardskill'">
-                            Hardskill
-                        </CButton>
-                        <CButton class="segment-btn font-weight-bold"
-                            :class="selected === 'Suggestions' ? 'active' : ''" @click="selected = 'Suggestions'">
-                            Suggestions
-                        </CButton>
-                    </CButtonGroup>
-                </div>
-            </CCol>
-            <CCol md="4" class="d-flex justify-content-end">
-                <CButton color="danger" class="font-weight-bold d-flex align-items-center"
-                    style="border-radius: 6px; padding: 8px 16px;" @click="showCreateModal = true">
-                    <CIcon name="cil-plus" class="mr-2" /> Create {{ selected }}
-                </CButton>
-            </CCol>
-        </CRow>
+        <CompetenciesHeader @export-assessment="exportAssessment" />
+        <!-- Navigation & Management Bar -->
+        <CCard class="management-card border-0 mb-4 shadow-sm">
+            <CCardBody class="p-3">
+                <CRow class="align-items-center">
+                    <!-- Segmented Control (Softskill/Hardskill/Suggestions) -->
+                    <CCol lg="4" md="5" class="mb-3 mb-md-0">
+                        <div class="custom-segmented-control w-100">
+                            <CButtonGroup class="w-100 h-100">
+                                <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'Softskill' }"
+                                    @click="selected = 'Softskill'">
+                                    Softskill
+                                </CButton>
+                                <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'Hardskill' }"
+                                    @click="selected = 'Hardskill'">
+                                    Hardskill
+                                </CButton>
+                                <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'Suggestions' }"
+                                    @click="selected = 'Suggestions'">
+                                    Suggestions
+                                </CButton>
+                            </CButtonGroup>
+                        </div>
+                    </CCol>
 
+                    <!-- Search Bar -->
+                    <CCol lg="4" md="7" class="mb-3 mb-md-0">
+                        <div class="search-input-wrapper">
+                            <CIcon name="cil-search" class="search-icon" />
+                            <input type="text" class="form-control modern-search-input"
+                                :placeholder="'Search ' + selected + '...'" v-model="currentSearchQuery" />
+                        </div>
+                    </CCol>
+
+                    <!-- Actions -->
+                    <CCol lg="4" md="12" class="d-flex justify-content-end align-items-center flex-wrap">
+                        <CButton class="btn-modern-action btn-modern-filter mr-2" @click="showFilters = !showFilters">
+                            <CIcon name="cil-filter" class="mr-2" /> Filters
+                        </CButton>
+                        <CButton color="danger" class="btn-modern-action btn-modern-red font-weight-bold" 
+                            style="border-radius: 6px;" @click="showCreateModal = true">
+                            <CIcon name="cil-plus" class="mr-2" /> Create {{ selected }}
+                        </CButton>
+                    </CCol>
+                </CRow>
+
+                <!-- Expanded Filters -->
+                <transition name="slide">
+                    <div v-show="showFilters" class="mt-3 pt-3 border-top">
+                        <CRow>
+                            <CCol :md="selected === 'Hardskill' ? '3' : '12'">
+                                <label class="filter-mini-label">ACADEMIC YEAR</label>
+                                <CSelect 
+                                    custom 
+                                    class="modern-select-filter mb-0" 
+                                    :options="yearOptions"
+                                    :value.sync="currentYearFilter" 
+                                    placeholder="All Years" 
+                                />
+                            </CCol>
+                            <template v-if="selected === 'Hardskill'">
+                                <CCol md="4" class="mb-3 mb-md-0">
+                                    <label class="filter-mini-label">SCHOOL</label>
+                                    <CSelect 
+                                        custom 
+                                        class="modern-select-filter mb-0" 
+                                        :options="hardskillSchoolOptions"
+                                        :value.sync="selectionSchoolHardskill" 
+                                        placeholder="All Schools" 
+                                    />
+                                </CCol>
+                                <CCol md="5" class="mb-3 mb-md-0">
+                                    <label class="filter-mini-label">MAJOR / PROGRAM</label>
+                                    <CSelect 
+                                        custom 
+                                        class="modern-select-filter mb-0" 
+                                        :options="hardskillMajorOptions"
+                                        :value.sync="selectionMajorHardskill" 
+                                        placeholder="All Majors" 
+                                    />
+                                </CCol>
+                            </template>
+                        </CRow>
+                    </div>
+                </transition>
+            </CCardBody>
+        </CCard>
         <div v-show="selected === 'Softskill'">
-            <CCard class="mb-4 filter-card shadow-sm border-0">
-                <CCardBody class="p-3">
-                    <CRow class="align-items-center">
-                        <CCol md="5">
-                            <div class="search-input-wrapper">
-                                <CIcon name="cil-search" class="search-icon" />
-                                <input type="text" class="form-control search-input"
-                                    placeholder="Search by name, ID, or subject..." v-model="searchQuery" />
-                            </div>
-                        </CCol>
-                        <CCol md="7" class="d-flex justify-content-end align-items-center">
-                            <label class="filter-label mr-3 mb-0">ACADEMIC YEAR : </label>
-                            <CSelect class="custom-select-ui mb-0 mr-3" style="width: 200px;" :options="academicYears"
-                                :value.sync="selectionAcademicYear" placeholder="All Years" />
-                        </CCol>
-                    </CRow>
-                </CCardBody>
-            </CCard>
             <CCard class="table-card border-0 shadow-sm mt-4 mb-4">
                 <CDataTable class="custom-table mb-0" :items="filteredSoftskillItems" :fields="softskillFields"
                     :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePage">
+                    
                     <!-- Year -->
                     <template #year="{ item }">
-                        <div class="text-center font-weight-bold" style="color: #1e293b;">
-                            {{ item.year || '-' }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div class="font-weight-bold" style="color: #1e293b;">
+                                {{ item.year || '-' }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- Title -->
                     <template #title="{ item }">
-                        <div class="text-center" style="color: #334155;">
-                            {{ translate(item.title) }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div style="color: #334155;">
+                                {{ translate(item.title) }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- Active Status -->
                     <template #status="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <div v-if="item.active"
-                                class="d-inline-flex align-items-center font-weight-bold"
-                                style="color: #dc2626; cursor: pointer;" title="Click to deactivate"
+                                class="status-pill status-replied d-inline-flex align-items-center font-weight-bold"
+                                style="cursor: pointer;" title="Click to deactivate"
                                 @click="toggleStatus(item._id, 'softskill')">
-                                <CIcon name="cil-check-circle" class="mr-1"
-                                    style="color: #dc2626; width: 16px; height: 16px;" />
+                                <CIcon name="cil-check-circle" class="mr-1" size="sm" />
                                 Active
                             </div>
-                            <div v-else class="d-inline-flex align-items-center text-muted" style="cursor: pointer;"
-                                title="Click to make active" @click="toggleStatus(item._id, 'softskill')">
+                            <div v-else class="status-pill status-closed d-inline-flex align-items-center text-muted" 
+                                style="cursor: pointer;" title="Click to make active" 
+                                @click="toggleStatus(item._id, 'softskill')">
                                 <div class="mr-2"
                                     style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
                                 </div>
                                 Inactive
                             </div>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Assessment Question -->
                     <template #assessmentQuestion="{ item }">
-                        <div class="align-middle py-3" style="min-width: 340px;">
-                            <div class="question-list">
+                        <td class="align-middle py-3">
+                            <div class="question-list" style="min-width: 300px;">
                                 <div v-for="(c, idx) in item.config" :key="idx" class="question-item"
                                     :class="{ 'question-item--border': idx < item.config.length - 1 }">
                                     <div class="question-category">
@@ -97,19 +144,19 @@
                                     <div class="question-subtitle">{{ translate(c.question, 'en') }}</div>
                                 </div>
                             </div>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Actions -->
                     <template #actions="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <CButton class="btn-action-icon mr-2" title="Edit" @click="editItem(item)">
                                 <CIcon name="cil-pencil" />
                             </CButton>
                             <CButton class="btn-action-icon" title="Delete" @click="deleteItem(item._id, 'softskill')">
                                 <CIcon name="cil-trash" />
                             </CButton>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Pagination -->
@@ -126,99 +173,72 @@
                 </CDataTable>
             </CCard>
         </div>
-
         <div v-show="selected === 'Hardskill'">
-            <CCard class="mb-4 filter-card shadow-sm border-0">
-                <CCardBody class="p-3">
-                    <CRow class="align-items-center mb-3">
-                        <CCol md="4">
-                            <div class="search-input-wrapper">
-                                <CIcon name="cil-search" class="search-icon" />
-                                <input type="text" class="form-control search-input"
-                                    placeholder="Search by course or subject..." v-model="searchQueryHardskill" />
-                            </div>
-                        </CCol>
-                        <CCol md="4">
-                            <div class="d-flex align-items-center">
-                                <label class="filter-label mr-2 mb-0" style="min-width: 60px;">SCHOOL: </label>
-                                <CSelect class="custom-select-ui mb-0 w-100" :options="hardskillSchoolOptions"
-                                    :value.sync="selectionSchoolHardskill" placeholder="All Schools" />
-                            </div>
-                        </CCol>
-                        <CCol md="4">
-                            <div class="d-flex align-items-center">
-                                <label class="filter-label mr-2 mb-0" style="min-width: 60px;">MAJOR: </label>
-                                <CSelect class="custom-select-ui mb-0 w-100" :options="hardskillMajorOptions"
-                                    :value.sync="selectionMajorHardskill" placeholder="All Majors" />
-                            </div>
-                        </CCol>
-                    </CRow>
-                    <CRow class="align-items-center">
-                        <CCol md="12" class="d-flex justify-content-end align-items-center">
-                            <label class="filter-label mr-3 mb-0">ACADEMIC YEAR : </label>
-                            <CSelect class="custom-select-ui mb-0" style="width: 200px;" :options="academicYears"
-                                :value.sync="selectionAcademicYearHardskill" placeholder="All Years" />
-                        </CCol>
-                    </CRow>
-                </CCardBody>
-            </CCard>
             <CCard class="table-card border-0 shadow-sm mt-4 mb-4">
                 <CDataTable class="custom-table mb-0" :items="filteredHardskillItems" :fields="hardskillFields"
                     :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePageHardskill">
                     
                     <!-- Year -->
                     <template #year="{ item }">
-                        <div class="text-center font-weight-bold" style="color: #1e293b;">
-                            {{ item.year || '-' }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div class="font-weight-bold" style="color: #1e293b;">
+                                {{ item.year || '-' }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- School -->
                     <template #school="{ item }">
-                        <div class="text-center" style="color: #475569;">
-                            {{ item.program && item.program.school ? translate(item.program.school.title) : '-' }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div style="color: #475569;">
+                                {{ item.program && item.program.school ? translate(item.program.school.title) : '-' }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- Major -->
                     <template #major="{ item }">
-                        <div class="text-center" style="color: #475569;">
-                            {{ item.program ? translate(item.program.title) : '-' }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div style="color: #475569;">
+                                {{ item.program ? translate(item.program.title) : '-' }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- Title -->
                     <template #title="{ item }">
-                        <div class="text-center" style="color: #334155;">
-                            {{ translate(item.title) }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div style="color: #334155;">
+                                {{ translate(item.title) }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- Active Status -->
                     <template #status="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <div v-if="item.active"
-                                class="d-inline-flex align-items-center font-weight-bold"
-                                style="color: #dc2626; cursor: pointer;" title="Click to deactivate"
+                                class="status-pill status-replied d-inline-flex align-items-center font-weight-bold"
+                                style="cursor: pointer;" title="Click to deactivate"
                                 @click="toggleStatus(item._id, 'hardskill')">
-                                <CIcon name="cil-check-circle" class="mr-1"
-                                    style="color: #dc2626; width: 16px; height: 16px;" />
+                                <CIcon name="cil-check-circle" class="mr-1" size="sm" />
                                 Active
                             </div>
-                            <div v-else class="d-inline-flex align-items-center text-muted" style="cursor: pointer;"
-                                title="Click to make active" @click="toggleStatus(item._id, 'hardskill')">
+                            <div v-else class="status-pill status-closed d-inline-flex align-items-center text-muted" 
+                                style="cursor: pointer;" title="Click to make active" 
+                                @click="toggleStatus(item._id, 'hardskill')">
                                 <div class="mr-2"
                                     style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
                                 </div>
                                 Inactive
                             </div>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Assessment Question -->
                     <template #assessmentQuestion="{ item }">
-                        <div class="align-middle py-3" style="min-width: 340px;">
-                            <div class="question-list">
+                        <td class="align-middle py-3">
+                            <div class="question-list" style="min-width: 300px;">
                                 <div v-for="(c, idx) in item.config" :key="idx" class="question-item"
                                     :class="{ 'question-item--border': idx < item.config.length - 1 }">
                                     <div class="question-category">
@@ -228,19 +248,19 @@
                                     <div class="question-subtitle">{{ translate(c.question, 'en') }}</div>
                                 </div>
                             </div>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Actions -->
                     <template #actions="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <CButton class="btn-action-icon mr-2" title="Edit" @click="editItem(item)">
                                 <CIcon name="cil-pencil" />
                             </CButton>
                             <CButton class="btn-action-icon" title="Delete" @click="deleteItem(item._id, 'hardskill')">
                                 <CIcon name="cil-trash" />
                             </CButton>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Pagination -->
@@ -259,87 +279,71 @@
         </div>
 
         <div v-show="selected === 'Suggestions'">
-            <CCard class="mb-4 filter-card shadow-sm border-0">
-                <CCardBody class="p-3">
-                    <CRow class="align-items-center">
-                        <CCol md="5">
-                            <div class="search-input-wrapper">
-                                <CIcon name="cil-search" class="search-icon" />
-                                <input type="text" class="form-control search-input"
-                                    placeholder="Search by category or content..." v-model="searchQuerySuggestions" />
-                            </div>
-                        </CCol>
-                        <CCol md="7" class="d-flex justify-content-end align-items-center">
-                            <label class="filter-label mr-3 mb-0">ACADEMIC YEAR : </label>
-                            <CSelect class="custom-select-ui mb-0 mr-3" style="width: 200px;" :options="academicYears"
-                                :value.sync="selectionAcademicYearSuggestions" placeholder="All Years" />
-                        </CCol>
-                    </CRow>
-                </CCardBody>
-            </CCard>
             <CCard class="table-card border-0 shadow-sm mt-4 mb-4">
                 <CDataTable class="custom-table mb-0" :items="filteredSuggestionItems" :fields="suggestionFields"
                     :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePageSuggestions">
                     
                     <!-- Year -->
                     <template #year="{ item }">
-                        <div class="text-center font-weight-bold" style="color: #1e293b;">
-                            {{ item.year || '-' }}
-                        </div>
+                        <td class="text-center align-middle">
+                            <div class="font-weight-bold" style="color: #1e293b;">
+                                {{ item.year || '-' }}
+                            </div>
+                        </td>
                     </template>
 
                     <!-- Title (formerly Category) -->
                     <template #title="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <CBadge color="info" shape="pill" class="px-3" style="font-size: 11px;">
                                 {{ translate(item.title) || 'General' }}
                             </CBadge>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Suggestion Content -->
                     <template #suggestionContent="{ item }">
-                        <div class="align-middle py-3" style="min-width: 340px;">
-                            <div class="question-list">
+                        <td class="align-middle py-3">
+                            <div class="question-list" style="min-width: 300px;">
                                 <div v-for="(c, idx) in item.config" :key="idx" class="question-item"
                                     :class="{ 'question-item--border': idx < item.config.length - 1 }">
                                     <div class="question-title">{{ translate(c.question) }}</div>
                                 </div>
                             </div>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Active Status -->
                     <template #status="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <div v-if="item.active"
-                                class="d-inline-flex align-items-center font-weight-bold"
-                                style="color: #dc2626; cursor: pointer;" title="Click to deactivate"
+                                class="status-pill status-replied d-inline-flex align-items-center font-weight-bold"
+                                style="cursor: pointer;" title="Click to deactivate"
                                 @click="toggleStatus(item._id, 'suggestions')">
-                                <CIcon name="cil-check-circle" class="mr-1"
-                                    style="color: #dc2626; width: 16px; height: 16px;" />
+                                <CIcon name="cil-check-circle" class="mr-1" size="sm" />
                                 Active
                             </div>
-                            <div v-else class="d-inline-flex align-items-center text-muted" style="cursor: pointer;"
-                                title="Click to make active" @click="toggleStatus(item._id, 'suggestions')">
+                            <div v-else class="status-pill status-closed d-inline-flex align-items-center text-muted" 
+                                style="cursor: pointer;" title="Click to make active" 
+                                @click="toggleStatus(item._id, 'suggestions')">
                                 <div class="mr-2"
                                     style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
                                 </div>
                                 Inactive
                             </div>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Actions -->
                     <template #actions="{ item }">
-                        <div class="text-center">
+                        <td class="text-center align-middle">
                             <CButton class="btn-action-icon mr-2" title="Edit" @click="editItem(item)">
                                 <CIcon name="cil-pencil" />
                             </CButton>
                             <CButton class="btn-action-icon" title="Delete" @click="deleteItem(item._id, 'suggestions')">
                                 <CIcon name="cil-trash" />
                             </CButton>
-                        </div>
+                        </td>
                     </template>
 
                     <!-- Pagination -->
@@ -508,22 +512,28 @@
 
 <script>
 import { mapActions, mapState } from 'vuex'
+import CompetenciesHeader from '@/projects/components/Layout/CompetenciesHeader.vue'
+import WidgetsCompetencies from '@/projects/components/widgets/WidgetsCompetencies.vue'
 import Service from "../../../service/api";
 
 export default {
     name: 'Competencies',
+    components: {
+        CompetenciesHeader,
+        WidgetsCompetencies,
+    },
     data() {
         return {
             selected: 'Softskill',
             searchQuery: '',
             searchQueryHardskill: '',
             searchQuerySuggestions: '',
-            academicYears: ['2023', '2024', '2025', '2566', '2567', '2568'],
             selectionAcademicYear: '',
             selectionAcademicYearHardskill: '',
             selectionAcademicYearSuggestions: '',
             selectionSchoolHardskill: '',
             selectionMajorHardskill: '',
+            showFilters: false,
             activePage: 1,
             activePageHardskill: 1,
             activePageSuggestions: 1,
@@ -594,21 +604,66 @@ export default {
                 return found ? found.value : (data[0] ? data[0].value : '')
             }
         },
-        hardskillSchoolOptions() {
-            return this.schools.map(s => ({
-                value: s._id,
-                label: this.translate(s.title)
-            }))
+        uniqueYearsCount() {
+            const allItems = [...this.softskillItems, ...this.hardskillItems, ...this.suggestionItems]
+            const years = allItems.map(i => i.year).filter(y => y)
+            return new Set(years).size
         },
         hardskillMajorOptions() {
             let filtered = this.programs
             if (this.selectionSchoolHardskill) {
                 filtered = filtered.filter(p => p.school === this.selectionSchoolHardskill)
             }
-            return filtered.map(p => ({
-                value: p._id,
-                label: this.translate(p.title)
-            }))
+            return [
+                { value: '', label: 'All Majors' },
+                ...filtered.map(p => ({
+                    value: p._id,
+                    label: this.translate(p.title)
+                }))
+            ]
+        },
+        currentSearchQuery: {
+            get() {
+                if (this.selected === 'Softskill') return this.searchQuery
+                if (this.selected === 'Hardskill') return this.searchQueryHardskill
+                return this.searchQuerySuggestions
+            },
+            set(val) {
+                if (this.selected === 'Softskill') this.searchQuery = val
+                else if (this.selected === 'Hardskill') this.searchQueryHardskill = val
+                else this.searchQuerySuggestions = val
+            }
+        },
+        currentYearFilter: {
+            get() {
+                if (this.selected === 'Softskill') return this.selectionAcademicYear
+                if (this.selected === 'Hardskill') return this.selectionAcademicYearHardskill
+                return this.selectionAcademicYearSuggestions
+            },
+            set(val) {
+                if (this.selected === 'Softskill') this.selectionAcademicYear = val
+                else if (this.selected === 'Hardskill') this.selectionAcademicYearHardskill = val
+                else this.selectionAcademicYearSuggestions = val
+            }
+        },
+        yearOptions() {
+            const current = new Date().getFullYear() + 543
+            const years = [
+                { value: '', label: 'All Years' },
+                { value: (current - 1).toString(), label: (current - 1).toString() },
+                { value: current.toString(), label: current.toString() },
+                { value: (current + 1).toString(), label: (current + 1).toString() },
+            ]
+            return years
+        },
+        hardskillSchoolOptions() {
+            return [
+                { value: '', label: 'All Schools' },
+                ...this.schools.map(s => ({
+                    value: s._id,
+                    label: this.translate(s.title)
+                }))
+            ]
         },
         hardskillSchoolOptionsCreate() {
             return this.schools.map(s => ({
@@ -972,55 +1027,48 @@ export default {
                 return
             }
         },
+        exportAssessment() {
+            this.$router.push('/fill-form');
+        },
     },
 }
 </script>
 
 <style scoped>
+.management-card {
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
 .custom-segmented-control {
-    background-color: #f3f4f6;
-    border-radius: 8px;
+    background: #f1f5f9;
     padding: 4px;
-    display: inline-block;
-    width: 100%;
-    max-width: 300px;
+    border-radius: 12px;
+    display: flex;
+    height: 48px;
 }
 
 .segment-btn {
-    background-color: transparent;
-    color: #6b7280;
-    border: none;
-    padding: 7px 18px;
-    font-size: 14px;
-    border-radius: 6px;
-    transition: all 0.2s ease-in-out;
-    box-shadow: none;
-    flex: 1;
-}
-
-.segment-btn:hover {
-    color: #374151;
-    background-color: transparent;
-}
-
-.segment-btn.active {
-    background-color: #ffffff !important;
-    color: #111827 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
     border: none !important;
-}
-
-.segment-btn:focus,
-.segment-btn.focus {
+    background: transparent !important;
+    color: #64748b !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-shadow: none !important;
 }
 
-/* Filter Card Styles */
-.filter-card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    background-color: #ffffff;
+.segment-btn.active {
+    background: #ffffff !important;
+    color: #dc2626 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
 .search-input-wrapper {
@@ -1033,41 +1081,129 @@ export default {
     position: absolute;
     left: 16px;
     color: #94a3b8;
-    width: 18px;
-    height: 18px;
+    z-index: 10;
 }
 
-.search-input {
-    padding-left: 44px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    height: 42px;
+.modern-search-input {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 10px 16px 10px 44px !important;
+    height: 48px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    width: 100%;
+}
+
+.modern-search-input:focus {
+    background: #ffffff !important;
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1) !important;
+}
+
+.btn-modern-action {
+    height: 48px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-weight: 600;
     font-size: 14px;
+    display: flex;
+    align-items: center;
     transition: all 0.2s;
-    background-color: #f8fafc;
-}
-
-.search-input:focus {
-    background-color: #ffffff;
-    border-color: #94a3b8;
-    box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.1);
-}
-
-.filter-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: #64748b;
-    letter-spacing: 0.5px;
-    margin-bottom: 0px;
-}
-
-.custom-select-ui {
-    border-radius: 8px;
     border: 1px solid #e2e8f0;
-    height: 42px;
-    font-size: 14px;
-    color: #334155;
-    background-color: #ffffff;
+    background: white;
+    color: #475569;
+}
+
+.btn-modern-action:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.btn-modern-red {
+    background: #dc2626 !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-modern-red:hover {
+    background: #b91c1c !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.modern-select-filter {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    height: 42px !important;
+    font-size: 13px !important;
+    color: #1e293b !important;
+}
+
+.filter-mini-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* Status Pills */
+.status-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-replied {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.status-closed {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.btn-action-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.btn-action-icon:hover {
+    background: #f1f5f9;
+    color: #dc2626;
+    border-color: #dc2626;
+}
+
+.table-card {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.custom-table thead th {
+    background: #f8fafc;
+    border-bottom: 2px solid #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 16px;
 }
 
 /* Assessment Question List */

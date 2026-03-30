@@ -19,6 +19,7 @@ const CreateDocument = () => import('@/projects/views/administration/documents/C
 
 // competencies
 const Competencies = () => import('@/projects/views/administration/Competencies')
+const FillForm = () => import('@/projects/views/administration/FillForm')
 
 //correspondence
 const Correspondence = () => import('@/projects/views/administration/Correspondence')
@@ -61,6 +62,11 @@ export default new Router({
                     path: 'competencies',
                     name: 'Competencies',
                     component: Competencies
+                },
+                {
+                    path: 'fill-form',
+                    name: 'FillForm',
+                    component: FillForm
                 },
 
                 {
