@@ -1,6 +1,30 @@
-var mongo = require('mongodb');
-var Student = require('../controller/student');
+const mongo = require('mongodb');
+const Student = require('../controller/student');
 const ResMessage = require("../../Settings/service/message");
+const MailHelper = require("../../../../helpers/google/Mail");
+
+exports.onSend = async function (request, response) {
+    try {
+        const { to, subject, body } = request.body;
+        
+        // Find active template (optional, if user didn't provide custom body/subject)
+        const activeTemplate = await Student.onQuery({ active: true });
+        
+        let mailSubject = subject || (activeTemplate && activeTemplate.title && activeTemplate.title[0] ? activeTemplate.title[0].value : "Notification");
+        let mailBody = body || (activeTemplate ? activeTemplate.templete : "Hello student!");
+
+        const result = await MailHelper.sendMail(to, mailSubject, "", mailBody);
+        
+        if (result.success) {
+            return ResMessage.sendResponse(response, 0, 20000, result);
+        } else {
+            return ResMessage.sendResponse(response, 0, 40400, result.error);
+        }
+    } catch (err) {
+        console.error(err);
+        return ResMessage.sendResponse(response, 0, 40400);
+    }
+};
 
 exports.onQuery = async function (request, response) {
     try {

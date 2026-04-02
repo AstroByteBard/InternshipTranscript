@@ -1,10 +1,18 @@
 <template>
-    <div>
-        <ButtonGroupAdministrator 
-            v-model="selected" 
+    <div class="administrator-view">
+        <AdministratorHeader 
             @add-student="$refs.modalStudent.openAdd()"
             @add-advisor="$refs.modalAdvisor.openAdd()"
             @refresh="onInit" 
+        />
+
+        <WidgetsAdministrator 
+            :studentCount="storedStudents ? storedStudents.length : 0"
+            :advisorCount="storedAdvisors ? storedAdvisors.length : 0"
+            :schoolCount="storedSchools ? storedSchools.length : 0"
+            :programCount="storedPrograms ? storedPrograms.length : 0"
+            :activeTab="selected"
+            @select-tab="selected = $event"
         />
         
         <div v-if="selected === 'Student'">
@@ -53,12 +61,14 @@ import TableAdministratorStudent from '@/projects/components/Table/TableAdminist
 import TableAdminstratorAdviser from '@/projects/components/Table/TableAdminstratorAdviser.vue'
 import FilterStudent from '@/projects/components/Filter/Adminstrator/FilterStudent.vue'
 import FilterAdvisor from '@/projects/components/Filter/Adminstrator/FilterAdvisor.vue'
-import ButtonGroupAdministrator from '@/projects/components/ButtonGroup/ButtonGroupAdministrator.vue'
+import AdministratorHeader from '@/projects/components/Layout/AdministratorHeader.vue'
+import WidgetsAdministrator from '@/projects/components/widgets/WidgetsAdministrator.vue'
 
 export default {
     name: 'Administrator',
     components: {
-        ButtonGroupAdministrator,
+        AdministratorHeader,
+        WidgetsAdministrator,
         FilterStudent,
         FilterAdvisor,
         TableAdministratorStudent,
@@ -75,7 +85,7 @@ export default {
             program: '',
             academic: '',
             semester: '',
-
+            province: '',
         }
     },
 
@@ -103,6 +113,15 @@ export default {
         ...mapGetters('academic/course', { storedCourses: 'course' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
         ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
+
+        studentFilters() {
+            return {
+                school: this.school,
+                program: this.program,
+                academic: this.academic,
+                semester: this.semester
+            }
+        },
 
         formattedStudents() {
             if (!this.storedStudents || !this.storedStudents.length) return [];
@@ -139,9 +158,24 @@ export default {
                 if (!matchesSearch) return false;
 
                 // Dropdown Filters
-                if (this.studentFilters.school && student.info?.school?._id !== this.studentFilters.school) return false;
-                if (this.studentFilters.program && student.info?.program?._id !== this.studentFilters.program) return false;
+                const info = student.info || {};
+                
+                // School Filter
+                if (this.studentFilters.school) {
+                    const studentSchoolId = info.school?._id || info.school;
+                    if (studentSchoolId !== this.studentFilters.school) return false;
+                }
+
+                // Program Filter
+                if (this.studentFilters.program) {
+                    const studentProgramId = info.program?._id || info.program;
+                    if (studentProgramId !== this.studentFilters.program) return false;
+                }
+
+                // Academic Year Filter
                 if (this.studentFilters.academic && String(student.year) !== String(this.studentFilters.academic)) return false;
+
+                // Semester Filter
                 if (this.studentFilters.semester && String(student.semester) !== String(this.studentFilters.semester)) return false;
 
                 return true;

@@ -1,16 +1,18 @@
 const nodemailer = require("nodemailer");
 
 let transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: process.env.SMTP_PORT || 465,
+    secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
     auth: {
-        user: process.env.EMAIL_USER, // อีเมลผู้ส่ง
-        pass: process.env.EMAIL_PASS, // รหัสผ่าน (หรือ App Password)
+        user: process.env.SMTP_USER, // อีเมลผู้ส่ง
+        pass: process.env.SMTP_PASS, // รหัสผ่าน (หรือ App Password)
     },
 });
 
 exports.sendMail = async function (to, subject, text, html) {    
     let mailOptions = {
-        from: `"My App" <${process.env.EMAIL_USER}>`,
+        from: `"Internship System" <${process.env.SMTP_USER}>`,
         to,          // ผู้รับ
         subject,     // หัวข้อ
         text,        // ข้อความธรรมดา
