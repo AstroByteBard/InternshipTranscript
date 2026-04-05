@@ -4,6 +4,7 @@ const router = express.Router();
 const Hardskill = require("./service/hardskill");
 const Softskill = require("./service/softskill");
 const Suggestions = require("./service/suggestions");
+const Evaluation = require("./service/evaluation");
 
 router.get("/hardskill", Hardskill.onQuerys);
 router.post("/hardskill", Hardskill.onCreate);
@@ -20,6 +21,11 @@ router.post("/suggestions", Suggestions.onCreate);
 router.put("/suggestions", Suggestions.onUpdate);
 router.delete("/suggestions", Suggestions.onDelete);
 
+router.post("/evaluation", Evaluation.onCreate);
+router.get("/evaluation", Evaluation.onQuerys);
+router.post("/evaluation/query", Evaluation.onQuery);
+router.put("/evaluation", Evaluation.onUpdate);
+router.delete("/evaluation", Evaluation.onDelete);
 
 module.exports = router;
 

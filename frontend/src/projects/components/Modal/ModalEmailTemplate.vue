@@ -39,6 +39,9 @@
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Academic Year')">
                         <CIcon name="cil-plus" size="sm" class="mr-1" /> Academic Year
                     </CButton>
+                    <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Evaluation Link')">
+                        <CIcon name="cil-link" size="sm" class="mr-1" /> Evaluation Link
+                    </CButton>
                 </div>
             </div>
 
@@ -78,9 +81,20 @@ export default {
     methods: {
         openAdd() {
             this.editingEmailId = null
-            this.title = ''
-            this.subject = ''
-            this.template = ''
+            this.title = 'Internship Status Update'
+            this.subject = 'Update regarding your Internship: {{Academic Year}}'
+            this.template = `Dear {{Student Name}},
+                We are writing to provide an update regarding your internship status for the {{Academic Year}} academic year.
+
+                Please log in to the Internship Portal to view the latest documents and requirements for your program: {{Program}}.
+
+                {{Evaluation Link}}
+
+                If you have any questions, please contact the Student Affairs office.
+
+                Best regards,
+                Student Affairs Department
+                {{School}}`
             this.show = true
         },
         openEdit(email = {}) {
@@ -109,11 +123,13 @@ export default {
             if (this.editingEmailId) {
                 payload._id = this.editingEmailId
                 this.$store.dispatch('email/emailStudent/updateEmail', payload).then(() => {
+                    alert('Email template updated successfully!');
                     this.show = false
                     this.$emit('refresh')
                 })
             } else {
                 this.$store.dispatch('email/emailStudent/createEmail', payload).then(() => {
+                    alert('Email template created successfully!');
                     this.show = false
                     this.$emit('refresh')
                 })

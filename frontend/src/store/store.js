@@ -3,7 +3,7 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 // import DialogMessages from "./modules/Dialog/index";
-// import Setting from './modules/Setting/index'
+import Setting from './modules/Setting/index'
 
 // import Payment from  "@/store/modules/Payments/index";
 // import Organization from "@/store/modules/organization";
@@ -49,7 +49,8 @@ export default new Vuex.Store({
     email: Email,
     competencies: Competencies,
     member: Member,
-    academic: Academic
+    academic: Academic,
+    setting : Setting
 
     //   dialog: DialogMessages,
     //   setting : Setting,

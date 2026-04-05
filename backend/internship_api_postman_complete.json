@@ -1,0 +1,2412 @@
+{
+  "info": {
+    "name": "Internship Transcript API (Complete)",
+    "description": "Auto-generated collection containing all endpoints discovered directly from the backend source code.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "GET /api/v1/documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/documents/:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents/:id",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                ":id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/documents",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/documents/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents/:id",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                ":id"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/documents",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/documents/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/documents/:id",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                ":id"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "item": [
+        {
+          "name": "GET /api/v1/email/adviser",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/adviser",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "adviser"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/email/student",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/student",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "student"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/email/adviser",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/adviser",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "adviser"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/email/adviser/explorers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/adviser/explorers",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "adviser",
+                "explorers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/email/adviser/send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/adviser/send",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "adviser",
+                "send"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/email/student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/student",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "student"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/email/student/explorers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/student/explorers",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "student",
+                "explorers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/email/student/send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/student/send",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "student",
+                "send"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/email/adviser",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/adviser",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "adviser"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/email/student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/student",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "student"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/email/adviser",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/adviser",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "adviser"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/email/student",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/email/student",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "email",
+                "student"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Competencies",
+      "item": [
+        {
+          "name": "GET /api/v1/competencies/hardskill",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/hardskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "hardskill"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/competencies/softskill",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/softskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "softskill"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/competencies/suggestions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/suggestions",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "suggestions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/competencies/evaluation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/evaluation",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "evaluation"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/competencies/hardskill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/hardskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "hardskill"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/competencies/softskill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/softskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "softskill"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/competencies/suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/suggestions",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "suggestions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/competencies/evaluation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/evaluation",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "evaluation"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/competencies/evaluation/query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/evaluation/query",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "evaluation",
+                "query"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/competencies/hardskill",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/hardskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "hardskill"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/competencies/softskill",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/softskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "softskill"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/competencies/suggestions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/suggestions",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "suggestions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/competencies/evaluation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/evaluation",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "evaluation"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/competencies/hardskill",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/hardskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "hardskill"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/competencies/softskill",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/softskill",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "softskill"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/competencies/suggestions",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/suggestions",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "suggestions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/competencies/evaluation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/competencies/evaluation",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "competencies",
+                "evaluation"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Academic",
+      "item": [
+        {
+          "name": "GET /api/v1/academic/program",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/program",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "program"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/academic/school",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/school",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "school"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/academic/course",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/course",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "course"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/academic/program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/program",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "program"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/academic/school",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/school",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "school"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/academic/course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/course",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "course"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/academic/program",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/program",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "program"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/academic/school",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/school",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "school"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/academic/course",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/course",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "course"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/academic/program",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/program",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "program"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/academic/school",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/school",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "school"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/academic/course",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/academic/course",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "academic",
+                "course"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Member",
+      "item": [
+        {
+          "name": "GET /api/v1/member/students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/students",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/member/advisors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/advisors",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "advisors"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/member/students",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/students",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "students"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/member/advisors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/advisors",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "advisors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/member/students",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/students",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "students"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/member/advisors",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/advisors",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "advisors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/member/students",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/students",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "students"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/member/advisors",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/member/advisors",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "member",
+                "advisors"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Setting",
+      "item": [
+        {
+          "name": "GET /api/v1/setting/province",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/province",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "province"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/setting/message",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/message",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "message"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/setting/status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/status",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/setting/group",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/group",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "group"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/v1/setting/verification",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/verification",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "verification"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/setting/province",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/province",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "province"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/setting/message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/message",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "message"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/setting/status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/status",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/setting/group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/group",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "group"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/setting/verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/verification",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "verification"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/v1/setting/verification/explorers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/verification/explorers",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "verification",
+                "explorers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/setting/province",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/province",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "province"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/setting/message",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/message",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "message"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/setting/status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/status",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/setting/group",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/group",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "group"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/v1/setting/verification",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/verification",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "verification"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/setting/province",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/province",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "province"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/setting/message",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/message",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "message"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/setting/status",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/status",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/setting/group",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/group",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "group"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/v1/setting/verification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/api/v1/setting/verification",
+              "host": [
+                "localhost:8081"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "setting",
+                "verification"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

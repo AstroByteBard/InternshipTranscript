@@ -1,22 +1,40 @@
 <template>
-  <div class="fill-form-page pb-5 h-100 overflow-auto">
-    <CContainer fluid class="px-4 mt-n3 animate-fade-in">
-      <!-- Intro Card -->
-      <CCard class="form-intro-card border-0 shadow-sm mb-4">
-        <CCardBody class="p-4 d-flex align-items-center">
-          <div class="intro-icon-wrapper mr-4">
-            <CIcon name="cil-notes" size="xl" class="text-danger" />
-          </div>
-          <div>
-            <h4 class="font-weight-bold mb-1" style="color: #1e293b;">Evaluation Guidelines</h4>
-            <p class="text-muted mb-0" style="font-size: 14px;">
-              Please rate each competency based on your current internship performance. 
-              A score of 1 indicates significant improvement is needed, while 5 represents excellence.
-            </p>
-          </div>
-        </CCardBody>
-      </CCard>
+  <div class="fill-form-page h-100 overflow-auto bg-light">
+    <!-- Sticky Navigation -->
+    <FormNavbar :studentName="displayName" :studentID="studentID || 'Student'" />
+    
+    <!-- Unified Header: Hero Banner + Overlapping Profile Card -->
+    <div class="unified-header-container position-relative mb-5"> 
+      <div class="profile-overlap-container container-fluid px-4">
+        <StudentAssessmentHeader 
+            v-if="studentDoc"
+            :studentName="displayName"
+            :studentID="studentID"
+            :schoolName="schoolInfo"
+            :programName="programInfo"
+            :academicYear="yearInfo"
+            :semester="semesterInfo"
+        />
+        
+        <!-- Guidelines Info Box -->
+        <CCard class="guidelines-info-card border-0 shadow-sm mt-4 animate-slide-up">
+          <CCardBody class="p-3 d-flex align-items-center">
+            <div class="info-icon mr-3">
+              <CIcon name="cil-info" class="text-info" size="xl" />
+            </div>
+            <div>
+              <div class="font-weight-bold text-dark mb-1">Evaluation Guidelines</div>
+              <div class="small text-muted">
+                Please rate each competency from 1 (Needs Improvement) to 5 (Excellent). 
+                Your feedback is essential for the student's academic progress and career development.
+              </div>
+            </div>
+          </CCardBody>
+        </CCard>
+      </div>
+    </div>
 
+    <CContainer fluid class="px-4 content-body animate-fade-in">
       <!-- Softskills Section -->
       <div class="section-title-wrapper mb-3 d-flex align-items-center">
         <div class="section-badge text-danger mr-3">SECTION 01</div>
@@ -103,30 +121,59 @@
       <CCard class="competency-card border-0 mb-5 shadow-sm">
         <CCardBody class="p-4">
              <div v-for="item in suggestionItems" :key="item._id" class="mb-4">
-                 <h5 class="competency-title mb-3">{{ translate(item.title) }}</h5>
-                 <div v-for="(q, qIdx) in item.config" :key="qIdx" class="mb-3">
-                     <label class="font-weight-bold text-muted small mb-2">{{ translate(q.question) }}</label>
-                     <CTextarea 
+                  <h5 class="competency-title mb-3">{{ translate(item.title) }}</h5>
+                  <div v-for="(q, qIdx) in item.config" :key="qIdx" class="mb-3">
+                      <label class="font-weight-bold text-muted small mb-2">{{ translate(q.question) }}</label>
+                      <CTextarea 
                         rows="3" 
                         class="form-control-modern" 
                         placeholder="Write your suggestions here..."
                         v-model="evaluation.suggestions[item._id + '_' + qIdx]"
-                     />
-                 </div>
+                      />
+                  </div>
              </div>
         </CCardBody>
       </CCard>
 
-      <!-- Footer Actions -->
-      <div class="form-footer-actions d-flex justify-content-between align-items-center mb-5 mt-4">
-        <CButton @click="$router.push('/competencies')" variant="ghost" class="btn-modern-back px-4">
-            <CIcon name="cil-arrow-left" class="mr-2" /> Back to Competencies
+      <!-- Centered Submit Button -->
+      <div class="submit-section-container d-flex flex-column align-items-center mt-5 mb-5 pt-4">
+        <CButton 
+            color="danger" 
+            size="lg" 
+            class="px-5 py-3 font-weight-bold shadow-lg btn-submit-evaluation rounded-pill mb-3"
+            @click="submitEvaluation"
+            :disabled="isSubmitting"
+        >
+          <CIcon v-if="isSubmitting" name="cil-sync" class="mr-2 spin-icon" />
+          <CIcon v-else name="cil-check-alt" class="mr-2" />
+          {{ isSubmitting ? 'SUBMITTING...' : 'COMPLETE ASSESSMENT & SUBMIT' }}
         </CButton>
-        <CButton @click="submitEvaluation" color="danger" class="btn-modern-submit px-5 py-3 font-weight-bold shadow">
-            <CIcon name="cil-check-alt" class="mr-2" /> Submit Evaluation Form
-        </CButton>
+        <p class="text-muted small">By clicking submit, you confirm that all ratings provided are accurate.</p>
       </div>
+
     </CContainer>
+
+    <!-- Success Modal -->
+    <CModal
+      title="Assessment Complete"
+      color="success"
+      :show.sync="showSuccessModal"
+      centered
+      fade
+      :closeOnBackdrop="false"
+    >
+      <div class="text-center py-4">
+        <div class="success-icon-large mb-3">
+            <CIcon name="cil-check-circle" size="xl" class="text-success" />
+        </div>
+        <h3 class="font-weight-bold">Success!</h3>
+        <p class="text-muted">The evaluation for <strong>{{ displayName }}</strong> has been submitted successfully.</p>
+      </div>
+      <template #footer>
+        <CButton color="success" class="px-5 py-2 font-weight-bold rounded-pill" @click="onCloseSuccess">Exit to Dashboard</CButton>
+      </template>
+    </CModal>
+
   </div>
 </template>
 
@@ -134,31 +181,45 @@
 import { mapActions, mapState } from 'vuex'
 import CompetenciesHeader from '@/projects/components/Layout/CompetenciesHeader.vue'
 import RatingSelector from '@/projects/components/Util/RatingSelector.vue'
+import FormNavbar from '@/projects/components/Layout/FormNavbar.vue'
+import StudentAssessmentHeader from '@/projects/components/Layout/StudentAssessmentHeader.vue'
 
 export default {
   name: 'FillForm',
   components: {
     CompetenciesHeader,
-    RatingSelector
+    RatingSelector,
+    FormNavbar,
+    StudentAssessmentHeader
   },
   data() {
     return {
+      studentID: null,
+      studentDoc: null,
       evaluation: {
         softskills: {},
         hardskills: {},
         suggestions: {}
-      }
+      },
+      isSubmitting: false,
+      showSuccessModal: false
     }
   },
-  created() {
-    this.fetchSoftskills()
-    this.fetchHardskills()
-    this.fetchSuggestions()
+  async created() {
+    this.studentID = this.$route.query.studentID;
+    this.fetchGeneral()
+    this.fetchSpecific()
+    this.fetchProposition()
+    
+    if (this.studentID) {
+        this.fetchStudentInfo();
+    }
   },
   computed: {
     ...mapState('competencies/general', ['general']),
     ...mapState('competencies/specific', ['specific']),
     ...mapState('competencies/proposition', ['proposition']),
+    ...mapState('member/students', ['students']),
     softskillItems() { return this.general ? this.general.filter(i => i.active) : [] },
     hardskillItems() { return this.specific ? this.specific.filter(i => i.active) : [] },
     suggestionItems() { return this.proposition ? this.proposition.filter(i => i.active) : [] },
@@ -168,17 +229,52 @@ export default {
         const found = data.find(i => i.key === key)
         return found ? found.value : (data[0] ? data[0].value : '')
       }
+    },
+    displayName() {
+        if (!this.studentDoc) return 'Student Assessment';
+        const lang = this.$store.getters['setting/lang'] || 'th';
+        return this.translate(this.studentDoc.name, lang);
+    },
+    schoolInfo() {
+        if (!this.studentDoc?.info?.school) return 'N/A';
+        const lang = this.$store.getters['setting/lang'] || 'th';
+        return this.translate(this.studentDoc.info.school.title || this.studentDoc.info.school.name, lang);
+    },
+    programInfo() {
+        if (!this.studentDoc?.info?.program) return 'N/A';
+        const lang = this.$store.getters['setting/lang'] || 'th';
+        return this.translate(this.studentDoc.info.program.title || this.studentDoc.info.program.name, lang);
+    },
+    yearInfo() {
+        return this.studentDoc?.info?.year || 'N/A';
+    },
+    semesterInfo() {
+        return this.studentDoc?.info?.semester || 'N/A';
     }
   },
   methods: {
-    ...mapActions('competencies/general', ['fetchSoftskills']),
-    ...mapActions('competencies/specific', ['fetchHardskills']),
-    ...mapActions('competencies/proposition', ['fetchSuggestions']),
-    onExport() {
-        alert('Export logic would go here.');
+    ...mapActions('competencies/general', { fetchGeneral: 'general' }),
+    ...mapActions('competencies/specific', { fetchSpecific: 'specific' }),
+    ...mapActions('competencies/proposition', { fetchProposition: 'proposition' }),
+    ...mapActions('competencies/evaluation', ['createEvaluation']),
+    
+    async fetchStudentInfo() {
+        try {
+            const resp = await this.$store.dispatch('member/students/students', { id: this.studentID });
+            // Assume the response or state update gives us the student
+            this.studentDoc = this.students.find(s => s._id === this.studentID);
+        } catch (e) {
+            console.error("Failed to fetch student info", e);
+        }
     },
+
     async submitEvaluation() {
-        // Basic validation: Check if every config item has a rating
+        if (!this.studentID) {
+            alert("Error: No student ID provided for this evaluation.");
+            return;
+        }
+
+        // 1. Calculate Completion
         let totalQuestions = 0;
         this.softskillItems.forEach(i => totalQuestions += (i.config || []).length);
         this.hardskillItems.forEach(i => totalQuestions += (i.config || []).length);
@@ -187,18 +283,42 @@ export default {
         const hardRated = Object.keys(this.evaluation.hardskills).length;
         
         if ((softRated + hardRated) < totalQuestions) {
-            if (!confirm('You have not rated all competency criteria. Are you sure you want to submit?')) return;
+            if (!confirm('You have not rated all competency criteria. Are you sure you want to submit the assessment anyway?')) return;
         }
 
+        this.isSubmitting = true;
+
         try {
-            console.log('Submitting detailed evaluation:', this.evaluation);
-            // API Call placeholder
-            alert('Assessment submitted successfully!');
-            this.$router.push('/competencies');
+            // 2. Transform evaluation data for backend (Competencies_Evaluation schema)
+            const payload = {
+                studentId: this.studentID,
+                softskills: Object.keys(this.evaluation.softskills).map(key => {
+                    const [id] = key.split('_');
+                    return { criteriaId: id, score: this.evaluation.softskills[key] };
+                }),
+                hardskills: Object.keys(this.evaluation.hardskills).map(key => {
+                    const [id] = key.split('_');
+                    return { criteriaId: id, score: this.evaluation.hardskills[key] };
+                }),
+                suggestions: Object.keys(this.evaluation.suggestions).map(key => {
+                    const [id] = key.split('_');
+                    return { criteriaId: id, value: this.evaluation.suggestions[key] };
+                })
+            };
+
+            await this.createEvaluation(payload);
+            this.showSuccessModal = true;
         } catch (error) {
             console.error('Submission failed', error);
             alert('Failed to submit evaluation. Please try again.');
+        } finally {
+            this.isSubmitting = false;
         }
+    },
+
+    onCloseSuccess() {
+        this.showSuccessModal = false;
+        this.$router.push('/dashboard');
     }
   }
 }
@@ -210,10 +330,25 @@ export default {
   min-height: 100vh;
 }
 
-.intro-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  background: #fff1f2;
+.unified-header-container {
+  margin-top: 0;
+}
+
+.profile-overlap-container {
+  margin-top: -80px;
+  position: relative;
+  z-index: 50;
+}
+
+.guidelines-info-card {
+  border-left: 5px solid #3b82f6;
+  border-radius: 16px;
+}
+
+.info-icon {
+  background: #eff6ff;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -231,33 +366,10 @@ export default {
 }
 
 .section-main-title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   color: #1e293b;
   margin-bottom: 0;
-}
-
-.competency-card {
-  border-radius: 16px;
-  transition: all 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 20px -5px rgba(0,0,0,0.1) !important;
-}
-
-.item-number {
-  font-size: 18px;
-  font-weight: 800;
-  color: #e2e8f0;
-  line-height: 1;
-}
-
-.competency-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
 }
 
 .competency-container-card {
@@ -280,20 +392,16 @@ export default {
     border-bottom: 1px dashed #e2e8f0;
 }
 
-.question-row:last-child {
-    border-bottom: none;
-}
-
 .q-marker {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
     background: #f1f5f9;
     color: #475569;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 800;
 }
 
@@ -312,50 +420,59 @@ export default {
     line-height: 1.5;
 }
 
-.btn-modern-back {
-    color: #64748b;
-    font-weight: 600;
+.btn-submit-evaluation {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.btn-modern-back:hover {
-    color: #1e293b;
-    background: #f1f5f9;
+.btn-submit-evaluation:hover:not(:disabled) {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -8px rgba(220, 38, 38, 0.4) !important;
 }
 
-.btn-modern-submit {
-    border-radius: 14px;
-    height: 54px;
-    background: #dc2626 !important;
-    border: none;
-    transition: all 0.3s;
-}
-
-.btn-modern-submit:hover {
-    background: #b91c1c !important;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px -5px rgba(220, 38, 38, 0.4) !important;
+.success-icon-large {
+  transform: scale(3.5);
+  margin: 40px 0;
 }
 
 .form-control-modern {
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px 16px;
+    border-radius: 16px;
+    padding: 16px;
     background: #f8fafc;
-    transition: all 0.2s;
+    transition: all 0.3s;
 }
 
 .form-control-modern:focus {
     background: white;
     border-color: #dc2626;
-    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
     outline: none;
 }
 
+.spin-icon {
+  animation: fa-spin 1.5s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(359deg); }
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.8s ease-out;
+  animation: fadeIn 0.8s ease-out forwards;
 }
 
 @keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+@keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }

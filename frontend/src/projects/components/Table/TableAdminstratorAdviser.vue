@@ -14,6 +14,12 @@
                     </template>
 
                     <!-- Organization Combo -->
+                    <template #province="{ item }">
+                        <td class="align-middle">
+                            {{ getProvinceName(item.province) }}
+                        </td>
+                    </template>
+
                     <template #organizationCombo="{ item }">
                         <td class="align-middle">
                             <div><strong>{{ item.organizationName || '-' }}</strong></div>
@@ -97,6 +103,16 @@ export default {
                     alert("Failed to delete advisor.");
                 });
             }
+        },
+        getProvinceName(province) {
+            if (!province) return '-';
+            if (typeof province === 'string') return province; // Support IDs if not populated
+            if (province.title && Array.isArray(province.title)) {
+                const lang = this.$i18n.locale || 'en';
+                const titleObj = province.title.find(t => t.key === lang) || province.title[0];
+                return titleObj ? titleObj.value : '-';
+            }
+            return '-';
         },
     },
     computed: {

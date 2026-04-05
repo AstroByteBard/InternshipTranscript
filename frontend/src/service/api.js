@@ -14,7 +14,7 @@ export default {
     general(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/competencies/softskill", data);
+                return instance.get("/competencies/softskill", { params: data });
             case 'post':
                 return instance.post("/competencies/softskill", data);
             case 'put':
@@ -30,7 +30,7 @@ export default {
     specific(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/competencies/hardskill", data);
+                return instance.get("/competencies/hardskill", { params: data });
             case 'post':
                 return instance.post("/competencies/hardskill", data);
             case 'put':
@@ -45,7 +45,7 @@ export default {
     proposition(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/competencies/suggestions", data);
+                return instance.get("/competencies/suggestions", { params: data });
             case 'post':
                 return instance.post("/competencies/suggestions", data);
             case 'put':
@@ -61,8 +61,10 @@ export default {
         switch (method) {
             case 'exp':
                 return instance.post("/email/adviser/explorers", data);
+            case 'send':
+                return instance.post("/email/adviser/send", data);
             case 'get':
-                return instance.get("/email/adviser", data);
+                return instance.get("/email/adviser", { params: data });
             case 'post':
                 return instance.post("/email/adviser", data);
             case 'put':
@@ -78,8 +80,10 @@ export default {
         switch (method) {
             case 'exp':
                 return instance.post("/email/student/explorers", data);
+            case 'send':
+                return instance.post("/email/student/send", data);
             case 'get':
-                return instance.get("/email/student", data);
+                return instance.get("/email/student", { params: data });
             case 'post':
                 return instance.post("/email/student", data);
             case 'put':
@@ -96,7 +100,7 @@ export default {
             case 'exp':
                 return instance.post("/academic/school/explorers", data);
             case 'get':
-                return instance.get("/academic/school", data);
+                return instance.get("/academic/school", { params: data });
             case 'post':
                 return instance.post("/academic/school", data);
             case 'put':
@@ -113,7 +117,7 @@ export default {
             case 'sendmail':
                 return instance.post("/academic/program/sendmail", data);
             case 'get':
-                return instance.get("/academic/program", data);
+                return instance.get("/academic/program", { params: data });
             case 'post':
                 return instance.post("/academic/program", data);
             case 'put':
@@ -128,7 +132,7 @@ export default {
     course(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/academic/course", data);
+                return instance.get("/academic/course", { params: data });
             case 'post':
                 return instance.post("/academic/course", data);
             case 'put':
@@ -143,7 +147,7 @@ export default {
     advisors(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/member/advisors", data);
+                return instance.get("/member/advisors", { params: data });
             case 'post':
                 return instance.post("/member/advisors", data);
             case 'put':
@@ -158,7 +162,7 @@ export default {
     students(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("/member/students", data);
+                return instance.get("/member/students", { params: data });
             case 'post':
                 return instance.post("/member/students", data);
             case 'put':
@@ -173,15 +177,15 @@ export default {
     status(method, data, configs) {
         switch (method) {
             case 'exp':
-                return instance.post("/api/v1/setting/status/explorers", data);
+                return instance.post("/setting/status/explorers", data);
             case 'get':
-                return instance.get("/api/v1/setting/status");
+                return instance.get("/setting/status", { params: data });
             case 'post':
-                return instance.post("/api/v1/setting/status", data);
+                return instance.post("/setting/status", data);
             case 'put':
-                return instance.put("/api/v1/setting/status", data);
+                return instance.put("/setting/status", data);
             case 'delete':
-                return instance.delete("/api/v1/setting/status");
+                return instance.delete("/setting/status", { data: data });
             default:
                 break;
         }
@@ -200,6 +204,38 @@ export default {
                 return instance.put("/documents", data);
             case 'delete':
                 return instance.delete("/documents", { data: data });
+            default:
+                break;
+        }
+    },
+
+    evaluation(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/competencies/evaluation", { params: data });
+            case 'post':
+                return instance.post("/competencies/evaluation", data);
+            case 'query':
+                return instance.post("/competencies/evaluation/query", data);
+            case 'put':
+                return instance.put("/competencies/evaluation", data);
+            case 'delete':
+                return instance.delete("/competencies/evaluation", { data: data });
+            default:
+                break;
+        }
+    },
+
+    province(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("/setting/province", { params: data });
+            case 'post':
+                return instance.post("/setting/province", data);
+            case 'put':
+                return instance.put("/setting/province", data);
+            case 'delete':
+                return instance.delete("/setting/province", { data: data });
             default:
                 break;
         }

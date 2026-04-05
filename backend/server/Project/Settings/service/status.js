@@ -4,32 +4,33 @@ const resMsg = require("../service/message");
 
 exports.onQuery = async function (request, response, next) {
     try {
+        var querys = request.query || {};
+        if (querys.group) querys.group = new mongo.ObjectId(querys.group);
 
-        var querys = {};
         const doc = await Status.onQuery(querys);
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
-
     } catch (err) {
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 };
+
 exports.onQuerys = async function (request, response, next) {
     try {
-
-        var querys = {};
+        var querys = request.query || {};
+        if (querys.group) querys.group = new mongo.ObjectId(querys.group);
 
         const doc = await Status.onQuerys(querys);
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
 
     } catch (err) {
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 };

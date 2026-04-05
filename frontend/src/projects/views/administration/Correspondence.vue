@@ -40,16 +40,16 @@
 
                     <!-- Action Buttons -->
                     <CCol lg="5" md="12" class="d-flex justify-content-end align-items-center flex-wrap">
-                        <CButton class="btn-modern-action mr-2">
+                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')">
                             <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> Send Email {{ selected === 'StudentData' ? 'School' : 'Org' }}
                         </CButton>
-                        <CButton v-if="selected === 'StudentData'" class="btn-modern-action mr-2">
+                        <CButton v-if="selected === 'StudentData'" class="btn-modern-action mr-2" @click="sendBulkEmail('program')">
                             <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> Send Email Program
                         </CButton>
                         <CButton class="btn-modern-action btn-modern-filter mr-2" @click="showFilters = !showFilters">
                             <CIcon name="cil-filter" class="mr-2" /> Filters
                         </CButton>
-                        <CButton class="btn-modern-action btn-modern-red">
+                        <CButton class="btn-modern-action btn-modern-red" @click="handlePreview">
                             <CIcon name="cil-envelope-open" class="mr-2" /> Preview
                         </CButton>
                     </CCol>
@@ -108,6 +108,7 @@
         <!-- Content Area -->
         <div class="content-pannel">
             <StudentEmailSection 
+                ref="studentSection"
                 v-if="selected === 'StudentData'" 
                 :search-query="searchQuery"
                 :school="filterSchool"
@@ -117,6 +118,7 @@
             />
 
             <AdviserEmailSection 
+                ref="adviserSection"
                 v-else-if="selected === 'AdviserData'" 
                 :search-query="searchQuery"
                 :school="filterSchool"
@@ -125,6 +127,8 @@
                 :status="filterStatus"
             />
         </div>
+
+        <ModalEmailPreview ref="modalPreview" />
     </div>
 </template>
 
@@ -134,6 +138,7 @@ import CorrespondenceHeader from '@/projects/components/Layout/CorrespondenceHea
 import WidgetsCorrespondence from '@/projects/components/widgets/WidgetsCorrespondence.vue'
 import StudentEmailSection from '@/projects/components/Correspondence/StudentEmailSection.vue'
 import AdviserEmailSection from '@/projects/components/Correspondence/AdviserEmailSection.vue'
+import ModalEmailPreview from '@/projects/components/Modal/ModalEmailPreview.vue'
 
 export default {
     name: 'Correspondence',
@@ -142,6 +147,7 @@ export default {
         WidgetsCorrespondence,
         StudentEmailSection,
         AdviserEmailSection,
+        ModalEmailPreview,
     },
     data() {
         return {
@@ -163,6 +169,55 @@ export default {
             this.$store.dispatch('member/advisors/advisors')
             this.$store.dispatch('academic/schools/schools')
             this.$store.dispatch('academic/programs/programs')
+            this.$store.dispatch('email/emailStudent/email')
+            this.$store.dispatch('email/emailAdviser/email')
+        },
+        async handlePreview() {
+            const isStudent = this.selected === 'StudentData';
+            const section = isStudent ? this.$refs.studentSection : this.$refs.adviserSection;
+            if (!section) return;
+
+            const items = isStudent ? section.programsTable : section.advisersTable;
+            if (!items || items.length === 0) {
+                alert('No data to preview with.');
+                return;
+            }
+
+            const activeTemplate = section.emailsData.find(t => t.active);
+            if (!activeTemplate) {
+                alert('No active template found. Please activate a template first.');
+                return;
+            }
+
+            // Using first recipient as sample
+            this.$refs.modalPreview.open(activeTemplate, items[0], !isStudent);
+        },
+        async sendBulkEmail(type) {
+            const isStudent = this.selected === 'StudentData';
+            const section = isStudent ? this.$refs.studentSection : this.$refs.adviserSection;
+            
+            if (!section) return;
+
+            const items = isStudent ? section.programsTable : section.advisersTable;
+            
+            if (!items || items.length === 0) {
+                alert('No data to send emails to.');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to send emails to ${items.length} ${isStudent ? 'students' : 'advisers'}?`)) {
+                return;
+            }
+
+            // Iterate and send
+            for (const item of items) {
+                try {
+                    await section.sendEmail(item._id);
+                } catch (error) {
+                    console.error(`Failed to send email to ${item._id}:`, error);
+                }
+            }
+            alert('Bulk email operation completed.');
         }
     },
     computed: {
@@ -184,7 +239,7 @@ export default {
                 { value: null, label: 'All Schools' },
                 ...(this.storedSchools || []).map(item => ({ 
                     value: item._id, 
-                    label: item.title.find(t => t.key === lang)?.value ?? '' 
+                    label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '' 
                 }))
             ]
         },
@@ -196,7 +251,7 @@ export default {
                 { value: null, label: 'All Programs' },
                 ...progs.map(item => ({ 
                     value: item._id, 
-                    label: item.title.find(t => t.key === lang)?.value ?? '' 
+                    label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '' 
                 }))
             ]
         },

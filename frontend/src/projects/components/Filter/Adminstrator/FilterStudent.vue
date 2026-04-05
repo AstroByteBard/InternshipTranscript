@@ -107,11 +107,19 @@ export default {
             ];
         },
         semesterOptions() {
-            if (!this.storedStudents) return [];
-            const semesters = new Set(this.storedStudents.map(s => s.info?.semester).filter(s => s));
+            const lang = this.$i18n.locale || 'en';
+            const statuses = this.$store.getters['setting/status/item'] || [];
+            
             return [
                 { value: '', label: 'Select Semester' },
-                ...Array.from(semesters).sort().map(s => ({ value: s, label: s }))
+                ...statuses.map(s => {
+                    const titleObj = (Array.isArray(s.title) ? s.title.find(t => t.key === lang) : null) || (Array.isArray(s.title) ? s.title[0] : null);
+                    const val = titleObj ? titleObj.value : s.title || s._id;
+                    return {
+                        value: val,
+                        label: val
+                    };
+                })
             ];
         },
         internalSearch: {

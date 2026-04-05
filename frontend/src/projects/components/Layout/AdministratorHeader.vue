@@ -19,24 +19,104 @@
         <input type="file" ref="fileInputStudent" @change="onFileChangeStudent" accept=".xlsx, .xls, .csv" style="display: none;" />
         <input type="file" ref="fileInputAdvisor" @change="onFileChangeAdvisor" accept=".xlsx, .xls, .csv" style="display: none;" />
 
-        <CButton color="light" class="btn-hero-action px-3 py-2 mr-2 font-weight-bold shadow-sm" @click="$refs.fileInputStudent.click()">
-          <CIcon name="cil-cloud-upload" class="mr-2 text-primary"/>
-          Import Students
-        </CButton>
-        <CButton color="light" class="btn-hero-action px-3 py-2 mr-2 font-weight-bold shadow-sm" @click="$emit('add-student')">
-          <CIcon name="cil-user-plus" class="mr-2 text-danger"/>
-          Add Student
-        </CButton>
-        <CButton color="light" class="btn-hero-action px-3 py-2 mr-2 font-weight-bold shadow-sm" @click="$emit('add-advisor')">
-          <CIcon name="cil-address-book" class="mr-2 text-warning"/>
-          Add Advisor
-        </CButton>
-        <CButton color="light" class="btn-hero-action px-3 py-2 font-weight-bold shadow-sm" @click="$emit('refresh')">
-          <CIcon name="cil-reload" class="mr-2 text-info"/>
-          Sync
+        <CButton 
+          color="light" 
+          class="btn-hero-action px-4 py-2 font-weight-bold shadow-sm d-flex align-items-center" 
+          @click="showImportModal = true"
+        >
+          <CIcon name="cil-cloud-upload" class="mr-2 text-primary" size="lg"/>
+          IMPORT
         </CButton>
       </div>
     </div>
+
+    <!-- Import Selection Modal -->
+    <CModal
+      title="Import Selection"
+      :show.sync="showImportModal"
+      centered
+      size="lg"
+      class="import-modal"
+    >
+      <div class="p-4 text-center">
+        <h4 class="mb-4 text-dark font-weight-bold">What would you like to import?</h4>
+        <div class="d-flex justify-content-center mb-5">
+          <div 
+            class="selection-card mr-4" 
+            :class="{'active': importType === 'Student'}"
+            @click="importType = 'Student'"
+          >
+            <div class="icon-box bg-soft-red mb-3">
+              <CIcon name="cil-people" height="40" class="text-danger" />
+            </div>
+            <div class="selection-label">Student</div>
+          </div>
+          <div 
+            class="selection-card" 
+            :class="{'active': importType === 'Advisor'}"
+            @click="importType = 'Advisor'"
+          >
+            <div class="icon-box bg-soft-orange mb-3">
+              <CIcon name="cil-briefcase" height="40" class="text-warning" />
+            </div>
+            <div class="selection-label">Advisor</div>
+          </div>
+        </div>
+
+        <div class="action-options-container py-3 border-top">
+          <div v-if="importType === 'Student'" class="animate-fade-in">
+            <CRow>
+              <CCol md="6">
+                <CButton 
+                  color="info" 
+                  variant="outline" 
+                  class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerStudentFile"
+                >
+                  <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
+                  <span class="font-weight-bold">Upload Excel/CSV</span>
+                  <small class="d-block mt-1 text-muted">Import multiple students from file</small>
+                </CButton>
+              </CCol>
+              <CCol md="6">
+                <CButton 
+                  color="danger" 
+                  variant="outline" 
+                  class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerStudentManual"
+                >
+                  <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
+                  <span class="font-weight-bold">Enter Text</span>
+                  <small class="d-block mt-1 text-muted">Add a single student manually</small>
+                </CButton>
+              </CCol>
+            </CRow>
+          </div>
+          <div v-if="importType === 'Advisor'" class="animate-fade-in">
+            <CRow class="justify-content-center">
+              <CCol md="6">
+                <CButton 
+                  color="warning" 
+                  variant="outline" 
+                  class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerAdvisorManual"
+                >
+                  <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
+                  <span class="font-weight-bold">Enter Text</span>
+                  <small class="d-block mt-1 text-muted">Add a single advisor manually</small>
+                </CButton>
+              </CCol>
+            </CRow>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <CButton color="secondary" @click="showImportModal = false">Close</CButton>
+        <CButton color="info" variant="link" class="ml-auto" @click="$emit('refresh'); showImportModal = false">
+           <CIcon name="cil-reload" class="mr-1" size="sm"/> Sync Data
+        </CButton>
+      </template>
+    </CModal>
     <!-- Abstract decorative elements -->
     <div class="hero-shape hero-shape-1"></div>
     <div class="hero-shape hero-shape-2"></div>
@@ -67,7 +147,25 @@ export default {
         return `${semester}/${year}`;
     }
   },
+  data() {
+    return {
+      showImportModal: false,
+      importType: 'Student', // 'Student' or 'Advisor'
+    }
+  },
   methods: {
+    triggerStudentFile() {
+      this.$refs.fileInputStudent.click();
+      this.showImportModal = false;
+    },
+    triggerStudentManual() {
+      this.$emit('add-student');
+      this.showImportModal = false;
+    },
+    triggerAdvisorManual() {
+      this.$emit('add-advisor');
+      this.showImportModal = false;
+    },
     onFileChangeStudent(e) {
         const files = e.target.files;
         if (!files.length) return;
@@ -350,5 +448,85 @@ export default {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Modal Content Styles */
+.selection-card {
+  width: 160px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 2px solid #f3f4f6;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f9fafb;
+}
+
+.selection-card:hover {
+  transform: translateY(-5px);
+  border-color: #e5e7eb;
+  background: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.selection-card.active {
+  border-color: #8c1515;
+  background: #fffafa;
+  box-shadow: 0 10px 20px -5px rgba(140, 21, 21, 0.1);
+}
+
+.icon-box {
+  width: 70px;
+  height: 70px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.bg-soft-red { background-color: #fee2e2; }
+.bg-soft-orange { background-color: #ffedd5; }
+
+.selection-label {
+  font-weight: 700;
+  font-size: 16px;
+  color: #374151;
+}
+
+.btn-option {
+  border-radius: 16px !important;
+  border-width: 2px !important;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.btn-option:hover {
+  transform: scale(1.02);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.import-modal >>> .modal-content {
+  border-radius: 24px;
+  border: none;
+  overflow: hidden;
+}
+
+.import-modal >>> .modal-header {
+  background: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+  padding: 20px 24px;
+}
+
+.import-modal >>> .modal-title {
+  font-weight: 800;
+  color: #111827;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
 }
 </style>

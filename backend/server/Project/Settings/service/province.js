@@ -4,32 +4,29 @@ const resMsg = require("../service/message");
 
 exports.onQuery = async function (request, response, next) {
     try {
-
-        var querys = {};
+        var querys = request.query || {};
         const doc = await Province.onQuery(querys);
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
-
     } catch (err) {
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 };
+
 exports.onQuerys = async function (request, response, next) {
     try {
-
-        var querys = {};
-
+        var querys = request.query || {};
         const doc = await Province.onQuerys(querys);
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
 
     } catch (err) {
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 };

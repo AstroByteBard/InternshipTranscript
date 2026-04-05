@@ -4,14 +4,12 @@ import Router from 'vue-router'
 // Containers
 const TheContainer_Project = () => import('@/containers/TheContainer_Project')
 
-
 // project 
 const Dashboard = () => import('@/projects/views/administration/Dashboard')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
 const Administrator = () => import('@/projects/views/administration/Administrator')
-
 
 //documents
 const Documents = () => import('@/projects/views/administration/documents/index')
@@ -24,11 +22,10 @@ const FillForm = () => import('@/projects/views/administration/FillForm')
 //correspondence
 const Correspondence = () => import('@/projects/views/administration/Correspondence')
 
-
 Vue.use(Router)
 
 export default new Router({
-    mode: 'history', // https://router.vuejs.org/api/#mode
+    mode: 'hash', // Use hash mode to ensure links like /#/fill-form work correctly
     linkActiveClass: 'open active',
     scrollBehavior: () => ({ y: 0 }),
     routes: [
@@ -63,11 +60,6 @@ export default new Router({
                     name: 'Competencies',
                     component: Competencies
                 },
-                {
-                    path: 'fill-form',
-                    name: 'FillForm',
-                    component: FillForm
-                },
 
                 {
                     path: 'documents',
@@ -92,6 +84,11 @@ export default new Router({
                 },
 
             ]
-        }
+        },
+        {
+            path: '/fill-form',
+            name: 'FillForm',
+            component: FillForm
+        },
     ]
 })

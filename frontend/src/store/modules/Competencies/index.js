@@ -1,6 +1,7 @@
 import general from "./general";
 import specific from "./specific";
 import proposition from "./proposition";
+import evaluation from "./evaluation";
 
 const ServerModule = {
     namespaced: true,
@@ -8,6 +9,7 @@ const ServerModule = {
         general,
         specific,
         proposition,
+        evaluation,
     },
 
     state: {

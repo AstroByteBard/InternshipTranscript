@@ -17,7 +17,7 @@
                     v-model="formAdvisor.organizationAddress" />
             </CCol>
             <CCol sm="6">
-                <CSelect label="Province" :options="provinceOptions" :value.sync="formAdvisor.province" />
+                <CSelect label="Province" :options="provinceOptions" :value="formAdvisor.province" @update:value="formAdvisor.province = $event" />
             </CCol>
             <CCol sm="6">
                 <CInput label="Academic Year" placeholder="Year" v-model="formAdvisor.year" />
@@ -55,11 +55,17 @@ export default {
         ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
 
         provinceOptions() {
-            if (!this.storedAdvisors) return [];
-            const provinces = new Set(this.storedAdvisors.map(a => a.province).filter(p => p));
+            const lang = this.$i18n.locale || 'en';
+            const provinces = this.$store.getters['setting/province/province'] || [];
             return [
                 { value: '', label: 'Select Province' },
-                ...Array.from(provinces).sort().map(p => ({ value: p, label: p }))
+                ...provinces.map(p => {
+                    const titleObj = (Array.isArray(p.title) ? p.title.find(t => t.key === lang) : null) || (Array.isArray(p.title) ? p.title[0] : null);
+                    return {
+                        value: p._id,
+                        label: titleObj ? titleObj.value : p._id
+                    };
+                })
             ];
         }
     },
@@ -80,7 +86,7 @@ export default {
                 studentID: item.student ? item.student.studentID : '',
                 organizationName: item.organizationName || '',
                 organizationAddress: item.organizationAddress || '',
-                province: item.province || '',
+                province: item.province ? (item.province._id || item.province) : '',
                 year: item.year || ''
             };
             this.show = true;
@@ -113,7 +119,7 @@ export default {
 
             if (this.isEditing) {
                 advisorData._id = this.editID;
-                this.$store.dispatch("member/advisors/updateAdvisors", [advisorData]).then(() => {
+                this.$store.dispatch("member/advisors/updateAdvisors", advisorData).then(() => {
                     this.$emit('refresh');
                     this.show = false;
                     alert(`Advisor updated successfully!`);

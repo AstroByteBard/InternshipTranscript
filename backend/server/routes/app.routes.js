@@ -15,7 +15,7 @@ module.exports = function (app) {
   app.use(path + '/documents', DocumentRoutes)
   console.log("Documents route registered at:", path + '/documents');
   app.get(path + '/test', (req, res) => res.send("OK"));
-  app.use(path + '/email' , EmailRoutes)
+  app.use(path + '/email', EmailRoutes)
   app.use(path + '/competencies', CompetenciesRoutes) // complete
   app.use(path + '/academic', AcademicRoutes); // complete
   app.use(path + '/member', MemberRoutes); // complete

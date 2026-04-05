@@ -30,6 +30,9 @@
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student Name')">
                         <CIcon name="cil-plus" size="sm" class="mr-1" /> Student Name
                     </CButton>
+                    <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student ID')">
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> Student ID
+                    </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('School')">
                         <CIcon name="cil-plus" size="sm" class="mr-1" /> School
                     </CButton>
@@ -38,6 +41,9 @@
                     </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Academic Year')">
                         <CIcon name="cil-plus" size="sm" class="mr-1" /> Academic Year
+                    </CButton>
+                    <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Evaluation Link')">
+                        <CIcon name="cil-link" size="sm" class="mr-1" /> Evaluation Link
                     </CButton>
                 </div>
             </div>
@@ -78,9 +84,21 @@ export default {
     methods: {
         openAdd() {
             this.editingEmailId = null
-            this.title = ''
-            this.subject = ''
-            this.template = ''
+            this.title = 'Internship Evaluation Request'
+            this.subject = '[ACTION REQUIRED] Internship Evaluation for {{Student Name}}'
+            this.template = `Dear {{Adviser Name}},
+
+We are writing to request your evaluation for {{Student Name}}, who is currently an intern at your organization.
+
+Your feedback is essential for the student's academic progress and our university records. Please complete the evaluation by clicking the link below:
+
+{{Evaluation Link}}
+
+If you have any questions, please feel free to reply to this email.
+
+Best regards,
+Internship Coordinator
+{{School}}`
             this.show = true
         },
         openEdit(email = {}) {
@@ -109,11 +127,13 @@ export default {
             if (this.editingEmailId) {
                 payload._id = this.editingEmailId
                 this.$store.dispatch('email/emailAdviser/updateEmail', payload).then(() => {
+                    alert('Email template updated successfully!');
                     this.show = false
                     this.$emit('refresh')
                 })
             } else {
                 this.$store.dispatch('email/emailAdviser/createEmail', payload).then(() => {
+                    alert('Email template created successfully!');
                     this.show = false
                     this.$emit('refresh')
                 })

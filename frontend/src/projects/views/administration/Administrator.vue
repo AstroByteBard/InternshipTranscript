@@ -104,6 +104,8 @@ export default {
             this.$store.dispatch("academic/course/course")
             this.$store.dispatch("member/students/students")
             this.$store.dispatch("member/advisors/advisors")
+            this.$store.dispatch("setting/status/get")
+            this.$store.dispatch("setting/province/province")
         }
     },
 
@@ -234,11 +236,18 @@ export default {
         },
 
         semesterOptions() {
-            if (!this.formattedStudents) return [];
-            const semesters = new Set(this.formattedStudents.map(s => s.semester).filter(s => s));
+            const lang = this.$i18n.locale || 'en';
+            const statuses = this.$store.getters['setting/status/item'] || [];
+            
             return [
                 { value: '', label: 'Select Semester' },
-                ...Array.from(semesters).sort().map(s => ({ value: s, label: s }))
+                ...statuses.map(s => {
+                    const titleObj = s.title.find(t => t.key === lang) || s.title[0];
+                    return {
+                        value: titleObj ? titleObj.value : s._id,
+                        label: titleObj ? titleObj.value : s._id
+                    };
+                })
             ];
         },
 
@@ -281,8 +290,12 @@ export default {
                     (adv.studentID && adv.studentID.toLowerCase().includes(searchLower));
 
                 if (!matches) return false;
-
-                if (this.province && adv.province !== this.province) return false;
+                
+                // Province Filter
+                if (this.province) {
+                    const studentProvinceId = adv.province?._id || adv.province;
+                    if (studentProvinceId !== this.province) return false;
+                }
 
                 return true;
             });

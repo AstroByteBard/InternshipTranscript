@@ -39,14 +39,23 @@ const ServerModule = {
                         console.log(err)
             });
         },
-        deleteEmail({ dispatch },data) {
+        deleteEmail({ dispatch }, data) {
             Service.emailAdviser('delete', data, {})
                 .then((response) => {
                     console.log('สถานนะการลบอีเมล : ', response.data)
-                    return dispatch ('email')
+                    return dispatch('email')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    console.log(err)
+                });
+        },
+        sendEmail({ dispatch }, data) {
+            Service.emailAdviser('send', data, {})
+                .then((response) => {
+                    console.log('สถานนะการส่งอีเมล : ', response.data)
+                    return dispatch('email')
+                }).catch((err) => {
+                    console.log(err)
+                });
         },
     },
 

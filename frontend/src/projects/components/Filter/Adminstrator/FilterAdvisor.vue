@@ -112,11 +112,17 @@ export default {
             ];
         },
         provinceOptions() {
-            if (!this.storedAdvisors) return [];
-            const provinces = new Set(this.storedAdvisors.map(a => a.province).filter(p => p));
+            const lang = this.$i18n.locale || 'en';
+            const provinces = this.$store.getters['setting/province/province'] || [];
             return [
                 { value: '', label: 'Select Province' },
-                ...Array.from(provinces).sort().map(p => ({ value: p, label: p }))
+                ...provinces.map(p => {
+                    const titleObj = (Array.isArray(p.title) ? p.title.find(t => t.key === lang) : null) || (Array.isArray(p.title) ? p.title[0] : null);
+                    return {
+                        value: p._id,
+                        label: titleObj ? titleObj.value : p._id
+                    };
+                })
             ];
         },
         internalSearch: {

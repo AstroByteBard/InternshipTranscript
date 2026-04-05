@@ -102,11 +102,20 @@ export default {
             ];
         },
         semesterOptions() {
-            if (!this.storedStudents) return [];
-            const semesters = new Set(this.storedStudents.map(s => s.info?.semester).filter(s => s));
+            const lang = this.$i18n.locale || 'en';
+            const statuses = this.$store.getters['setting/status/item'] || [];
+            
+            // If statuses are loaded, use them. Otherwise, fallback to an empty list or a default.
+            // Note: Ideally we filter by group ID, but for now we list all statuses.
             return [
                 { value: '', label: 'Select Semester' },
-                ...Array.from(semesters).sort().map(s => ({ value: s, label: s }))
+                ...statuses.map(s => {
+                    const titleObj = s.title.find(t => t.key === lang) || s.title[0];
+                    return {
+                        value: titleObj ? titleObj.value : s._id, // Using value string as it's a String in Model
+                        label: titleObj ? titleObj.value : s._id
+                    };
+                })
             ];
         }
     },

@@ -21,12 +21,12 @@ const module = {
     // router.delete("/message", message.onDelete);
 
     actions: {
-        get({commit}, data) {
-            Service.status('get', {}, {})
+        get({ commit }, data) {
+            Service.status('get', data, {})
                 .then((response) => {
-                    store.commit("setting/status/item", response.data.data)
+                    commit("item", response.data.data)
                 }).catch((err) => {
-            });
+                });
         },
         post({commit}, data) {
             Service.status('post', data, {})

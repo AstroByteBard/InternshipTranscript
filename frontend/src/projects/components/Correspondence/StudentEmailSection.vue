@@ -202,7 +202,9 @@ export default {
             this.$store.dispatch('email/emailStudent/updateEmail', { _id, active: true })
         },
         sendEmail(_id) {
-            this.$store.dispatch('email/emailStudent/sendEmail', { _id, templete: '6973168131640a4d402b0682' })
+            const activeTemplate = this.emailsData.find(t => t.active);
+            const templateId = activeTemplate ? activeTemplate._id : '6973168131640a4d402b0682'; // Fallback to hardcoded if none active
+            return this.$store.dispatch('email/emailStudent/sendEmail', { _id, templete: templateId });
         },
         removeEmail(_id) {
             this.$store.dispatch('email/emailStudent/deleteEmail', { _id })
@@ -238,13 +240,13 @@ export default {
             }
             if (this.searchQuery.trim()) {
                 const q = this.searchQuery.toLowerCase().trim()
-                const getT = t => (!t?.length ? '' : (t.find(x => x.key === lang) ?? t[0])?.value ?? '')
+                const getT = t => (Array.isArray(t) ? (t.find(x => x.key === lang) ?? t[0])?.value ?? '' : t ?? '')
                 source = source.filter(s =>
                     getT(s.name).toLowerCase().includes(q) || (s.studentID ?? '').toLowerCase().includes(q)
                 )
             }
 
-            const getTitle = t => (!t?.length ? 'N/A' : (t.find(x => x.key === lang) ?? t[0])?.value ?? 'N/A')
+            const getTitle = t => (Array.isArray(t) ? (t.find(x => x.key === lang) ?? t[0])?.value ?? 'N/A' : t ?? 'N/A')
             return source.map((item, index) => {
                 const info = item.info || {}
                 const program = info.program?.title ? info.program : this.storedPrograms.find(p => p._id === info.program) ?? null
@@ -267,8 +269,9 @@ export default {
             if (!this.emailStudent) return []
             return this.emailStudent.map(item => ({
                 _id: item._id,
-                title: item.title.find(t => t.key === lang)?.value ?? '',
-                description: item.description.find(d => d.key === lang)?.value ?? '',
+                title: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '',
+                description: item.description?.find?.(d => d.key === lang)?.value ?? item.description ?? '',
+                templete: item.templete,
                 active: item.active,
                 updatedAt: this.moment(item.updatedAt).format('DD/MM/YYYY HH:mm'),
             }))
@@ -278,7 +281,7 @@ export default {
             const lang = this.$i18n.locale
             return [
                 { value: null, label: 'All Schools' },
-                ...(this.storedSchools ?? []).map(item => ({ value: item._id, label: item.title.find(t => t.key === lang)?.value ?? '' }))
+                ...(this.storedSchools ?? []).map(item => ({ value: item._id, label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '' }))
             ]
         },
 
@@ -288,7 +291,7 @@ export default {
             if (this.selectionSchool) progs = progs.filter(p => p.school === this.selectionSchool)
             return [
                 { value: null, label: 'All Programs' },
-                ...progs.map(item => ({ value: item._id, label: item.title.find(t => t.key === lang)?.value ?? '' }))
+                ...progs.map(item => ({ value: item._id, label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '' }))
             ]
         },
 
