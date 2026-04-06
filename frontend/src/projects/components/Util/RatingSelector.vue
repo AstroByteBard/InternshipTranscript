@@ -1,6 +1,6 @@
 <template>
-  <div class="rating-selector d-flex align-items-center justify-content-between">
-    <div v-for="n in 5" :key="n" class="rating-item" :class="{ active: value === n }" @click="$emit('input', n)">
+  <div class="rating-selector d-flex align-items-center justify-content-between" :class="{ 'rating-disabled': disabled }">
+    <div v-for="n in 5" :key="n" class="rating-item" :class="{ active: value === n }" @click="!disabled && $emit('input', n)">
       <div class="rating-circle shadow-sm">
         {{ n }}
       </div>
@@ -15,7 +15,8 @@
 export default {
   name: 'RatingSelector',
   props: {
-    value: { type: Number, default: 0 }
+    value: { type: Number, default: 0 },
+    disabled: { type: Boolean, default: false }
   }
 }
 </script>
@@ -79,5 +80,11 @@ export default {
 
 .rating-item.active .rating-label {
   color: #dc2626;
+}
+
+.rating-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  filter: grayscale(0.5);
 }
 </style>

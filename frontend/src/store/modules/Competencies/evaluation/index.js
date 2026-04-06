@@ -14,11 +14,22 @@ const ServerModule = {
 
     actions: {
         evaluations({ commit }, data) {
-            Service.evaluation('get', data, {})
+            return Service.evaluation('get', data, {})
                 .then((response) => {
                     commit('evaluations', response.data.data)
+                    return response.data;
                 }).catch((err) => {
                     console.log(err)
+                    throw err;
+                });
+        },
+        queryEvaluation({ commit }, data) {
+            return Service.evaluation('query', data, {})
+                .then((response) => {
+                    return response.data;
+                }).catch((err) => {
+                    console.log(err);
+                    throw err;
                 });
         },
         createEvaluation({ dispatch }, data) {

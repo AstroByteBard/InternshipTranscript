@@ -1,157 +1,199 @@
 <template>
-  <div class="fill-form-page h-100 overflow-auto bg-light">
-    <!-- Sticky Navigation -->
-    <FormNavbar :studentName="displayName" :studentID="studentID || 'Student'" />
-    
-    <!-- Unified Header: Hero Banner + Overlapping Profile Card -->
-    <div class="unified-header-container position-relative mb-5"> 
-      <div class="profile-overlap-container container-fluid px-4">
-        <StudentAssessmentHeader 
-            v-if="studentDoc"
-            :studentName="displayName"
-            :studentID="studentID"
-            :schoolName="schoolInfo"
-            :programName="programInfo"
-            :academicYear="yearInfo"
-            :semester="semesterInfo"
-        />
-        
-        <!-- Guidelines Info Box -->
-        <CCard class="guidelines-info-card border-0 shadow-sm mt-4 animate-slide-up">
-          <CCardBody class="p-3 d-flex align-items-center">
-            <div class="info-icon mr-3">
-              <CIcon name="cil-info" class="text-info" size="xl" />
-            </div>
-            <div>
-              <div class="font-weight-bold text-dark mb-1">Evaluation Guidelines</div>
-              <div class="small text-muted">
-                Please rate each competency from 1 (Needs Improvement) to 5 (Excellent). 
-                Your feedback is essential for the student's academic progress and career development.
-              </div>
-            </div>
-          </CCardBody>
-        </CCard>
+  <div class="c-app fill-form-page">
+    <!-- Page Loading Overlay -->
+    <transition name="fade">
+      <div v-if="pageLoading" class="page-loading-overlay">
+        <div class="loader-content">
+          <div class="modern-spinner mb-4"></div>
+          <h4 class="font-weight-bold text-dark mb-2">Preparing Assessment</h4>
+          <p class="text-muted">Please wait while we load the student data and criteria...</p>
+        </div>
       </div>
-    </div>
+    </transition>
 
-    <CContainer fluid class="px-4 content-body animate-fade-in">
-      <!-- Softskills Section -->
-      <div class="section-title-wrapper mb-3 d-flex align-items-center">
-        <div class="section-badge text-danger mr-3">SECTION 01</div>
-        <h3 class="section-main-title">General Competencies (Softskills)</h3>
-      </div>
-      
-      <div class="competency-list mb-5">
-        <CCard v-for="(item, idx) in softskillItems" :key="item._id" class="competency-container-card border-0 mb-4 shadow-sm">
-          <CCardBody class="p-0">
-            <div class="competency-header p-4 border-bottom bg-light-soft">
-                <div class="d-flex align-items-center">
-                    <div class="item-number mr-3">{{ String(idx + 1).padStart(2, '0') }}</div>
-                    <h5 class="competency-title mb-0">{{ translate(item.title) }}</h5>
-                </div>
-            </div>
-            <div class="question-items-wrapper">
-                <div v-for="(conf, cIdx) in (item.config || [])" :key="cIdx" class="question-row p-4 border-bottom-dashed">
-                    <CRow class="align-items-center">
-                        <CCol lg="7" md="6" class="mb-3 mb-md-0">
-                            <div class="d-flex align-items-start">
-                                <div class="q-marker mr-3">{{ cIdx + 1 }}</div>
-                                <div>
-                                    <div class="q-category mb-1" v-if="conf.label || conf.variable">{{ translate(conf.label || conf.variable) }}</div>
-                                    <div class="q-text">{{ translate(conf.question) }}</div>
-                                </div>
-                            </div>
-                        </CCol>
-                        <CCol lg="5" md="6">
-                            <RatingSelector v-model="evaluation.softskills[item._id + '_' + cIdx]" />
-                        </CCol>
-                    </CRow>
-                </div>
-            </div>
-          </CCardBody>
-        </CCard>
-      </div>
+    <CWrapper v-if="!pageLoading">
+      <!-- Sticky Navigation -->
+      <FormNavbar :studentName="displayName" :studentID="studentID || 'Student'" />
+      <div class="c-body">
+        <main class="c-main">
+          <CContainer fluid class="px-4 content-body animate-fade-in">
 
-      <!-- Hardskills Section -->
-      <div class="section-title-wrapper mb-3 d-flex align-items-center">
-        <div class="section-badge text-success mr-3">SECTION 02</div>
-        <h3 class="section-main-title">Program-Specific Skills (Hardskills)</h3>
-      </div>
-      
-      <div class="competency-list mb-5">
-        <CCard v-for="(item, idx) in hardskillItems" :key="item._id" class="competency-container-card border-0 mb-4 shadow-sm">
-          <CCardBody class="p-0">
-            <div class="competency-header p-4 border-bottom bg-light-spec">
-                <div class="d-flex align-items-center">
-                    <div class="item-number mr-3">{{ String(idx + 1).padStart(2, '0') }}</div>
-                    <div>
-                        <h5 class="competency-title mb-1">{{ translate(item.title) }}</h5>
-                        <CBadge color="light" class="border text-muted px-2 py-1">{{ item.program ? translate(item.program.title) : 'General' }}</CBadge>
+          <StudentAssessmentHeader
+              v-if="studentDoc"
+              :studentName="displayName"
+              :studentID="studentID"
+              :schoolName="schoolInfo"
+              :programName="programInfo"
+              :academicYear="yearInfo"
+              :semester="semesterInfo"
+          />
+            <!-- Case 1: Assessment Already Completed (Locked State) -->
+            <transition name="fade">
+              <div v-if="isAlreadySubmitted" class="locked-hero-container py-5 mt-4">
+                <CCard class="border-0 shadow-lg text-center p-5 rounded-xl">
+                  <CCardBody>
+                    <div class="locked-icon-wrapper mb-4">
+                      <CIcon name="cil-check-circle" size="xl" class="text-success success-icon-animate" />
                     </div>
-                </div>
-            </div>
-            <div class="question-items-wrapper">
-                <div v-for="(conf, cIdx) in (item.config || [])" :key="cIdx" class="question-row p-4 border-bottom-dashed">
-                    <CRow class="align-items-center">
-                        <CCol lg="7" md="6" class="mb-3 mb-md-0">
-                            <div class="d-flex align-items-start">
-                                <div class="q-marker mr-3 text-success">{{ cIdx + 1 }}</div>
-                                <div>
-                                    <div class="q-category mb-1 text-success" v-if="conf.label || conf.variable">{{ translate(conf.label || conf.variable) }}</div>
-                                    <div class="q-text">{{ translate(conf.question) }}</div>
-                                </div>
-                            </div>
-                        </CCol>
-                        <CCol lg="5" md="6">
-                            <RatingSelector v-model="evaluation.hardskills[item._id + '_' + cIdx]" />
-                        </CCol>
-                    </CRow>
-                </div>
-            </div>
-          </CCardBody>
-        </CCard>
-      </div>
+                    <h1 class="display-4 font-weight-bold mb-3" style="color: #1e293b;">Assessment Completed</h1>
+                    <h4 class="text-muted mb-4 px-lg-5">
+                      The evaluation for <strong class="text-dark">{{ displayName }}</strong> <br>
+                      has already been recorded in our system.
+                    </h4>
+                  </CCardBody>
+                </CCard>
+              </div>
 
-      <!-- Propositions / Suggestions Section -->
-      <div class="section-title-wrapper mb-3 d-flex align-items-center">
-        <div class="section-badge text-warning mr-3">SECTION 03</div>
-        <h3 class="section-main-title">Student Suggestions & Propositions</h3>
-      </div>
-      
-      <CCard class="competency-card border-0 mb-5 shadow-sm">
-        <CCardBody class="p-4">
-             <div v-for="item in suggestionItems" :key="item._id" class="mb-4">
-                  <h5 class="competency-title mb-3">{{ translate(item.title) }}</h5>
-                  <div v-for="(q, qIdx) in item.config" :key="qIdx" class="mb-3">
-                      <label class="font-weight-bold text-muted small mb-2">{{ translate(q.question) }}</label>
-                      <CTextarea 
-                        rows="3" 
-                        class="form-control-modern" 
-                        placeholder="Write your suggestions here..."
-                        v-model="evaluation.suggestions[item._id + '_' + qIdx]"
-                      />
+              <!-- Case 2: Fresh Assessment Form (Default State) -->
+              <div v-else>
+                <!-- Instructions & Description -->
+                <div class="assessment-intro-card mb-5 p-4 rounded-xl shadow-sm border-0 bg-white d-flex align-items-center">
+                  <div class="intro-icon-wrapper mr-4">
+                    <CIcon name="cil-info" size="xl" class="text-danger" />
                   </div>
-             </div>
-        </CCardBody>
-      </CCard>
+                  <div>
+                    <h5 class="font-weight-bold mb-1">Assessment Instructions</h5>
+                    <p class="text-muted mb-0 small">Please rate the student's performance based on the criteria below. Your feedback helps us improve our academic programs.</p>
+                  </div>
+                </div>
 
-      <!-- Centered Submit Button -->
-      <div class="submit-section-container d-flex flex-column align-items-center mt-5 mb-5 pt-4">
-        <CButton 
-            color="danger" 
-            size="lg" 
-            class="px-5 py-3 font-weight-bold shadow-lg btn-submit-evaluation rounded-pill mb-3"
-            @click="submitEvaluation"
-            :disabled="isSubmitting"
-        >
-          <CIcon v-if="isSubmitting" name="cil-sync" class="mr-2 spin-icon" />
-          <CIcon v-else name="cil-check-alt" class="mr-2" />
-          {{ isSubmitting ? 'SUBMITTING...' : 'COMPLETE ASSESSMENT & SUBMIT' }}
-        </CButton>
-        <p class="text-muted small">By clicking submit, you confirm that all ratings provided are accurate.</p>
+                <!-- Softskills Section -->
+                <div class="section-title-wrapper mb-3 d-flex align-items-center">
+                  <div class="section-badge text-danger mr-3">SECTION 01</div>
+                  <h3 class="section-main-title">General Competencies (Softskills)</h3>
+                </div>
+                
+                <div class="competency-list mb-5">
+                  <CCard v-for="(item, idx) in softskillItems" :key="item._id" class="competency-container-card border-0 mb-4 shadow-sm">
+                    <CCardBody class="p-0">
+                      <div class="competency-header p-4 border-bottom bg-light-soft">
+                          <div class="d-flex align-items-center">
+                              <div class="item-number mr-3">{{ String(idx + 1).padStart(2, '0') }}</div>
+                              <h5 class="competency-title mb-0">{{ translate(item.title) }}</h5>
+                          </div>
+                      </div>
+                      <div class="question-items-wrapper">
+                          <div v-for="(conf, cIdx) in (item.config || [])" :key="cIdx" class="question-row p-4 border-bottom-dashed">
+                              <CRow class="align-items-center">
+                                  <CCol lg="7" md="6" class="mb-3 mb-md-0">
+                                      <div class="d-flex align-items-start">
+                                          <div class="q-marker mr-3">{{ cIdx + 1 }}</div>
+                                          <div>
+                                              <div class="q-category mb-1" v-if="conf.label || conf.variable">{{ translate(conf.label || conf.variable) }}</div>
+                                              <div class="q-text">{{ translate(conf.question) }}</div>
+                                          </div>
+                                      </div>
+                                  </CCol>
+                                  <CCol lg="5" md="6">
+                                      <RatingSelector v-model="evaluation.softskills[item._id + '_' + cIdx]" :disabled="isAlreadySubmitted" />
+                                  </CCol>
+                              </CRow>
+                          </div>
+                      </div>
+                    </CCardBody>
+                  </CCard>
+                </div>
+
+                <!-- Hardskills Section -->
+                <div class="section-title-wrapper mb-3 d-flex align-items-center">
+                  <div class="section-badge text-success mr-3">SECTION 02</div>
+                  <h3 class="section-main-title">Program-Specific Skills (Hardskills)</h3>
+                </div>
+                
+                <div class="competency-list mb-5">
+                  <CCard v-for="(item, idx) in hardskillItems" :key="item._id" class="competency-container-card border-0 mb-4 shadow-sm">
+                    <CCardBody class="p-0">
+                      <div class="competency-header p-4 border-bottom bg-light-spec">
+                          <div class="d-flex align-items-center">
+                              <div class="item-number mr-3">{{ String(idx + 1).padStart(2, '0') }}</div>
+                              <div>
+                                  <h5 class="competency-title mb-1">{{ translate(item.title) }}</h5>
+                                  <CBadge color="light" class="border text-muted px-2 py-1">{{ item.program ? translate(item.program.title) : 'General' }}</CBadge>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="question-items-wrapper">
+                          <div v-for="(conf, cIdx) in (item.config || [])" :key="cIdx" class="question-row p-4 border-bottom-dashed">
+                              <CRow class="align-items-center">
+                                  <CCol lg="7" md="6" class="mb-3 mb-md-0">
+                                      <div class="d-flex align-items-start">
+                                          <div class="q-marker mr-3 text-success">{{ cIdx + 1 }}</div>
+                                          <div>
+                                              <div class="q-category mb-1 text-success" v-if="conf.label || conf.variable">{{ translate(conf.label || conf.variable) }}</div>
+                                              <div class="q-text">{{ translate(conf.question) }}</div>
+                                          </div>
+                                      </div>
+                                  </CCol>
+                                  <CCol lg="5" md="6">
+                                      <RatingSelector v-model="evaluation.hardskills[item._id + '_' + cIdx]" :disabled="isAlreadySubmitted" />
+                                  </CCol>
+                              </CRow>
+                          </div>
+                      </div>
+                    </CCardBody>
+                  </CCard>
+                </div>
+
+                <!-- Suggestions Section -->
+                <div class="section-title-wrapper mb-3 d-flex align-items-center">
+                  <div class="section-badge text-info mr-3">SECTION 03</div>
+                  <h3 class="section-main-title">Continuous Improvement & Suggestions</h3>
+                </div>
+
+                <div class="suggestions-list mb-5">
+                  <CCard v-for="(item, idx) in suggestionItems" :key="item._id" class="competency-container-card border-0 mb-4 shadow-sm">
+                    <CCardBody class="p-0">
+                      <div class="competency-header p-4 border-bottom bg-light-info">
+                          <div class="d-flex align-items-center">
+                              <div class="item-number mr-3">{{ String(idx + 1).padStart(2, '0') }}</div>
+                              <h5 class="competency-title mb-0">{{ translate(item.title) }}</h5>
+                          </div>
+                      </div>
+                      <div class="question-items-wrapper">
+                          <div v-for="(q, qIdx) in (item.config || [])" :key="qIdx" class="question-row p-4 border-bottom-dashed">
+                              <div class="mb-2">
+                                <div class="d-flex align-items-center mb-3">
+                                  <div class="q-marker mr-3 text-info">{{ qIdx + 1 }}</div>
+                                  <div class="q-text">{{ translate(q.question) }}</div>
+                                </div>
+                                <CInput 
+                                  rows="4" 
+                                  class="form-control-modern" 
+                                  placeholder="Write your suggestions here..."
+                                  v-model="evaluation.suggestions[item._id + '_' + qIdx]"
+                                  :disabled="isAlreadySubmitted"
+                                />
+                              </div>
+                          </div>
+                      </div>
+                    </CCardBody>
+                  </CCard>
+                </div>
+
+                <!-- Centered Submit Button -->
+                <div class="submit-section-container d-flex flex-column align-items-center mt-5 mb-5 pt-4">
+                  <div class="d-flex justify-content-center py-5">
+                    <CButton 
+                      color="danger" 
+                      size="lg" 
+                      class="px-5 py-3 font-weight-bold shadow btn-submit-evaluation rounded-pill" 
+                      :disabled="isSubmitting || isAlreadySubmitted"
+                      @click="submitEvaluation"
+                    >
+                      <CIcon v-if="isSubmitting" name="cil-reload" class="mr-2 spin-icon" />
+                      <CIcon v-else-if="isAlreadySubmitted" name="cil-lock-locked" class="mr-2" />
+                      <CIcon v-else name="cil-check-circle" class="mr-2" />
+                      {{ isSubmitting ? 'Submitting...' : (isAlreadySubmitted ? 'Evaluation Submitted' : 'Submit Evaluation') }}
+                    </CButton>
+                  </div>
+                  <p class="text-muted small">By clicking submit, you confirm that all ratings provided are accurate.</p>
+                </div>
+              </div>
+            </transition>
+          </CContainer>
+        </main>
       </div>
-
-    </CContainer>
+    </CWrapper>
 
     <!-- Success Modal -->
     <CModal
@@ -161,19 +203,31 @@
       centered
       fade
       :closeOnBackdrop="false"
+      size="sm"
     >
-      <div class="text-center py-4">
-        <div class="success-icon-large mb-3">
-            <CIcon name="cil-check-circle" size="xl" class="text-success" />
+      <div class="text-center py-5 px-4">
+        <div class="success-icon-wrapper mb-4">
+            <CIcon name="cil-check-circle" class="text-success success-icon-animate" />
         </div>
-        <h3 class="font-weight-bold">Success!</h3>
-        <p class="text-muted">The evaluation for <strong>{{ displayName }}</strong> has been submitted successfully.</p>
+        <h2 class="font-weight-bold mb-3" style="color: #1e293b;">Success!</h2>
+        <p class="text-muted leading-relaxed mb-0">
+          The evaluation for <br>
+          <strong class="text-dark">{{ displayName }}</strong> <br>
+          has been submitted successfully.
+        </p>
       </div>
       <template #footer>
-        <CButton color="success" class="px-5 py-2 font-weight-bold rounded-pill" @click="onCloseSuccess">Exit to Dashboard</CButton>
+        <div class="w-100 d-flex justify-content-center pb-4">
+            <CButton 
+                color="success" 
+                class="px-5 py-2 font-weight-bold rounded-pill shadow-sm btn-exit-dashboard" 
+                @click="onCloseSuccess"
+            >
+                Exit to Dashboard
+            </CButton>
+        </div>
       </template>
     </CModal>
-
   </div>
 </template>
 
@@ -202,17 +256,36 @@ export default {
         suggestions: {}
       },
       isSubmitting: false,
-      showSuccessModal: false
+      showSuccessModal: false,
+      isAlreadySubmitted: false,
+      pageLoading: true
     }
   },
   async created() {
-    this.studentID = this.$route.query.studentID;
-    this.fetchGeneral()
-    this.fetchSpecific()
-    this.fetchProposition()
+    this.pageLoading = true;
     
-    if (this.studentID) {
-        this.fetchStudentInfo();
+    // Ensure studentID is set from the route query
+    if (this.$route.query.studentID) {
+        this.studentID = this.$route.query.studentID;
+    }
+
+    try {
+        const promises = [
+            this.fetchGeneral(),
+            this.fetchSpecific(),
+            this.fetchProposition()
+        ];
+        
+        if (this.studentID) {
+            promises.push(this.fetchStudentInfo());
+            promises.push(this.checkExistingEvaluation());
+        }
+
+        await Promise.all(promises);
+    } catch (e) {
+        console.error("Initialization error", e);
+    } finally {
+        setTimeout(() => { this.pageLoading = false; }, 600); // Small delay for smooth transition
     }
   },
   computed: {
@@ -256,21 +329,60 @@ export default {
     ...mapActions('competencies/general', { fetchGeneral: 'general' }),
     ...mapActions('competencies/specific', { fetchSpecific: 'specific' }),
     ...mapActions('competencies/proposition', { fetchProposition: 'proposition' }),
-    ...mapActions('competencies/evaluation', ['createEvaluation']),
+    ...mapActions('competencies/evaluation', {
+        createEvaluation: 'createEvaluation',
+        queryEvaluation: 'queryEvaluation',
+        fetchEvaluations: 'evaluations'
+    }),
+    
+    async checkExistingEvaluation() {
+        if (!this.studentID) return;
+        try {
+            // Using GET (via evaluations action) as the primary authority for checking status
+            const resp = await this.fetchEvaluations({ studentId: this.studentID });
+            if (resp && resp.data && resp.data.length > 0) {
+                this.isAlreadySubmitted = true;
+                // Optional: Map existing data back to form if needed
+            }
+        } catch (e) {
+            console.error("Error checking existing evaluation", e);
+        }
+    },
     
     async fetchStudentInfo() {
         try {
-            const resp = await this.$store.dispatch('member/students/students', { id: this.studentID });
-            // Assume the response or state update gives us the student
-            this.studentDoc = this.students.find(s => s._id === this.studentID);
+            const students = await this.$store.dispatch('member/students/students', { id: this.studentID });
+            // Use the returned students array which is now guaranteed to be loaded
+            if (students && Array.isArray(students)) {
+                this.studentDoc = students.find(s => s._id === this.studentID);
+            }
         } catch (e) {
             console.error("Failed to fetch student info", e);
         }
     },
 
     async submitEvaluation() {
+        if (this.isSubmitting || this.isAlreadySubmitted) return;
+        
+        this.isSubmitting = true;
+
         if (!this.studentID) {
             alert("Error: No student ID provided for this evaluation.");
+            this.isSubmitting = false;
+            return;
+        }
+
+        // Basic MongoDB ObjectId check (24-char hex)
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(this.studentID);
+        if (!isObjectId) {
+            alert("Error: The Student ID provided is invalid. Please use the link provided in the official email.");
+            this.isSubmitting = false;
+            return;
+        }
+
+        if (!this.studentDoc) {
+            alert("Error: Student information could not be verified. Please refresh the page.");
+            this.isSubmitting = false;
             return;
         }
 
@@ -283,10 +395,11 @@ export default {
         const hardRated = Object.keys(this.evaluation.hardskills).length;
         
         if ((softRated + hardRated) < totalQuestions) {
-            if (!confirm('You have not rated all competency criteria. Are you sure you want to submit the assessment anyway?')) return;
+            if (!confirm('You have not rated all competency criteria. Are you sure you want to submit the assessment anyway?')) {
+                this.isSubmitting = false;
+                return;
+            }
         }
-
-        this.isSubmitting = true;
 
         try {
             // 2. Transform evaluation data for backend (Competencies_Evaluation schema)
@@ -294,25 +407,64 @@ export default {
                 studentId: this.studentID,
                 softskills: Object.keys(this.evaluation.softskills).map(key => {
                     const [id] = key.split('_');
-                    return { criteriaId: id, score: this.evaluation.softskills[key] };
+                    const category = this.softskillItems.find(i => i._id === id);
+                    const lang = this.$store.getters['setting/lang'] || 'th';
+                    return { 
+                        answer: {
+                            title: {
+                                th: this.translate(category ? category.title : '', 'th'),
+                                en: this.translate(category ? category.title : '', 'en')
+                            },
+                            score: this.evaluation.softskills[key]
+                        }
+                    };
                 }),
                 hardskills: Object.keys(this.evaluation.hardskills).map(key => {
                     const [id] = key.split('_');
-                    return { criteriaId: id, score: this.evaluation.hardskills[key] };
+                    const category = this.hardskillItems.find(i => i._id === id);
+                    const lang = this.$store.getters['setting/lang'] || 'th';
+                    return { 
+                        answer: {
+                            title: {
+                                th: this.translate(category ? category.title : '', 'th'),
+                                en: this.translate(category ? category.title : '', 'en')
+                            },
+                            score: this.evaluation.hardskills[key]
+                        }
+                    };
                 }),
-                suggestions: Object.keys(this.evaluation.suggestions).map(key => {
+                sugestion: Object.keys(this.evaluation.suggestions).map(key => {
                     const [id] = key.split('_');
-                    return { criteriaId: id, value: this.evaluation.suggestions[key] };
+                    const category = this.suggestionItems.find(i => i._id === id);
+                    const lang = this.$store.getters['setting/lang'] || 'th';
+                    return { 
+                        answer: {
+                            title: {
+                                th: this.translate(category ? category.title : '', 'th'),
+                                en: this.translate(category ? category.title : '', 'en')
+                            },
+                            value: this.evaluation.suggestions[key]
+                        }
+                    };
                 })
             };
-
+            
             await this.createEvaluation(payload);
+            
+            // Success: Lock UI state
+            this.isAlreadySubmitted = true;
             this.showSuccessModal = true;
         } catch (error) {
             console.error('Submission failed', error);
+            
+            // Check for Duplicate (400) - Lock the UI if already exists
+            if (error && error.response && error.response.status === 400) {
+                this.isAlreadySubmitted = true;
+                return;
+            }
+            
             alert('Failed to submit evaluation. Please try again.');
-        } finally {
-            this.isSubmitting = false;
+            this.isSubmitting = false; // Allow retry on real connection errors
         }
     },
 
@@ -379,6 +531,7 @@ export default {
 
 .bg-light-soft { background-color: #fff1f2; }
 .bg-light-spec { background-color: #f0fdf4; }
+.bg-light-info { background-color: #f0f9ff; }
 
 .question-row {
     transition: background 0.2s;
@@ -429,9 +582,33 @@ export default {
   box-shadow: 0 20px 40px -8px rgba(220, 38, 38, 0.4) !important;
 }
 
-.success-icon-large {
-  transform: scale(3.5);
-  margin: 40px 0;
+.success-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.success-icon-wrapper .c-icon {
+  width: 80px;
+  height: 80px;
+}
+
+.success-icon-animate {
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.btn-exit-dashboard {
+    transition: all 0.3s;
+}
+
+.btn-exit-dashboard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4) !important;
 }
 
 .form-control-modern {
@@ -476,4 +653,56 @@ export default {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Page Loading Overlay */
+.page-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.modern-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #dc2626;
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Locked State UI */
+.locked-hero-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.locked-icon-wrapper .c-icon {
+  width: 120px;
+  height: 120px;
+  color: #10b981;
+}
+
+.divider-small {
+  width: 60px;
+  height: 4px;
+  background: #10b981;
+  border-radius: 2px;
+}
+
+.rounded-xl { border-radius: 24px !important; }
+
+.leading-relaxed { line-height: 1.625; }
 </style>

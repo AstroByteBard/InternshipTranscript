@@ -14,38 +14,43 @@ const ServerModule = {
 
     actions: {
         students({ commit }, data) {
-            Service.students('get', data, {})
+            return Service.students('get', data, {})
                 .then((response) => {
                     commit('students', response.data.data)
+                    return response.data.data
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         createStudents({ dispatch }, data) {
-            Service.students('post', data, {})
+            return Service.students('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
                     return dispatch('students')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         updateStudents({ dispatch }, data) {
-            Service.students('put', data, {})
+            return Service.students('put', data, {})
                 .then((response) => {
                     console.log('สถานนะการแก้ไข : ', response.data)
                     return dispatch('students')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         deleteStudents({ dispatch }, data) {
-            Service.students('delete', data, {})
+            return Service.students('delete', data, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
                     return dispatch('students')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
     },
