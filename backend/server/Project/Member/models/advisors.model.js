@@ -10,7 +10,6 @@ var objsSchema = new Schema({
     email: { type: String, default: null, required: true },
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'Students', default: null },
     year: { type: String, default: new Date().getFullYear().toString() },
-    evaluation: { type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Evaluation', default: null },
 });
 
 module.exports = mongoose.model('Advisors', objsSchema, 'Advisors');

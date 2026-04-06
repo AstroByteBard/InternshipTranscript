@@ -185,11 +185,11 @@ export default {
             this.$store.dispatch('member/students/students')
         },
         getStatusClass(status) {
-            const map = { SENT: 'status-replied', FAILED: 'status-closed', PENDING: 'status-pending' }
+            const map = { COMPLETE: 'status-replied', FAILED: 'status-closed', PENDING: 'status-pending' }
             return map[status] ?? 'status-pending'
         },
         getStatusIcon(status) {
-            const map = { SENT: 'cil-check-circle', FAILED: 'cil-warning', PENDING: 'cil-clock' }
+            const map = { COMPLETE: 'cil-check-circle', FAILED: 'cil-warning', PENDING: 'cil-clock' }
             return map[status] ?? 'cil-clock'
         },
         formatSendStatus(status) {
@@ -236,7 +236,10 @@ export default {
                 source = source.filter(s => s.info?.year === this.year.toString())
             }
             if (this.status) {
-                source = source.filter(() => 'PENDING' === this.status)
+                source = source.filter(s => {
+                    const currentStat = s.evaluation ? 'COMPLETE' : 'PENDING';
+                    return currentStat === this.status;
+                })
             }
             if (this.searchQuery.trim()) {
                 const q = this.searchQuery.toLowerCase().trim()
@@ -259,7 +262,7 @@ export default {
                     programName: program ? getTitle(program.title) : 'N/A',
                     academicYear: info.year ?? 'N/A',
                     semester: info.semester ?? 'N/A',
-                    sendStatus: 'PENDING',
+                    sendStatus: item.evaluation ? 'COMPLETE' : 'PENDING',
                 }
             })
         },
@@ -309,7 +312,7 @@ export default {
             return [
                 { value: null, label: 'All Status' },
                 { value: 'PENDING', label: 'Pending' },
-                { value: 'SENT', label: 'Replied' },
+                { value: 'COMPLETE', label: 'Complete' },
                 { value: 'FAILED', label: 'Closed' },
             ]
         },

@@ -406,42 +406,54 @@ export default {
             const payload = {
                 studentId: this.studentID,
                 softskills: Object.keys(this.evaluation.softskills).map(key => {
-                    const [id] = key.split('_');
+                    const [id, cIdx] = key.split('_');
                     const category = this.softskillItems.find(i => i._id === id);
-                    const lang = this.$store.getters['setting/lang'] || 'th';
+                    const config = category && category.config ? category.config[parseInt(cIdx)] : null;
+                    const catTitleTH = this.translate(category ? category.title : '', 'th');
+                    const catTitleEN = this.translate(category ? category.title : '', 'en');
+                    const qTitleTH = this.translate(config ? config.question : '', 'th');
+                    const qTitleEN = this.translate(config ? config.question : '', 'en');
                     return { 
                         answer: {
                             title: {
-                                th: this.translate(category ? category.title : '', 'th'),
-                                en: this.translate(category ? category.title : '', 'en')
+                                th: qTitleTH ? `${catTitleTH} - ${qTitleTH}` : catTitleTH,
+                                en: qTitleEN ? `${catTitleEN} - ${qTitleEN}` : catTitleEN
                             },
                             score: this.evaluation.softskills[key]
                         }
                     };
                 }),
                 hardskills: Object.keys(this.evaluation.hardskills).map(key => {
-                    const [id] = key.split('_');
+                    const [id, cIdx] = key.split('_');
                     const category = this.hardskillItems.find(i => i._id === id);
-                    const lang = this.$store.getters['setting/lang'] || 'th';
+                    const config = category && category.config ? category.config[parseInt(cIdx)] : null;
+                    const catTitleTH = this.translate(category ? category.title : '', 'th');
+                    const catTitleEN = this.translate(category ? category.title : '', 'en');
+                    const qTitleTH = this.translate(config ? config.question : '', 'th');
+                    const qTitleEN = this.translate(config ? config.question : '', 'en');
                     return { 
                         answer: {
                             title: {
-                                th: this.translate(category ? category.title : '', 'th'),
-                                en: this.translate(category ? category.title : '', 'en')
+                                th: qTitleTH ? `${catTitleTH} - ${qTitleTH}` : catTitleTH,
+                                en: qTitleEN ? `${catTitleEN} - ${qTitleEN}` : catTitleEN
                             },
                             score: this.evaluation.hardskills[key]
                         }
                     };
                 }),
                 sugestion: Object.keys(this.evaluation.suggestions).map(key => {
-                    const [id] = key.split('_');
+                    const [id, cIdx] = key.split('_');
                     const category = this.suggestionItems.find(i => i._id === id);
-                    const lang = this.$store.getters['setting/lang'] || 'th';
+                    const config = category && category.config ? category.config[parseInt(cIdx)] : null;
+                    const catTitleTH = this.translate(category ? category.title : '', 'th');
+                    const catTitleEN = this.translate(category ? category.title : '', 'en');
+                    const qTitleTH = this.translate(config ? config.question : '', 'th');
+                    const qTitleEN = this.translate(config ? config.question : '', 'en');
                     return { 
                         answer: {
                             title: {
-                                th: this.translate(category ? category.title : '', 'th'),
-                                en: this.translate(category ? category.title : '', 'en')
+                                th: qTitleTH ? `${catTitleTH} - ${qTitleTH}` : catTitleTH,
+                                en: qTitleEN ? `${catTitleEN} - ${qTitleEN}` : catTitleEN
                             },
                             value: this.evaluation.suggestions[key]
                         }

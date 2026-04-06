@@ -18,7 +18,7 @@ var objsSchema = new Schema({
         year: { type: String, default: new Date().getFullYear().toString() }
     },
     company: { type: String, default: null },
-    status: { type: mongoose.Schema.Types.ObjectId, ref: 'Setting_Status', default: "689c04cb255db4e56aea88ef" },
+    evaluation: { type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Evaluation', default: null },
 });
 
 module.exports = mongoose.model('Students', objsSchema, 'Students');

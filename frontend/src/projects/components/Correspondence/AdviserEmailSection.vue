@@ -194,11 +194,11 @@ export default {
             this.$store.dispatch('member/students/students')
         },
         getStatusClass(status) {
-            const map = { SENT: 'status-replied', FAILED: 'status-closed', PENDING: 'status-pending' }
+            const map = { COMPLETE: 'status-replied', FAILED: 'status-closed', PENDING: 'status-pending' }
             return map[status] ?? 'status-pending'
         },
         getStatusIcon(status) {
-            const map = { SENT: 'cil-check-circle', FAILED: 'cil-warning', PENDING: 'cil-clock' }
+            const map = { COMPLETE: 'cil-check-circle', FAILED: 'cil-warning', PENDING: 'cil-clock' }
             return map[status] ?? 'cil-clock'
         },
         formatSendStatus(status) {
@@ -248,7 +248,10 @@ export default {
                 source = source.filter(adviser => adviser.student?.info?.year === this.year.toString())
             }
             if (this.status) {
-                source = source.filter(() => 'PENDING' === this.status)
+                source = source.filter(adviser => {
+                    const currentStat = adviser.student?.evaluation ? 'COMPLETE' : 'PENDING';
+                    return currentStat === this.status;
+                })
             }
             if (this.searchQuery.trim()) {
                 const q = this.searchQuery.toLowerCase().trim()
@@ -268,7 +271,7 @@ export default {
                 organizationAddress: item.organizationAddress || '',
                 email: item.email || 'N/A',
                 student: item.student?.name ? getTitle(item.student.name) : 'N/A',
-                sendStatus: 'PENDING',
+                sendStatus: item.student?.evaluation ? 'COMPLETE' : 'PENDING',
             }))
         },
 
@@ -317,7 +320,7 @@ export default {
             return [
                 { value: null, label: 'All Status' },
                 { value: 'PENDING', label: 'Pending' },
-                { value: 'SENT', label: 'Replied' },
+                { value: 'COMPLETE', label: 'Complete' },
                 { value: 'FAILED', label: 'Closed' },
             ]
         },

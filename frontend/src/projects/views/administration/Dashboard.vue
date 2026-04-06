@@ -38,6 +38,7 @@ import WidgetsDropdown from '../../components/widgets/WidgetsDashboard.vue'
 import CChartBar from '../../components/charts/CChartBar'
 import CChartPie from '../../components/charts/CChartPie'
 import CChartLine from '../../components/charts/CChartLine'
+import * as XLSX from "xlsx"
 
 export default {
   name: 'Dashboard',
@@ -55,14 +56,15 @@ export default {
       selectedProgram: '',
       selectedYear: '',
       selectedEvaluated: '',
-      // Default status ID for "Not Evaluated"
-      NOT_EVALUATED_STATUS: '689c04cb255db4e56aea88ef'
     }
   },
   computed: {
     ...mapGetters('academic/schools', { storedSchools: 'schools' }),
     ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
     ...mapGetters('member/students', { storedStudents: 'students' }),
+    ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
+    ...mapGetters('competencies/general', { storedGeneral: 'general' }),
+    ...mapGetters('competencies/specific', { storedSpecific: 'specific' }),
 
     filteredStudents() {
       if (!this.storedStudents) return [];
@@ -78,11 +80,11 @@ export default {
         // Year Filter
         if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
         
-        // Evaluated Filter (Logic: default status ID is not evaluated)
+        // Evaluated Filter (Logic: student.evaluation exists)
         if (this.selectedEvaluated === 'evaluated') {
-          if ((student.status?._id || student.status) === this.NOT_EVALUATED_STATUS) return false;
+          if (!student.evaluation) return false;
         } else if (this.selectedEvaluated === 'not_evaluated') {
-          if ((student.status?._id || student.status) !== this.NOT_EVALUATED_STATUS) return false;
+          if (student.evaluation) return false;
         }
         
         return true;
@@ -94,11 +96,11 @@ export default {
     },
 
     evaluatedCount() {
-      return this.filteredStudents.filter(s => (s.status?._id || s.status) !== this.NOT_EVALUATED_STATUS).length;
+      return this.filteredStudents.filter(s => s.evaluation).length;
     },
 
     notEvaluatedCount() {
-      return this.filteredStudents.filter(s => (s.status?._id || s.status) === this.NOT_EVALUATED_STATUS).length;
+      return this.filteredStudents.filter(s => !s.evaluation).length;
     },
 
     selectedSchoolName() {
@@ -134,9 +136,9 @@ export default {
           if (this.selectedProgram && (info.program?._id || info.program) !== this.selectedProgram) return false;
           if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
           if (this.selectedEvaluated === 'evaluated') {
-            if ((student.status?._id || student.status) === this.NOT_EVALUATED_STATUS) return false;
+            if (!student.evaluation) return false;
           } else if (this.selectedEvaluated === 'not_evaluated') {
-            if ((student.status?._id || student.status) !== this.NOT_EVALUATED_STATUS) return false;
+            if (student.evaluation) return false;
           }
           
           return (info.school?._id || info.school) === school._id;
@@ -210,9 +212,140 @@ export default {
       this.$store.dispatch("academic/programs/programs")
       this.$store.dispatch("academic/schools/schools")
       this.$store.dispatch("member/students/students")
+      this.$store.dispatch("member/advisors/advisors")
+      this.$store.dispatch("competencies/general/general")
+      this.$store.dispatch("competencies/specific/specific")
     },
     downloadReport() {
-      console.log("Generating report...");
+      const lang = this.$i18n.locale || 'en';
+      const students = this.filteredStudents;
+      if (!students.length) return;
+
+      // Build Label Dictionaries from active competency definitions to help legacy data
+      const softDict = [];
+      if (this.storedGeneral) {
+        this.storedGeneral.filter(i => i.active).forEach(cat => {
+          (cat.config || []).forEach(conf => {
+            softDict.push(this.translate(conf.question, lang));
+          });
+        });
+      }
+      
+      const hardDict = [];
+      if (this.storedSpecific) {
+        // We use all active specific questions as candidates
+        this.storedSpecific.filter(i => i.active).forEach(cat => {
+          (cat.config || []).forEach(conf => {
+            hardDict.push(this.translate(conf.question, lang));
+          });
+        });
+      }
+
+      // Identify the max number of items for all categories and their unique titles from DB
+      const softSkillMap = {}; 
+      const hardSkillMap = {};
+      const suggestionMap = {};
+
+      students.forEach(s => {
+        if (s.evaluation) {
+          (s.evaluation.softskills || []).forEach((item, idx) => {
+            if(!softSkillMap[idx]) softSkillMap[idx] = new Set();
+            const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
+            if (ititle) softSkillMap[idx].add(ititle);
+          });
+          (s.evaluation.hardskills || []).forEach((item, idx) => {
+            if(!hardSkillMap[idx]) hardSkillMap[idx] = new Set();
+            const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
+            if (ititle) hardSkillMap[idx].add(ititle);
+          });
+          (s.evaluation.sugestion || []).forEach((item, idx) => {
+            if(!suggestionMap[idx]) suggestionMap[idx] = new Set();
+            const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
+            if (ititle) suggestionMap[idx].add(ititle);
+          });
+        }
+      });
+
+      // Build definitive header lists based on indices and Dictionary lookup
+      const getDisplayHeader = (map, dict, prefix) => {
+        return Object.keys(map).sort((a,b) => parseInt(a) - parseInt(b)).map(idxStr => {
+          const idx = parseInt(idxStr);
+          const titles = Array.from(map[idx]);
+          let titleStr = titles.length === 1 ? titles[0] : titles.join(' / ');
+          
+          // If title seems too generic or matches category pattern, try to get detailed title from dictionary
+          if (dict[idx] && (titleStr.length < 5 || titleStr.includes('Competencies'))) {
+            titleStr = dict[idx];
+          }
+
+          return {
+             idx: idx,
+             label: `${prefix} ${idx + 1}: ${titleStr}`
+          };
+        });
+      };
+
+      const softHeaders = getDisplayHeader(softSkillMap, softDict, 'Soft Skill');
+      const hardHeaders = getDisplayHeader(hardSkillMap, hardDict, 'Hard Skill');
+      const suggHeaders = getDisplayHeader(suggestionMap, [], 'Suggestion');
+
+      const getT = (t) => (Array.isArray(t) ? (t.find(x => x.key === lang) ?? t[0])?.value ?? '' : t ?? '');
+      
+      const data = students.map(s => {
+        const info = s.info || {};
+        const schoolQuery = info.school?._id || info.school;
+        const school = (info.school && info.school.title) ? info.school : (this.storedSchools.find(sc => sc._id === schoolQuery) || {});
+        
+        const programQuery = info.program?._id || info.program;
+        const program = (info.program && info.program.title) ? info.program : (this.storedPrograms.find(p => p._id === programQuery) || {});
+        
+        const advisor = this.storedAdvisors.find(a => a.student === s._id || a.student?._id === s._id);
+        
+        const row = {
+          'Student ID': s.studentID || 'N/A',
+          'Name (TH)': (s.name?.find?.(x => x.key === 'th') || {}).value || 'N/A',
+          'Name (EN)': (s.name?.find?.(x => x.key === 'en') || {}).value || 'N/A',
+          'School': getT(school.title) || 'N/A',
+          'Program': getT(program.title) || 'N/A',
+          'Academic Year': info.year || 'N/A',
+          'Semester': info.semester || 'N/A',
+          'Adviser Email': advisor ? advisor.email : 'N/A',
+          'Evaluation Status': s.evaluation ? 'Complete' : 'Pending'
+        };
+        
+        // Map scores by fixed indices to keep columns consistent
+        softHeaders.forEach(h => {
+          const item = s.evaluation?.softskills?.[h.idx];
+          row[h.label] = item ? item.answer.score : '';
+        });
+        
+        hardHeaders.forEach(h => {
+          const item = s.evaluation?.hardskills?.[h.idx];
+          row[h.label] = item ? item.answer.score : '';
+        });
+        
+        suggHeaders.forEach(h => {
+          const item = s.evaluation?.sugestion?.[h.idx];
+          row[h.label] = item ? item.answer.value : '';
+        });
+        
+        return row;
+      });
+      
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Evaluation Report");
+      
+      // Fine-tune column widths: headers can be long
+      const wscols = Object.keys(data[0] || {}).map(key => ({ wch: Math.max(key.length, 15) }));
+      worksheet['!cols'] = wscols;
+
+      XLSX.writeFile(workbook, `Evaluation_Report_${this.moment().format('YYYY-MM-DD')}.xlsx`);
+    },
+    translate(data, key = 'th') {
+      if (!data || !Array.isArray(data)) return data
+      const found = data.find(i => i.key === key)
+      return found ? found.value : (data[0] ? data[0].value : '')
     },
     handleStatusFilter(status) {
       if (status === 'all') {

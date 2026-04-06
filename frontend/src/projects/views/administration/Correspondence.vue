@@ -227,10 +227,20 @@ export default {
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
 
         totalCount() {
-            return this.selected === 'StudentData' ? (this.storedStudents || []).length : (this.storedAdvisors || []).length;
+            const list = this.selected === 'StudentData' ? (this.storedStudents || []) : (this.storedAdvisors || []);
+            return list.length;
         },
-        pendingCount() { return this.totalCount; },
-        sentCount() { return 0; },
+        sentCount() {
+            // "Complete" status maps to sentCount widget
+            if (this.selected === 'StudentData') {
+                return (this.storedStudents || []).filter(s => s.evaluation).length;
+            } else {
+                return (this.storedAdvisors || []).filter(a => a.student?.evaluation).length;
+            }
+        },
+        pendingCount() {
+            return this.totalCount - this.sentCount;
+        },
         failedCount() { return 0; },
 
         schoolOptions() {
@@ -265,7 +275,7 @@ export default {
             return [
                 { value: null, label: 'All Status' },
                 { value: 'PENDING', label: 'Pending' },
-                { value: 'SENT', label: 'Replied' },
+                { value: 'COMPLETE', label: 'Complete' },
                 { value: 'FAILED', label: 'Closed' },
             ]
         }

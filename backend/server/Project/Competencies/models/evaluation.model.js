@@ -34,4 +34,17 @@ var evaluationSchema = new Schema({
     }],
 }, { versionKey: false, timestamps: true });
 
+
+evaluationSchema.post('save', async function (doc) {
+    try {
+        await mongoose.model('Students').updateOne(
+            { _id: doc.studentId },
+            { $set: { evaluation: doc._id } }
+        );
+        console.log('Updated student evaluation status');
+    } catch (err) {
+        console.error('Error updating Student evaluation:', err);
+    }
+});
+
 module.exports = mongoose.model('Competencies_Evaluation', evaluationSchema, 'Competencies_Evaluation');
