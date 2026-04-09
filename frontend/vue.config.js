@@ -7,11 +7,17 @@ module.exports = {
   configureWebpack: {
     //Necessary to run npm link https://webpack.js.org/configuration/resolve/#resolve-symlinks
     resolve: {
-       symlinks: false
+      symlinks: false
     }
   },
   transpileDependencies: [
-    '@coreui/utils'
+    '@coreui/utils',
+    'jspdf',
+    'html2canvas',
+    'fast-png',
+    'fflate',
+    'iobuffer',
+    'image-size'
   ],
   // use this option for production linking
   // publicPath: process.env.NODE_ENV === 'production' ? '/vue/demo/3.0.0' : '/'

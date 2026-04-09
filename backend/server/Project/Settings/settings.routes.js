@@ -6,6 +6,7 @@ const status = require("./service/status");
 const group = require("./service/group")
 const verification = require("./service/verification");
 const province = require("./service/province")
+const mockAuth = require("./service/mockAuth");
 // const auth_message = require("./service/auth_message");
 // const Role = require("../Accounts/service/role");
 // const Authen_Type = require("../Accounts/service/authen_type");
@@ -62,5 +63,45 @@ router.delete("/verification", verification.onDelete);
 // router.put("/authen/type", Authen_Type.onUpdate);
 // router.delete("/authen/type", Authen_Type.onDelete);
 
+/**
+ * Mock Authentication Routes (Development/Testing Only)
+ */
+router.post("/auth/mock-login", async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required'
+            });
+        }
+        const result = await mockAuth.mockLogin(email);
+        return res.status(200).json({
+            success: true,
+            data: result
+        });
+    } catch (err) {
+        console.error('Mock login error:', err);
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
+router.get("/auth/mock-users", async (req, res) => {
+    try {
+        const users = await mockAuth.getAllMockUsers();
+        return res.status(200).json({
+            success: true,
+            data: users
+        });
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
 
 module.exports = router;

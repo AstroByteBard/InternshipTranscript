@@ -3,9 +3,11 @@ import Router from 'vue-router'
 
 // Containers
 const TheContainer_Project = () => import('@/containers/TheContainer_Project')
+const TheContainer_Student = () => import('@/containers/TheContainer_Student')
 
 // project 
 const Dashboard = () => import('@/projects/views/administration/Dashboard')
+const StudentDashboard = () => import('@/projects/views/student/StudentDashboard')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
@@ -38,6 +40,19 @@ export default new Router({
             path: '/login',
             name: 'Login',
             component: Login
+        },
+        {
+            path: '/student',
+            redirect: '/student/dashboard',
+            name: 'StudentHome',
+            component: TheContainer_Student,
+            children: [
+                {
+                    path: 'dashboard',
+                    name: 'StudentDashboard',
+                    component: StudentDashboard
+                }
+            ]
         },
         {
             path: '/',

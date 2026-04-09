@@ -1,11 +1,11 @@
 <template>
     <div class="tiptap-toolbar d-flex align-items-center mb-4 pb-3 border-bottom flex-wrap">
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
-            @click="handleAction('undo')" :disabled="!canUndo()">
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" @click="handleAction('undo')"
+            :disabled="!canUndo()">
             <CIcon name="cil-action-undo" size="sm" />
         </CButton>
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1"
-            @click="handleAction('redo')" :disabled="!canRedo()">
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" @click="handleAction('redo')"
+            :disabled="!canRedo()">
             <CIcon name="cil-action-redo" size="sm" />
         </CButton>
 
@@ -156,7 +156,8 @@
 export default {
     name: 'EditorToolbar',
     props: {
-        editor: { type: Object, required: false }
+        editor: { type: Object, required: false },
+        konvaEditor: { type: Object, required: false }
     },
     data() {
         return {
@@ -187,20 +188,30 @@ export default {
             }
         },
         canUndo() {
-            if (!this.editor || !this.editor.can) return false
-            try {
-                return this.editor.can().chain().focus().undo().run()
-            } catch (e) {
-                return false
+            if (this.editor && this.editor.can) {
+                try {
+                    return this.editor.can().chain().focus().undo().run()
+                } catch (e) {
+                    return false
+                }
+            } else if (this.konvaEditor) {
+                // For Konva Editor
+                return this.konvaEditor.historyIndex > 0
             }
+            return false
         },
         canRedo() {
-            if (!this.editor || !this.editor.can) return false
-            try {
-                return this.editor.can().chain().focus().redo().run()
-            } catch (e) {
-                return false
+            if (this.editor && this.editor.can) {
+                try {
+                    return this.editor.can().chain().focus().redo().run()
+                } catch (e) {
+                    return false
+                }
+            } else if (this.konvaEditor) {
+                // For Konva Editor
+                return this.konvaEditor.historyIndex < this.konvaEditor.history.length - 1
             }
+            return false
         },
         handleFormat(type, value) {
             if (this.editor && this.editor.chain) {
@@ -222,8 +233,12 @@ export default {
                 else if (action === 'redo') chain.redo().run();
                 else if (action === 'toggleBulletList') chain.toggleBulletList().run();
                 else if (action === 'toggleOrderedList') chain.toggleOrderedList().run();
+            } else if (this.konvaEditor) {
+                // For Konva Editor
+                if (action === 'undo') this.konvaEditor.undo();
+                else if (action === 'redo') this.konvaEditor.redo();
+                else this.$emit('action', action);
             } else {
-                // For Konva
                 this.$emit('action', action);
             }
         },
@@ -326,7 +341,7 @@ export default {
 
 .font-select:focus {
     border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
 }
 
 /* Font Size Stepper */
