@@ -27,10 +27,24 @@ export default {
             history: [],
             historyIndex: -1,
             isLoading: false,
+            // Example data from database
+            exampleData: {
+                studentName: 'Name',
+                studentID: 'Student ID',
+                school: 'School',
+                program: 'Major',
+                academyYear: new Date().getFullYear().toString(),
+                competencies: {
+                    programWithMostCompetencies: 'Major',
+                    competenciesCount: 0,
+                    competenciesList: []
+                }
+            }
         }
     },
     mounted() {
         this.createStage()
+        this.fetchExampleData()
         window.addEventListener('resize', this.onResize)
         window.addEventListener('keydown', this.onKeyDown)
     },
@@ -146,7 +160,7 @@ export default {
             });
 
             this.transformer = new Konva.Transformer({
-                enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right'],
+                enabledAnchors: ['top-left', 'top-center', 'top-right', 'middle-right', 'bottom-right', 'bottom-center', 'bottom-left', 'middle-left'],
                 rotateEnabled: true,
                 ignoreStroke: true,
                 keepRatio: true,
@@ -184,6 +198,12 @@ export default {
                 }
             })
 
+            this.stage.on('dblclick dbltap', (e) => {
+                // Now unselect for everything (even text/variables)
+                this.transformer.nodes([])
+                this.layer.draw()
+            })
+
             // setup HTML5 drag and drop on the container
             container.addEventListener('dragover', (e) => {
                 e.preventDefault() // required to allow drop
@@ -204,24 +224,8 @@ export default {
                         const x = (pos.x - this.stage.x()) / scale
                         const y = (pos.y - this.stage.y()) / scale
 
-                        // Check for specific competency variables, suggestion, or graph variables
-                        if (parsed.value.startsWith('{Graph')) {
-                            this.addGraphPlaceholder(parsed.value, { left: x, top: y })
-                        } else if (parsed.value === '{GeneralCompetencies}' || parsed.value === '{SpecificCompetencies}') {
-                            this.addCompetencyTable(parsed.value, { left: x, top: y })
-                        } else if (parsed.value === '{Suggestion}') {
-                            this.addSuggestionTable({ left: x, top: y })
-                        } else {
-                            // Apply formatting for specific basic variables
-                            let textToInsert = parsed.value;
-                            if (parsed.value === '{StudentName}') textToInsert = 'Name XXXXXX XXXXXX XXXXXX';
-                            else if (parsed.value === '{StudentID}') textToInsert = 'Student ID XXXXXXXXXX';
-                            else if (parsed.value === '{School}') textToInsert = 'School XXXXXXXXXXXXXXXXXXXX';
-                            else if (parsed.value === '{Program}') textToInsert = 'Major XXXXXXXXXXXXXXXXXXXX';
-                            else if (parsed.value === '{AcademyYear}') textToInsert = 'Academic Year XXXXXX';
-
-                            this.addTextBlock(textToInsert, { left: x, top: y })
-                        }
+                        // Use unified insertVariable logic
+                        this.insertVariable(parsed.value, { left: x, top: y })
                     }
                 } catch (err) {
                     console.error('Invalid drop data', err)
@@ -252,6 +256,22 @@ export default {
             node.setAttr('createdOrder', this.creationSeq)
             this.creationSeq += 1
         },
+        handleNodeSelection(node, shiftKey) {
+            if (!this.transformer) return
+            const nodes = this.transformer.nodes().slice()
+            if (shiftKey) {
+                const index = nodes.indexOf(node)
+                if (index >= 0) {
+                    nodes.splice(index, 1)
+                } else {
+                    nodes.push(node)
+                }
+                this.transformer.nodes(nodes)
+            } else {
+                this.transformer.nodes([node])
+            }
+            this.layer.batchDraw()
+        },
         addImage(dataUrl, opts = {}) {
             return new Promise((resolve) => {
                 const imageObj = new window.Image()
@@ -265,6 +285,7 @@ export default {
                     const isBanner = imageObj.naturalWidth > imageObj.naturalHeight * 2;
                     const defaultW = opts.width ? Number(opts.width) : (isBanner ? maxW : Math.min(600, imageObj.naturalWidth, maxW))
                     const defaultH = opts.height ? Number(opts.height) : Math.floor((imageObj.naturalHeight / imageObj.naturalWidth) * defaultW)
+                    const lockResize = opts.lockResize === true || (opts.lockResize !== false && isBanner);
 
                     const hasX = typeof opts.x !== 'undefined' || typeof opts.left !== 'undefined'
                     const hasY = typeof opts.y !== 'undefined' || typeof opts.top !== 'undefined'
@@ -278,14 +299,17 @@ export default {
                         width: defaultW,
                         height: defaultH,
                         draggable: true,
+                        // ensure images are borderless by default
+                        stroke: null,
+                        strokeWidth: 0,
+                        imageSmoothingEnabled: isBanner ? false : undefined,
                     })
 
                     this.assignCreationOrder(konvaImage)
 
-                    konvaImage.on('click tap', () => {
-                        this.transformer.nodes([konvaImage])
-                        this.layer.draw()
-                    })
+                    konvaImage.on('click tap', (e) => {
+                        this.handleNodeSelection(konvaImage, e.evt.shiftKey)
+                    });
 
                     konvaImage.on('dragmove', () => {
                         // keep inside bounds while dragging
@@ -298,6 +322,12 @@ export default {
                     })
 
                     konvaImage.on('transform', () => {
+                        if (lockResize) {
+                            // prevent scaling for banner images
+                            konvaImage.scaleX(1);
+                            konvaImage.scaleY(1);
+                            return;
+                        }
                         // keep transform within bounds and enforce min size
                         const minSize = 16
                         const scaleX = konvaImage.scaleX()
@@ -316,6 +346,13 @@ export default {
                     })
 
                     konvaImage.on('transformend', () => {
+                        if (lockResize) {
+                            konvaImage.scaleX(1);
+                            konvaImage.scaleY(1);
+                            this.layer.draw()
+                            this.saveHistory()
+                            return
+                        }
                         // apply scale to width/height and reset scale
                         const scaleX = konvaImage.scaleX()
                         const scaleY = konvaImage.scaleY()
@@ -361,6 +398,17 @@ export default {
                     if (opts.isGraphPlaceholder && opts.graphType) {
                         konvaImage.setAttr('name', 'graph-placeholder')
                         konvaImage.setAttr('graphType', opts.graphType)
+                    }
+                    if (opts.variableName) {
+                        konvaImage.setAttr('variableName', opts.variableName)
+                        konvaImage.setAttr('placeholder', opts.variableName)
+                    }
+
+                    if (isBanner) {
+                        konvaImage.setAttr('isBanner', true)
+                    }
+                    if (lockResize) {
+                        konvaImage.setAttr('lockResize', true)
                     }
 
                     this.layer.draw()
@@ -540,6 +588,30 @@ export default {
                 }).then(resolve);
             });
         },
+        addImagePlaceholder(variableName, opts = {}) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 500;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Do not draw a stroked border for image placeholders — keep them borderless
+                ctx.fillStyle = '#64748b';
+                ctx.font = 'bold 28px Inter, Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(variableName.replace(/[{}]/g, ''), canvas.width / 2, canvas.height / 2);
+
+                const dataUrl = canvas.toDataURL('image/png');
+                this.addImage(dataUrl, {
+                    width: 380,
+                    height: 240,
+                    ...opts,
+                    variableName
+                }).then(resolve);
+            });
+        },
         addCompetencyTable(variableName, opts = {}) {
             return new Promise((resolve) => {
                 const isGeneral = variableName.includes('General');
@@ -579,9 +651,8 @@ export default {
                 this.layer.add(group);
                 if (typeof opts.onCreate === 'function') opts.onCreate(group);
 
-                group.on('click tap', () => {
-                    this.transformer.nodes([group]);
-                    this.layer.draw();
+                group.on('click tap', (e) => {
+                    this.handleNodeSelection(group, e.evt.shiftKey)
                 });
                 group.on('dragend', () => {
                     this.layer.draw();
@@ -636,9 +707,8 @@ export default {
                 this.layer.add(group);
                 if (typeof opts.onCreate === 'function') opts.onCreate(group);
 
-                group.on('click tap', () => {
-                    this.transformer.nodes([group]);
-                    this.layer.draw();
+                group.on('click tap', (e) => {
+                    this.handleNodeSelection(group, e.evt.shiftKey)
                 });
                 group.on('dragend', () => {
                     this.layer.draw();
@@ -782,23 +852,35 @@ export default {
                 const maxW = this.stage.width()
                 const maxH = this.stage.height()
                 const defaultFontSize = opts.fontSize ? Number(opts.fontSize) : 20
-                const defaultW = opts.width ? Number(opts.width) : Math.min(400, Math.floor(maxW * 0.6))
-                const x = typeof opts.left !== 'undefined' ? Number(opts.left) : Math.max(10, Math.floor((maxW - defaultW) / 2))
+
+                // If width is not provided, let Konva auto-size it to match text length
+                const initialW = opts.width ? Number(opts.width) : undefined
+
+                const x = typeof opts.left !== 'undefined' ? Number(opts.left) : (initialW ? Math.max(10, Math.floor((maxW - initialW) / 2)) : 50)
                 const y = typeof opts.top !== 'undefined' ? Number(opts.top) : 30
 
                 const konvaText = new Konva.Text({
-                    x, y, text, fontSize: defaultFontSize, fontFamily: 'Arial, sans-serif', fill: '#111827', fontStyle: opts.fontWeight || 'normal', draggable: true, width: defaultW, wrap: 'none', padding: 10, lineHeight: 1.2, align: 'left'
+                    x, y, text,
+                    fontSize: defaultFontSize,
+                    fontFamily: 'Inter, Arial',
+                    fill: '#1e293b',
+                    fontStyle: opts.fontWeight || 'normal',
+                    draggable: true,
+                    width: initialW,
+                    wrap: initialW ? 'word' : 'none',
+                    padding: 5,
+                    lineHeight: 1.2,
+                    align: 'left'
                 });
 
                 this.assignCreationOrder(konvaText)
                 this.layer.add(konvaText)
                 this.transformer.moveToTop()
 
-                konvaText.on('click tap', () => {
-                    this.transformer.nodes([konvaText])
-                    this.layer.draw()
+                konvaText.on('click tap', (e) => {
+                    this.handleNodeSelection(konvaText, e.evt.shiftKey)
                 })
-                konvaText.on('dblclick dbltap', () => this.startEditingText(konvaText));
+                // konvaText.on('dblclick dbltap', () => this.startEditingText(konvaText));
                 konvaText.on('dragmove', () => {
                     const pos = konvaText.position();
                     const curW = konvaText.width() * konvaText.scaleX();
@@ -1113,6 +1195,35 @@ export default {
                 this.loadFromJSON(JSON.parse(this.history[this.historyIndex]));
             }
         },
+        insertVariable(variableName, opts = {}) {
+            if (!variableName) return;
+
+            if (variableName === '{GeneralCompetencies}' || variableName === '{SpecificCompetencies}') {
+                return this.addCompetencyTable(variableName, opts);
+            } else if (variableName === '{Suggestion}') {
+                return this.addSuggestionTable(opts);
+            } else if (variableName.startsWith('{Graph')) {
+                return this.addGraphPlaceholder(variableName, opts);
+            } else {
+                // Map to localized placeholder values using data from database
+                const mapping = {
+                    '{StudentName}': this.exampleData.studentName || 'Name',
+                    '{StudentID}': this.exampleData.studentID || 'Student ID',
+                    '{School}': this.exampleData.school || 'School',
+                    '{Program}': this.exampleData.program || 'Major',
+                    '{AcademyYear}': 'Academic Year ' + (this.exampleData.academyYear || 'XXXX')
+                };
+                const text = mapping[variableName] || variableName;
+                return this.addTextBlock(text, {
+                    ...opts,
+                    onCreate: (node) => {
+                        node.setAttr('variableName', variableName);
+                        node.setAttr('placeholder', variableName);
+                        if (typeof opts.onCreate === 'function') opts.onCreate(node);
+                    }
+                });
+            }
+        },
         saveToJSON() {
             if (!this.stage) return null;
             const bg = this.layer.findOne('.background-rect');
@@ -1145,6 +1256,9 @@ export default {
             });
 
             elements.sort((a, b) => {
+                const aZ = typeof a.zIndex === 'number' ? a.zIndex : 0
+                const bZ = typeof b.zIndex === 'number' ? b.zIndex : 0
+                if (aZ !== bZ) return aZ - bZ
                 const aOrder = typeof a.attrs.createdOrder === 'number' ? a.attrs.createdOrder : a._orderIndex
                 const bOrder = typeof b.attrs.createdOrder === 'number' ? b.attrs.createdOrder : b._orderIndex
                 return aOrder - bOrder
@@ -1184,6 +1298,11 @@ export default {
                             ...el.attrs,
                             onCreate: (node) => this.applySavedAttrs(node, el.attrs)
                         });
+                    } else if (el.attrs.variableName && !el.src) {
+                        await this.addImagePlaceholder(el.attrs.variableName, {
+                            ...el.attrs,
+                            onCreate: (node) => this.applySavedAttrs(node, el.attrs)
+                        });
                     } else {
                         await this.addImage(el.src, {
                             ...el.attrs,
@@ -1207,6 +1326,19 @@ export default {
             this.transformer.moveToTop()
             this.layer.batchDraw();
             this.isLoading = false;
+        },
+        async fetchExampleData() {
+            try {
+                // Use axios directly for fetching example data
+                const axios = (await import('axios')).default;
+                const response = await axios.get('http://localhost:8081/api/v1/member/example-data');
+                if (response.data && response.data.data) {
+                    this.exampleData = response.data.data;
+                }
+            } catch (err) {
+                console.warn('Failed to fetch example data from API:', err);
+                // Keep default values if API fails
+            }
         }
     }
 }

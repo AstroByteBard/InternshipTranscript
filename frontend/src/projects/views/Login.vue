@@ -13,14 +13,14 @@
           <img src="@/assets/banner/MFU INTERNSHIP BANNER.png" alt="MFU Internship Banner" class="mb-4" height="100px">
 
           <div class="google-login-btn-container w-100 mt-4">
-            <button @click="onAuthenGoogle"
+            <button @click="loginAsAdmin"
               class="google-signin-btn btn w-100 d-flex align-items-center justify-content-center">
               <img src="@/assets/icons/logo-google.png" alt="Google Logo" class="mr-3" width="24px">
               <span class="font-weight-bold">Continue with Admin Lamduan Mail</span>
             </button>
           </div>
           <div class="google-login-btn-container w-100 mt-4">
-            <button @click="onAuthenGoogle"
+            <button @click="loginAsStudent"
               class="google-signin-btn btn w-100 d-flex align-items-center justify-content-center">
               <img src="@/assets/icons/logo-google.png" alt="Google Logo" class="mr-3" width="24px">
               <span class="font-weight-bold">Continue with Student Lamduan Mail</span>
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'Login',
@@ -53,14 +53,39 @@ export default {
     this.onInit();
   },
   methods: {
+    ...mapActions('auth', ['loginAsAdmin', 'loginAsStudent']),
+
     onInit() {
       // original init code
     },
+
+    async loginAsAdmin() {
+      try {
+        await this.$store.dispatch('auth/loginAsAdmin');
+        // Navigate to admin dashboard after successful login
+        this.$router.push('/dashboard');
+      } catch (err) {
+        console.error('Admin Login Error:', err);
+        this.$toast?.error(err.response?.data?.message || 'Admin Login Failed');
+      }
+    },
+
+    async loginAsStudent() {
+      try {
+        await this.$store.dispatch('auth/loginAsStudent');
+        // Navigate to student dashboard after successful login
+        this.$router.push('/student/dashboard');
+      } catch (err) {
+        console.error('Student Login Error:', err);
+        this.$toast?.error(err.response?.data?.message || 'Student Login Failed');
+      }
+    },
+
     async onAuthenGoogle() {
       try {
         const googleUser = await this.$gAuth.signIn();
         console.log('googleUser', googleUser)
-        // Add your login logic here (e.g., dispatching to Vuex)
+        // Add your Google OAuth login logic here
         // this.$store.dispatch("auth/onLoginWithGoogle", googleUser);
       } catch (err) {
         console.error('Google sign-in error:', err);

@@ -5,12 +5,23 @@ const ResMessage = require("../../Settings/service/message");
 exports.onQuery = async function (request, response) {
     try {
         let query = {};
-        if (request.body.id) query._id = new mongo.ObjectId(request.body.id);
-        if (request.body.studentId) query.studentId = new mongo.ObjectId(request.body.studentId);
-        
+        const body = request.body || {};
+        const params = request.query || {};
+        const id = body.id || params.id;
+        const studentId = body.studentId || params.studentId;
+
+        if (id && mongo.ObjectId.isValid(id)) {
+            query._id = new mongo.ObjectId(id);
+        }
+
+        if (studentId && mongo.ObjectId.isValid(studentId)) {
+            query.studentId = new mongo.ObjectId(studentId);
+        }
+
         const doc = await Evaluation.onQuery(query);
         return ResMessage.sendResponse(response, 0, 20000, doc);
     } catch (err) {
+        console.error('Evaluation onQuery error:', err);
         return ResMessage.sendResponse(response, 0, 40400);
     }
 };
@@ -18,9 +29,14 @@ exports.onQuery = async function (request, response) {
 exports.onQuerys = async function (request, response) {
     try {
         let query = {};
+        const params = request.query || {};
+        if (params.studentId && mongo.ObjectId.isValid(params.studentId)) {
+            query.studentId = new mongo.ObjectId(params.studentId);
+        }
         const doc = await Evaluation.onQuerys(query);
         return ResMessage.sendResponse(response, 0, 20000, doc);
     } catch (err) {
+        console.error('Evaluation onQuerys error:', err);
         return ResMessage.sendResponse(response, 0, 40400);
     }
 };

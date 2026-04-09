@@ -57,6 +57,23 @@ export default {
         }
     },
 
+    evaluation(method, data, configs) {
+        switch (method) {
+            case 'query':
+                return instance.post("/competencies/evaluation/query", data);
+            case 'get':
+                return instance.get("/competencies/evaluation", { params: data });
+            case 'post':
+                return instance.post("/competencies/evaluation", data);
+            case 'put':
+                return instance.put("/competencies/evaluation", data);
+            case 'delete':
+                return instance.delete("/competencies/evaluation", { data: data });
+            default:
+                break;
+        }
+    },
+
     emailAdviser(method, data, configs) {
         switch (method) {
             case 'exp':

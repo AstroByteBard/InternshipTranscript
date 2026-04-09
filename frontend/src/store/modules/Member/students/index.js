@@ -14,11 +14,13 @@ const ServerModule = {
 
     actions: {
         students({ commit }, data) {
-            Service.students('get', data, {})
+            return Service.students('get', data, {})
                 .then((response) => {
                     commit('students', response.data.data)
+                    return response.data.data
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         createStudents({ dispatch }, data) {

@@ -54,6 +54,7 @@
     "axios": "^1.6.1",
     "cross-domain-storage": "^2.0.7",
     "en": "^1.0.1",
+    "jspdf": "^4.2.1",
     "konva": "^8.4.3",
     "less": "^3.9.0",
     "less-loader": "^4.1.0",

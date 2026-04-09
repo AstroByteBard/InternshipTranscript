@@ -15,6 +15,7 @@ import Academic from "@/store/modules/Academic"
 import Email from "@/store/modules/Email"
 import Member from "@/store/modules/Member"
 import Dialog from "@/store/modules/Dialog"
+import Auth from "@/store/modules/auth"
 
 const state = {
   sidebarShow: 'responsive',
@@ -45,12 +46,13 @@ export default new Vuex.Store({
   state,
   mutations,
   modules: {
+    auth: Auth,
     dialog: Dialog,
     email: Email,
     competencies: Competencies,
     member: Member,
     academic: Academic,
-    setting : Setting
+    setting: Setting
 
     //   dialog: DialogMessages,
     //   setting : Setting,

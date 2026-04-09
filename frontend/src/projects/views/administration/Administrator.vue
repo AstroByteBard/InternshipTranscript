@@ -16,36 +16,20 @@
         />
         
         <div v-if="selected === 'Student'">
-            <FilterStudent 
-                :search.sync="search" 
-                :school.sync="school" 
-                :program.sync="program" 
-                :academic.sync="academic" 
-                :semester.sync="semester" 
-            />
+            <FilterStudent :search.sync="search" :school.sync="school" :program.sync="program" :academic.sync="academic"
+                :semester.sync="semester" />
 
-            <TableAdministratorStudent 
-                :filteredStudents="filteredStudents"
-                @edit-student="$refs.modalStudent.openEdit($event)" 
-                @refresh="onInit" 
-            />
+            <TableAdministratorStudent :filteredStudents="filteredStudents"
+                @edit-student="$refs.modalStudent.openEdit($event)" @refresh="onInit" />
 
         </div>
 
         <div v-if="selected === 'Advisor'">
-            <FilterAdvisor 
-                :search.sync="searchAdvisor" 
-                :school.sync="school" 
-                :program.sync="program"
-                :academic.sync="academic" 
-                :province.sync="province" 
-            />
+            <FilterAdvisor :search.sync="searchAdvisor" :school.sync="school" :program.sync="program"
+                :academic.sync="academic" :province.sync="province" />
 
-            <TableAdminstratorAdviser 
-                :filteredAdvisors="filteredAdvisors"
-                @edit-advisor="$refs.modalAdvisor.openEdit($event)" 
-                @refresh="onInit" 
-            />
+            <TableAdminstratorAdviser :filteredAdvisors="filteredAdvisors"
+                @edit-advisor="$refs.modalAdvisor.openEdit($event)" @refresh="onInit" />
         </div>
 
         <ModalEditStudent ref="modalStudent" @refresh="onInit" />
@@ -199,8 +183,8 @@ export default {
             const lang = this.$i18n.locale;
             let source = this.storedPrograms || [];
 
-            if (this.studentFilters.school) {
-                source = source.filter(program => program.school === this.studentFilters.school);
+            if (this.school) {
+                source = source.filter(program => program.school === this.school);
             }
 
             return [

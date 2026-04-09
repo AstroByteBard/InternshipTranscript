@@ -1,21 +1,10 @@
 <template>
     <div class="variable-list-container">
-        <CInput
-            placeholder="Search..."
-            v-model="searchQuery"
-            size="sm"
-            class="mb-3"
-        />
+        <CInput placeholder="Search..." v-model="searchQuery" size="sm" class="mb-3" />
 
         <div class="data-items-container custom-scrollbar" :style="containerStyle">
-            <div 
-                v-for="item in filteredItems" 
-                :key="item.value"
-                class="data-item p-2 mb-2 text-center"
-                draggable="true"
-                @dragstart="onDragStart($event, item)"
-                @click="onClick(item)"
-            >
+            <div v-for="item in filteredItems" :key="item.value" class="data-item p-2 mb-2 text-center" draggable="true"
+                @dragstart="onDragStart($event, item)" @click="onClick(item)">
                 <div class="d-flex align-items-center justify-content-center">
                     <CIcon v-if="showIcon" name="cil-storage" size="sm" class="mr-2" />
                     {{ item.label }}

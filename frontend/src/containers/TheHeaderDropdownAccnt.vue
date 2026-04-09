@@ -92,7 +92,7 @@
     <!--    <CDropdownItem>-->
     <!--      <CIcon name="cil-shield-alt" size="xl" /> Lock Account-->
     <!--    </CDropdownItem>-->
-    <CDropdownItem>
+    <CDropdownItem @click="handleLogout">
       <CIcon name="cil-lock-locked" size="xl" /> Logout
     </CDropdownItem>
   </CDropdown>
@@ -126,6 +126,10 @@ export default {
   },
 
   methods: {
+    handleLogout() {
+      this.$store.dispatch('auth/logout');
+      this.$router.push('/login');
+    },
     replaceByDefault(e) {
       e.target.src = "https://demo.zdrive.fund/assets/images/brand/logo.png"
     },

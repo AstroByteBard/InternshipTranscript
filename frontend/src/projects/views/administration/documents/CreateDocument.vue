@@ -17,8 +17,8 @@
 
                 <CCard class="toolbar-card mb-3 border-0 shadow-sm" v-show="!isPreview">
                     <CCardBody class="p-3">
-                        <EditorToolbar @image-uploaded="handleToolbarImage" @insert-styled-text="handleStyledText"
-                            @bring-forward="callEditorMethod('bringForward')"
+                        <EditorToolbar :konvaEditor="$refs.konvaEditor" @image-uploaded="handleToolbarImage"
+                            @insert-styled-text="handleStyledText" @bring-forward="callEditorMethod('bringForward')"
                             @bring-to-front="callEditorMethod('bringToFront')"
                             @send-backward="callEditorMethod('sendBackward')"
                             @send-to-back="callEditorMethod('sendToBack')" @toggle-data-sidebar="toggleSidebar('data')"
@@ -196,23 +196,7 @@ export default {
         },
         insertVariable(variableStr) {
             if (this.$refs.konvaEditor) {
-                if (variableStr === '{GeneralCompetencies}' || variableStr === '{SpecificCompetencies}') {
-                    this.$refs.konvaEditor.addCompetencyTable(variableStr);
-                } else if (variableStr === '{Suggestion}') {
-                    this.$refs.konvaEditor.addSuggestionTable();
-                } else if (variableStr.startsWith('{Graph')) {
-                    this.$refs.konvaEditor.addGraphPlaceholder(variableStr);
-                } else {
-                    // Apply formatting for specific basic variables
-                    let textToInsert = variableStr;
-                    if (variableStr === '{StudentName}') textToInsert = 'Name XXXXXX XXXXXX XXXXXX';
-                    else if (variableStr === '{StudentID}') textToInsert = 'Student ID XXXXXXXXXX';
-                    else if (variableStr === '{School}') textToInsert = 'School XXXXXXXXXXXXXXXXXXXX';
-                    else if (variableStr === '{Program}') textToInsert = 'Major XXXXXXXXXXXXXXXXXXXX';
-                    else if (variableStr === '{AcademyYear}') textToInsert = 'Academic Year XXXXXX';
-
-                    this.$refs.konvaEditor.addTextBlock(textToInsert);
-                }
+                this.$refs.konvaEditor.insertVariable(variableStr);
             }
         },
         toggleSidebar(sidebarName) {
