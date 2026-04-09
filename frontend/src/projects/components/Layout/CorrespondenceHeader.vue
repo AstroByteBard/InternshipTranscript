@@ -16,9 +16,9 @@
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in">
-        <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow">
-          <CIcon name="cil-file" class="mr-2 text-danger"/>
-          Email Templates
+        <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow" @click="$emit('preview')">
+          <CIcon name="cil-envelope-open" class="mr-2 text-danger"/>
+          Preview
         </CButton>
       </div>
     </div>

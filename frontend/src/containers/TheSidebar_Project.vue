@@ -55,7 +55,10 @@ export default {
       nav: [{
         _name: 'CSidebarNav',
         _children: [
-
+          {
+            _name: 'CSidebarNavTitle',
+            _children: ['Overview']
+          },
           {
             _name: 'CSidebarNavItem',
             name: 'Dashboard',
@@ -63,16 +66,44 @@ export default {
             icon: 'cil-window-restore'
           },
           {
-            _name: 'CSidebarNavItem',
-            name: 'Correspondence',
-            to: '/correspondence',
-            icon: 'cil-envelope-closed',
+            _name: 'CSidebarNavTitle',
+            _children: ['Main']
           },
           {
-            _name: 'CSidebarNavItem',
+            _name: 'CSidebarNavDropdown',
+            name: 'Correspondence',
+            route: '/correspondence',
+            icon: 'cil-envelope-closed',
+            items: [
+              {
+                name: 'Student',
+                to: '/correspondence/student',
+              },
+              {
+                name: 'Adviser',
+                to: '/correspondence/adviser',
+              },
+            ]
+          },
+          {
+            _name: 'CSidebarNavDropdown',
             name: 'Competencies',
-            to: '/Competencies',
+            route: '/Competencies',
             icon: 'cil-lightbulb',
+            items: [
+              {
+                name: 'Soft Skill',
+                to: '/Competencies/softskill',
+              },
+              {
+                name: 'Hard Skill',
+                to: '/Competencies/hardskill',
+              },
+              {
+                name: "Suggestions",
+                to: "/Competencies/skill"
+              }
+            ]
           },
           {
             _name: 'CSidebarNavItem',
@@ -81,10 +112,24 @@ export default {
             icon: 'cil-description',
           },
           {
-            _name: 'CSidebarNavItem',
+            _name: 'CSidebarNavTitle',
+            _children: ['Administrator']
+          },
+          {
+            _name: 'CSidebarNavDropdown',
             name: 'Administrator',
-            to: '/administrator',
+            route: '/administrator',
             icon: 'cil-lightbulb',
+            items: [
+              {
+                name: 'Student',
+                to: '/administrator/student',
+              },
+              {
+                name: 'Adviser',
+                to: '/administrator/adviser',
+              },
+            ]
           },
           {
             _name: 'CSidebarNavTitle',

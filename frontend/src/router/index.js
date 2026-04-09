@@ -9,18 +9,22 @@ const Dashboard = () => import('@/projects/views/administration/Dashboard')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
-const Administrator = () => import('@/projects/views/administration/Administrator')
+const AdministratorStudent = () => import('@/projects/views/administration/Administrator/Student')
+const AdministratorAdviser = () => import('@/projects/views/administration/Administrator/Adviser')
 
 //documents
 const Documents = () => import('@/projects/views/administration/documents/index')
 const CreateDocument = () => import('@/projects/views/administration/documents/CreateDocument')
 
 // competencies
-const Competencies = () => import('@/projects/views/administration/Competencies')
+const CompetenciesSoftskill = () => import('@/projects/views/administration/Competencies/Softskill')
+const CompetenciesHardskill = () => import('@/projects/views/administration/Competencies/Hardskill')
+const CompetenciesSuggestions = () => import('@/projects/views/administration/Competencies/Suggestions')
 const FillForm = () => import('@/projects/views/administration/FillForm')
 
 //correspondence
-const Correspondence = () => import('@/projects/views/administration/Correspondence')
+const CorrespondenceStudent = () => import('@/projects/views/administration/Correspondence/Student')
+const CorrespondenceAdviser = () => import('@/projects/views/administration/Correspondence/Adviser')
 
 Vue.use(Router)
 
@@ -51,14 +55,37 @@ export default new Router({
 
                 {
                     path: 'correspondence',
-                    name: 'Correspondence',
-                    component: Correspondence
+                    redirect: 'correspondence/student'
+                },
+                {
+                    path: 'Correspondence/student',
+                    name: 'CorrespondenceStudent',
+                    component: CorrespondenceStudent
+                },
+                {
+                    path: 'Correspondence/adviser',
+                    name: 'CorrespondenceAdviser',
+                    component: CorrespondenceAdviser
                 },
 
                 {
-                    path: 'competencies',
-                    name: 'Competencies',
-                    component: Competencies
+                    path: 'Competencies',
+                    redirect: 'Competencies/softskill'
+                },
+                {
+                    path: 'Competencies/softskill',
+                    name: 'CompetenciesSoftskill',
+                    component: CompetenciesSoftskill
+                },
+                {
+                    path: 'Competencies/hardskill',
+                    name: 'CompetenciesHardskill',
+                    component: CompetenciesHardskill
+                },
+                {
+                    path: 'Competencies/skill',
+                    name: 'CompetenciesSuggestions',
+                    component: CompetenciesSuggestions
                 },
 
                 {
@@ -79,8 +106,17 @@ export default new Router({
 
                 {
                     path: 'administrator',
-                    name: 'administrator',
-                    component: Administrator
+                    redirect: 'administrator/student'
+                },
+                {
+                    path: 'administrator/student',
+                    name: 'AdministratorStudent',
+                    component: AdministratorStudent
+                },
+                {
+                    path: 'administrator/adviser',
+                    name: 'AdministratorAdviser',
+                    component: AdministratorAdviser
                 },
 
             ]

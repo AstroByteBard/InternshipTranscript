@@ -1,8 +1,9 @@
 <template>
     <div>
-        <CorrespondenceHeader />
+        <CorrespondenceHeader @preview="handlePreview" />
         
         <WidgetsCorrespondence 
+            :emailReady="isEmailReady"
             :total="totalCount" 
             :pending="pendingCount" 
             :sent="sentCount" 
@@ -13,24 +14,9 @@
         <CCard class="management-card border-0 mb-4 shadow-sm">
             <CCardBody class="p-3">
                 <CRow class="align-items-center">
-                    <!-- Navigation (Student/Adviser) -->
-                    <CCol lg="3" md="4" class="mb-3 mb-md-0">
-                        <div class="custom-segmented-control w-100">
-                            <CButtonGroup class="w-100 h-100">
-                                <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'StudentData' }"
-                                    @click="selected = 'StudentData'">
-                                    Student
-                                </CButton>
-                                <CButton class="segment-btn font-weight-bold" :class="{ active: selected === 'AdviserData' }"
-                                    @click="selected = 'AdviserData'">
-                                    Adviser
-                                </CButton>
-                            </CButtonGroup>
-                        </div>
-                    </CCol>
 
                     <!-- Search Bar -->
-                    <CCol lg="4" md="8" class="mb-3 mb-md-0">
+                    <CCol lg="6" md="6" class="mb-3 mb-md-0">
                         <div class="search-input-wrapper">
                             <CIcon name="cil-search" class="search-icon" />
                             <input type="text" class="form-control modern-search-input"
@@ -39,18 +25,15 @@
                     </CCol>
 
                     <!-- Action Buttons -->
-                    <CCol lg="5" md="12" class="d-flex justify-content-end align-items-center flex-wrap">
+                    <CCol lg="6" md="6" class="d-flex justify-content-end align-items-center flex-wrap">
                         <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')">
-                            <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> Send Email {{ selected === 'StudentData' ? 'School' : 'Org' }}
+                            <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> Send Email School
                         </CButton>
-                        <CButton v-if="selected === 'StudentData'" class="btn-modern-action mr-2" @click="sendBulkEmail('program')">
+                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('program')">
                             <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> Send Email Program
                         </CButton>
                         <CButton class="btn-modern-action btn-modern-filter mr-2" @click="showFilters = !showFilters">
                             <CIcon name="cil-filter" class="mr-2" /> Filters
-                        </CButton>
-                        <CButton class="btn-modern-action btn-modern-red" @click="handlePreview">
-                            <CIcon name="cil-envelope-open" class="mr-2" /> Preview
                         </CButton>
                     </CCol>
                 </CRow>
@@ -109,17 +92,6 @@
         <div class="content-pannel">
             <StudentEmailSection 
                 ref="studentSection"
-                v-if="selected === 'StudentData'" 
-                :search-query="searchQuery"
-                :school="filterSchool"
-                :program="filterProgram"
-                :year="filterYear"
-                :status="filterStatus"
-            />
-
-            <AdviserEmailSection 
-                ref="adviserSection"
-                v-else-if="selected === 'AdviserData'" 
                 :search-query="searchQuery"
                 :school="filterSchool"
                 :program="filterProgram"
@@ -137,21 +109,18 @@ import { mapGetters } from 'vuex'
 import CorrespondenceHeader from '@/projects/components/Layout/CorrespondenceHeader.vue'
 import WidgetsCorrespondence from '@/projects/components/widgets/WidgetsCorrespondence.vue'
 import StudentEmailSection from '@/projects/components/Correspondence/StudentEmailSection.vue'
-import AdviserEmailSection from '@/projects/components/Correspondence/AdviserEmailSection.vue'
 import ModalEmailPreview from '@/projects/components/Modal/ModalEmailPreview.vue'
 
 export default {
-    name: 'Correspondence',
+    name: 'CorrespondenceStudent',
     components: {
         CorrespondenceHeader,
         WidgetsCorrespondence,
         StudentEmailSection,
-        AdviserEmailSection,
         ModalEmailPreview,
     },
     data() {
         return {
-            selected: 'StudentData',
             searchQuery: '',
             showFilters: false,
             filterSchool: null,
@@ -166,18 +135,15 @@ export default {
     methods: {
         onInit() {
             this.$store.dispatch('member/students/students')
-            this.$store.dispatch('member/advisors/advisors')
             this.$store.dispatch('academic/schools/schools')
             this.$store.dispatch('academic/programs/programs')
             this.$store.dispatch('email/emailStudent/email')
-            this.$store.dispatch('email/emailAdviser/email')
         },
         async handlePreview() {
-            const isStudent = this.selected === 'StudentData';
-            const section = isStudent ? this.$refs.studentSection : this.$refs.adviserSection;
+            const section = this.$refs.studentSection;
             if (!section) return;
 
-            const items = isStudent ? section.programsTable : section.advisersTable;
+            const items = section.programsTable;
             if (!items || items.length === 0) {
                 alert('No data to preview with.');
                 return;
@@ -189,27 +155,27 @@ export default {
                 return;
             }
 
-            // Using first recipient as sample
-            this.$refs.modalPreview.open(activeTemplate, items[0], !isStudent);
+            this.$refs.modalPreview.open(activeTemplate, items[0], false);
         },
         async sendBulkEmail(type) {
-            const isStudent = this.selected === 'StudentData';
-            const section = isStudent ? this.$refs.studentSection : this.$refs.adviserSection;
-            
+            const section = this.$refs.studentSection;
             if (!section) return;
 
-            const items = isStudent ? section.programsTable : section.advisersTable;
+            // Filter for Pending only as requested for consistent behavior
+            const items = section.programsTable.filter(item => item.sendStatus === 'PENDING');
             
             if (!items || items.length === 0) {
-                alert('No data to send emails to.');
+                alert('No pending students found to send emails to.');
                 return;
             }
 
-            if (!confirm(`Are you sure you want to send emails to ${items.length} ${isStudent ? 'students' : 'advisers'}?`)) {
+            if (!confirm(`Are you sure you want to send emails to ${items.length} pending students?`)) {
                 return;
             }
 
-            // Iterate and send
+            this.$store.commit('dialog/loading', true);
+            this.$store.commit('dialog/loadingMessage', 'กำลังส่ง...');
+
             for (const item of items) {
                 try {
                     await section.sendEmail(item._id);
@@ -217,26 +183,28 @@ export default {
                     console.error(`Failed to send email to ${item._id}:`, error);
                 }
             }
-            alert('Bulk email operation completed.');
+            
+            this.$store.commit('dialog/loadingMessage', 'เสร็จแล้ว');
+            setTimeout(() => {
+                this.$store.commit('dialog/loading', false);
+            }, 1500);
         }
     },
     computed: {
         ...mapGetters('member/students', { storedStudents: 'students' }),
-        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
         ...mapGetters('academic/schools', { storedSchools: 'schools' }),
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
+        ...mapGetters('email/emailStudent', { storedStudentEmails: 'emailStudent' }),
+
+        isEmailReady() {
+            return (this.storedStudentEmails || []).some(t => t.active);
+        },
 
         totalCount() {
-            const list = this.selected === 'StudentData' ? (this.storedStudents || []) : (this.storedAdvisors || []);
-            return list.length;
+            return (this.storedStudents || []).length;
         },
         sentCount() {
-            // "Complete" status maps to sentCount widget
-            if (this.selected === 'StudentData') {
-                return (this.storedStudents || []).filter(s => s.evaluation).length;
-            } else {
-                return (this.storedAdvisors || []).filter(a => a.student?.evaluation).length;
-            }
+            return (this.storedStudents || []).filter(s => s.evaluation).length;
         },
         pendingCount() {
             return this.totalCount - this.sentCount;
@@ -410,4 +378,3 @@ export default {
     opacity: 0;
 }
 </style>
-```

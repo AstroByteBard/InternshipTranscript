@@ -14,7 +14,7 @@ var port = cfg.host.port;
 // var options = {
 //     key : fs.readFileSync('/etc/letsencrypt/live/finnext.io/privkey.pem'),
 //     cert : fs.readFileSync('/etc/letsencrypt/live/finnext.io/fullchain.pem'),
-    // passphrase : cfg.passphrase
+// passphrase : cfg.passphrase
 // };
 
 /**
@@ -41,13 +41,14 @@ var server = http.createServer(app);
 //     socket.setTimeout(cfg.timeout);
 // });
 
-var io = require('socket.io')(server,{
+var io = require('socket.io')(server, {
     cors: {
         origin: "https://127.0.0.1",
         // methods: ["GET", "POST"],
         // allowedHeaders: ["my-custom-header"],
         credentials: true
-    }})
+    }
+})
 require('./server/routes/socket.js')(io);
 
 

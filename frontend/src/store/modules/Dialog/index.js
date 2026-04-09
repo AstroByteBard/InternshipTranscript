@@ -20,6 +20,7 @@ const DialogModule = {
 
         isCode: null,
         loading: false,
+        loadingMessage: "",
         message: 0,
 
     },
@@ -28,6 +29,11 @@ const DialogModule = {
 
         loading(state, data) {
             state.loading = data
+            if (!data) state.loadingMessage = ""
+        },
+
+        loadingMessage(state, data) {
+            state.loadingMessage = data
         },
 
         message(state, data) {
@@ -51,6 +57,10 @@ const DialogModule = {
 
         loading(state) {
             return state.loading
+        },
+
+        loadingMessage(state) {
+            return state.loadingMessage
         },
 
         message(state) {

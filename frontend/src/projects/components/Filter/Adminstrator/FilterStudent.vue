@@ -2,14 +2,14 @@
     <CCard class="mb-4 filter-card">
         <CCardBody class="p-3">
             <CRow class="align-items-center mb-3">
-                <CCol md="8">
+                <CCol lg="6" md="8">
                     <div class="search-input-wrapper">
                         <CIcon name="cil-search" class="search-icon" />
                         <input type="text" class="form-control search-input"
                             placeholder="Search by name, ID, or email..." v-model="internalSearch" />
                     </div>
                 </CCol>
-                <CCol md="4" class="d-flex justify-content-end align-items-center">
+                <CCol lg="6" md="4" class="d-flex justify-content-end align-items-center">
                     <CButton class="btn-filter-action btn-filter-red" @click="showFilters = !showFilters">
                         <CIcon name="cil-filter" class="mr-2" /> Filters
                     </CButton>
