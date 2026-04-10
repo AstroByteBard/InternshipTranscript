@@ -19,7 +19,11 @@
             </div>
         </div>
       </div>
-      <div class="hero-actions pr-4 animate-scale-in">
+      <div class="hero-actions pr-4 animate-scale-in d-flex align-items-center">
+        <CButton v-if="showCreate" color="light" class="btn-hero-action mr-3 px-4 py-3 font-weight-bold shadow create-btn" @click="$emit('create-click')">
+          <CIcon name="cil-plus" class="mr-2 text-danger"/>
+          {{ createLabel }}
+        </CButton>
         <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow" @click="$emit('export-assessment')">
           <CIcon name="cil-notes" class="mr-2 text-danger"/>
           Assessment Form
@@ -35,7 +39,17 @@
 
 <script>
 export default {
-  name: 'CompetenciesHeader'
+  name: 'CompetenciesHeader',
+  props: {
+    showCreate: {
+      type: Boolean,
+      default: false
+    },
+    createLabel: {
+      type: String,
+      default: 'Create New'
+    }
+  }
 }
 </script>
 
@@ -108,6 +122,23 @@ export default {
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
   background-color: #f9fafb;
+}
+
+.btn-gold {
+  background-color: #FEC260 !important;
+  color: #8c1515 !important;
+  border: none !important;
+}
+
+.create-btn:hover {
+  background-color: #fff !important;
+  box-shadow: 0 10px 30px -5px rgba(254, 194, 96, 0.4) !important;
+  transform: translateY(-4px) scale(1.03);
+}
+
+.btn-gold:hover {
+  background-color: #fdb135 !important;
+  color: #721111 !important;
 }
 
 /* Illustration circle */

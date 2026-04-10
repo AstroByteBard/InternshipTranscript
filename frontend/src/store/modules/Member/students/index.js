@@ -53,6 +53,16 @@ const ServerModule = {
                     throw err
                 });
         },
+        explore({ commit }, data) {
+            return Service.students('exp', data, {})
+                .then((response) => {
+                    commit('students', [response.data.data])
+                    return response.data.data
+                }).catch((err) => {
+                    console.log(err)
+                    throw err
+                });
+        },
     },
 
     getters: {

@@ -101,7 +101,7 @@ export default {
               },
               {
                 name: "Suggestions",
-                to: "/Competencies/skill"
+                to: "/Competencies/suggestions"
               }
             ]
           },

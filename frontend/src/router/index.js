@@ -98,7 +98,7 @@ export default new Router({
                     component: CompetenciesHardskill
                 },
                 {
-                    path: 'Competencies/skill',
+                    path: 'Competencies/suggestions',
                     name: 'CompetenciesSuggestions',
                     component: CompetenciesSuggestions
                 },

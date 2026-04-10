@@ -1,15 +1,24 @@
 <template>
-  <div class="c-app c-default-layout">
+  <div class="c-app" :class="{ 'c-dark-theme': $store.state.darkMode }">
     <TheSidebar_Student />
+    <TheAside />
     <CWrapper>
       <TheHeader_Student />
-      <CContainer class="c-main">
-        <transition name="fade">
-          <router-view />
-        </transition>
-      </CContainer>
-      <TheFooter />
+      <div class="c-body">
+        <main class="c-main bg-gray-50">
+          <CContainer fluid>
+            <transition name="fade">
+              <router-view></router-view>
+            </transition>
+          </CContainer>
+        </main>
+        <!-- <TheFooter/> -->
+      </div>
     </CWrapper>
+    <CenterLoading />
+    <DialogMessage />
+    <SignIn />
+
   </div>
 </template>
 

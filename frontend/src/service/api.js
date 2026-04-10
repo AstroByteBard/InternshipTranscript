@@ -179,7 +179,9 @@ export default {
     students(method, data, configs) {
         switch (method) {
             case 'get':
-                return instance.get("member/students", { params: data });
+                return instance.get("member/students", data);
+            case 'exp':
+                return instance.post("member/students/explore", data);
             case 'post':
                 return instance.post("member/students", data);
             case 'put':

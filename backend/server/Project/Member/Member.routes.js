@@ -5,6 +5,7 @@ const students = require("./service/students");
 const advisors = require("./service/advisors");
 
 router.get("/students", students.onQuerys);
+router.post("/students/explore", students.onQuery)
 router.post("/students", students.onCreate);
 router.put("/students", students.onUpdate);
 router.delete("/students", students.onDelete);

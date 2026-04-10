@@ -1,154 +1,181 @@
 <template>
-    <div class="student-dashboard">
-        <div class="dashboard-header">
-            <div class="header-title">
-                <h1>Dashboard</h1>
-                <p class="subtitle">Overview of student evaluations and system activity</p>
+  <div class="student-dashboard">
+    <!-- Hero Section -->
+    <CRow class="mb-4">
+      <CCol md="12">
+        <CCard class="profile-hero-card border-0 shadow-sm">
+          <CCardBody class="p-4 d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex align-items-center">
+              <div class="avatar-wrapper mr-4">
+                <img :src="studentData.picture" class="hero-avatar shadow-lg" alt="Student Profile">
+              </div>
+              <div class="hero-info">
+                <h1 class="font-weight-bold mb-1 text-primary-dark">{{ studentData.name }}</h1>
+                <p class="text-muted mb-2">
+                    <CIcon name="cil-fingerprint" size="sm" class="mr-1"/> 
+                    ID: {{ studentData.studentID }}
+                </p>
+                <div class="d-flex flex-wrap">
+                  <CBadge color="light" class="badge-custom mr-2 mb-2">
+                      <CIcon name="cil-bank" size="sm" class="mr-1"/> 
+                      {{ studentData.school }}
+                  </CBadge>
+                  <CBadge color="light" class="badge-custom mb-2">
+                      <CIcon name="cil-education" size="sm" class="mr-1"/> 
+                      {{ studentData.program }}
+                  </CBadge>
+                </div>
+              </div>
             </div>
-            <button class="btn-download-pdf" @click="openDownloadModal">
-                <i class="fas fa-download"></i> Download PDF
-            </button>
+            <div class="action-hub mt-3 mt-lg-0">
+              <CButton color="primary" class="download-btn px-4 py-2 shadow-sm font-weight-bold" @click="openDownloadModal">
+                <CIcon name="cil-cloud-download" class="mr-2"/> Download Performance Report
+              </CButton>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+
+    <!-- Competencies Analysis -->
+    <CRow>
+      <!-- General Competencies (Soft Skills) -->
+      <CCol lg="6" class="mb-4">
+        <CCard class="h-100 border-0 shadow-sm glass-card">
+          <CCardHeader class="border-0 bg-transparent pt-4 px-4">
+            <h4 class="mb-0 text-secondary-dark font-weight-bold">Soft Skills</h4>
+            <p class="small text-muted mb-0">General Competencies Behavioral Analysis</p>
+          </CCardHeader>
+          <CCardBody class="px-4 pb-4">
+            <div class="chart-container mb-4 d-flex justify-content-center">
+              <CChartRadar
+                :datasets="generalChartDatasets"
+                :labels="generalChartLabels"
+                :options="chartOptions"
+                height="300px"
+              />
+            </div>
+            <div class="skills-list">
+              <div v-for="skill in generalCompetencies" :key="skill.id" class="skill-item mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="font-weight-bold text-small text-dark">{{ skill.name }}</span>
+                  <span class="text-primary font-weight-bold text-small">{{ skill.percentage }}%</span>
+                </div>
+                <CProgress :value="skill.percentage" :color="getProgressColor(skill.percentage)" class="progress-xs" />
+              </div>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+
+      <!-- Specific Competencies (Hard Skills) -->
+      <CCol lg="6" class="mb-4">
+        <CCard class="h-100 border-0 shadow-sm glass-card">
+          <CCardHeader class="border-0 bg-transparent pt-4 px-4">
+            <h4 class="mb-0 text-secondary-dark font-weight-bold">Hard Skills</h4>
+            <p class="small text-muted mb-0">Specific Technical Competencies Analysis</p>
+          </CCardHeader>
+          <CCardBody class="px-4 pb-4">
+            <div class="chart-container mb-4 d-flex justify-content-center">
+              <CChartRadar
+                :datasets="specificChartDatasets"
+                :labels="specificChartLabels"
+                :options="chartOptions"
+                height="300px"
+              />
+            </div>
+            <div class="skills-list">
+              <div v-for="skill in specificCompetencies" :key="skill.id" class="skill-item mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="font-weight-bold text-small text-dark">{{ skill.name }}</span>
+                  <span class="text-primary font-weight-bold text-small">{{ skill.percentage }}%</span>
+                </div>
+                <CProgress :value="skill.percentage" :color="getProgressColor(skill.percentage)" class="progress-xs" />
+              </div>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+
+    <!-- Qualitative Feedback -->
+    <CRow>
+      <CCol md="12" class="mb-4">
+        <CCard class="border-0 shadow-sm feedback-container">
+          <CCardBody class="p-4">
+            <CRow>
+              <CCol md="6" class="mb-3 mb-md-0 border-right-divider">
+                <div class="d-flex align-items-center mb-4 text-success">
+                  <div class="icon-circle bg-light-success mr-3">
+                    <CIcon name="cil-star" size="xl"/>
+                  </div>
+                  <h5 class="mb-0 font-weight-bold">Outstanding Performance</h5>
+                </div>
+                <div v-if="Outstanding.length > 0">
+                  <div v-for="feedback in Outstanding" :key="feedback.id" class="feedback-card p-3 mb-3">
+                    <ul class="mb-0 custom-list">
+                      <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">{{ point }}</li>
+                    </ul>
+                  </div>
+                </div>
+                <div v-else class="empty-state text-center py-4">
+                  <p class="text-muted font-italic">Analytical feedback is being processed...</p>
+                </div>
+              </CCol>
+              <CCol md="6">
+                <div class="d-flex align-items-center mb-4 text-info">
+                  <div class="icon-circle bg-light-info mr-3">
+                    <CIcon name="cil-chart-line" size="xl"/>
+                  </div>
+                  <h5 class="mb-0 font-weight-bold">Growth Opportunities</h5>
+                </div>
+                <div v-if="Opportunities.length > 0">
+                  <div v-for="feedback in Opportunities" :key="feedback.id" class="feedback-card p-3 mb-3">
+                    <ul class="mb-0 custom-list">
+                      <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">{{ point }}</li>
+                    </ul>
+                  </div>
+                </div>
+                <div v-else class="empty-state text-center py-4">
+                  <p class="text-muted font-italic">Continue your excellent progress in all domains!</p>
+                </div>
+              </CCol>
+            </CRow>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+
+    <!-- Download Modal -->
+    <CModal
+      title="Download Documentation"
+      :show.sync="showDownloadModal"
+      centered
+      color="primary"
+      size="sm"
+    >
+      <div class="py-3 px-1 text-center">
+        <CIcon name="cil-cloud-download" size="xl" class="text-primary mb-3" style="font-size: 3rem"/>
+        <h5 class="font-weight-bold mb-2">Ready to download?</h5>
+        <p class="text-muted small mb-4">Select a report template to generate your personalized document.</p>
+        <div class="text-left px-2">
+          <label class="font-weight-bold small text-uppercase text-muted mb-2">Report Template</label>
+          <CSelect
+            :options="publicDocumentOptions"
+            :value.sync="selectedDocumentId"
+            placeholder="Select a template..."
+            class="custom-select-modern"
+          />
         </div>
-
-        <CModal :show.sync="showDownloadModal" :centered="true">
-            <div class="modal-header">
-                <h5 class="modal-title">Download PDF</h5>
-                <button type="button" class="close" @click="showDownloadModal = false">&times;</button>
-            </div>
-            <div class="modal-body">
-                <label class="modal-label">Select Document<span class="text-danger">*</span></label>
-                <CSelect class="custom-select-ui" :options="publicDocumentOptions" :value.sync="selectedDocumentId"
-                    placeholder="Select Document" />
-                <div v-if="!publicDocumentOptions.length" class="text-muted small mt-2">
-                    No public documents available.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <CButton color="secondary" variant="ghost" @click="showDownloadModal = false">Cancel</CButton>
-                <CButton color="danger" :disabled="!selectedDocumentId" @click="handleDownload">
-                    Download
-                </CButton>
-            </div>
-        </CModal>
-
-        <!-- Student Info Card -->
-        <div class="student-info-card">
-            <div class="student-profile">
-                <img :src="studentData.picture" :alt="studentData.name" class="student-avatar">
-                <div class="student-details">
-                    <h2>{{ studentData.name }}</h2>
-                    <p class="student-id">Student ID: {{ studentData.studentID }}</p>
-                    <p class="student-school">{{ studentData.school }} - {{ studentData.program }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Competencies Section -->
-        <div class="competencies-section">
-            <!-- Specific Competencies -->
-            <div class="competency-category">
-                <h3>Specific Competencies</h3>
-                <div class="competency-list">
-                    <div v-for="skill in specificCompetencies" :key="skill.id" class="competency-item">
-                        <div class="competency-header">
-                            <span class="skill-name">{{ skill.name }}</span>
-                            <span class="skill-percentage">{{ skill.percentage }}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" :style="{ width: skill.percentage + '%' }"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- General Competencies -->
-            <div class="competency-category">
-                <h3>General Competencies</h3>
-                <div class="competency-list">
-                    <div v-for="skill in generalCompetencies" :key="skill.id" class="competency-item">
-                        <div class="competency-header">
-                            <span class="skill-name">{{ skill.name }}</span>
-                            <span class="skill-percentage">{{ skill.percentage }}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" :style="{ width: skill.percentage + '%' }"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts Section -->
-        <div class="charts-section">
-            <div class="chart-container">
-                <h4>Specific Competencies Comparison</h4>
-                <CChartRadar :datasets="specificChartDatasets" :labels="specificChartLabels" :options="chartOptions" />
-                <div class="chart-legend">
-                    <span class="legend-item"><span class="legend-color" style="background-color: #E8A0BF;"></span>
-                        You</span>
-                    <span class="legend-item"><span class="legend-color" style="background-color: #C9B1E0;"></span>
-                        Average</span>
-                </div>
-            </div>
-            <div class="chart-container">
-                <h4>General Competencies Comparison</h4>
-                <CChartRadar :datasets="generalChartDatasets" :labels="generalChartLabels" :options="chartOptions" />
-                <div class="chart-legend">
-                    <span class="legend-item"><span class="legend-color" style="background-color: #E8A0BF;"></span>
-                        You</span>
-                    <span class="legend-item"><span class="legend-color" style="background-color: #C9B1E0;"></span>
-                        Average</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Feedback Section -->
-        <div class="feedback-section">
-            <!-- Outstanding -->
-            <div class="feedback-category">
-                <h3>Outstanding</h3>
-                <div v-for="feedback in Outstanding" :key="feedback.id" class="feedback-item">
-                    <div class="feedback-header">
-                        <div class="feedback-profile">
-                            <img :src="feedback.picture" :alt="feedback.name" class="feedback-avatar">
-                            <div class="feedback-author">
-                                <h4>{{ feedback.name }}</h4>
-                                <p class="feedback-role">{{ feedback.role }}</p>
-                            </div>
-                        </div>
-                        <span class="feedback-date">{{ feedback.date }}</span>
-                    </div>
-                    <div class="feedback-content">
-                        <ul>
-                            <li v-for="(point, index) in feedback.points" :key="index">{{ point }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Opportunities -->
-            <div class="feedback-category">
-                <h3>Opportunities</h3>
-                <div v-for="feedback in Opportunities" :key="feedback.id" class="feedback-item">
-                    <div class="feedback-header">
-                        <div class="feedback-profile">
-                            <img :src="feedback.picture" :alt="feedback.name" class="feedback-avatar">
-                            <div class="feedback-author">
-                                <h4>{{ feedback.name }}</h4>
-                                <p class="feedback-role">{{ feedback.role }}</p>
-                            </div>
-                        </div>
-                        <span class="feedback-date">{{ feedback.date }}</span>
-                    </div>
-                    <div class="feedback-content">
-                        <ul>
-                            <li v-for="(point, index) in feedback.points" :key="index">{{ point }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+      </div>
+      <template #footer>
+        <CButton @click="showDownloadModal = false" color="light" class="px-4 font-weight-bold">Cancel</CButton>
+        <CButton @click="handleDownload" color="primary" class="px-4 font-weight-bold download-action-btn" :disabled="!selectedDocumentId">
+          Generate PDF
+        </CButton>
+      </template>
+    </CModal>
+  </div>
 </template>
 
 <script>
@@ -163,6 +190,7 @@ export default {
     },
     data() {
         return {
+            targetStudentId: '',
             studentData: {
                 name: '',
                 studentID: '',
@@ -173,42 +201,45 @@ export default {
             showDownloadModal: false,
             publicDocuments: [],
             selectedDocumentId: '',
-            specificCompetencies: [
-                // loaded from API
-            ],
-            generalCompetencies: [
-                // loaded from API
-            ],
-            Outstanding: [
-                // loaded from API
-            ],
-            Opportunities: [
-                // loaded from API
-            ],
-            specificChartLabels: [
-                // loaded from API
-            ],
-            specificChartDatasets: [
-                // loaded from API
-            ],
-            generalChartLabels: [
-                // loaded from API
-            ],
-            generalChartDatasets: [
-                // loaded from API
-            ],
+            specificCompetencies: [],
+            generalCompetencies: [],
+            Outstanding: [],
+            Opportunities: [],
+            specificChartLabels: [],
+            specificChartDatasets: [],
+            generalChartLabels: [],
+            generalChartDatasets: [],
             chartOptions: {
                 responsive: true,
                 maintainAspectRatio: false,
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        fontColor: '#4a4a4a',
+                        fontSize: 12
+                    }
                 },
                 scale: {
+                    gridLines: {
+                      color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    angleLines: {
+                      color: 'rgba(0, 0, 0, 0.05)'
+                    },
                     ticks: {
                         beginAtZero: true,
                         max: 100,
                         stepSize: 20,
-                        fontSize: 11
+                        fontSize: 10,
+                        showLabelBackdrop: false
+                    },
+                    pointLabels: {
+                      fontSize: 11,
+                      fontStyle: '600',
+                      fontColor: '#636e72'
                     }
                 }
             }
@@ -217,9 +248,20 @@ export default {
     async mounted() {
         await this.ensureAuthUser();
         await this.loadStudentData();
+        await this.$store.dispatch('competencies/evaluation/evaluations');
         await this.loadEvaluationData();
     },
     methods: {
+        getProgressColor(percent) {
+          if (percent >= 80) return 'success';
+          if (percent >= 50) return 'info';
+          if (percent >= 30) return 'warning';
+          return 'danger';
+        },
+        findStudent(id, email) {
+            const students = Array.isArray(this.storedStudents) ? this.storedStudents : (this.storedStudents ? [this.storedStudents] : []);
+            return students.find(s => s && (String(s._id) === String(id) || s.email === email));
+        },
         async ensureAuthUser() {
             if (!this.$store?.state?.auth?.user) {
                 try {
@@ -284,51 +326,58 @@ export default {
             this.generalChartLabels = generalLabels;
             this.specificChartDatasets = [
                 {
-                    label: 'You',
+                    label: 'My Score',
                     data: specificData,
                     borderColor: '#E8A0BF',
-                    backgroundColor: 'rgba(232, 160, 191, 0.2)',
+                    backgroundColor: 'rgba(232, 160, 191, 0.25)',
                     pointBackgroundColor: '#E8A0BF',
                     pointBorderColor: '#ffffff',
                     pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: '#E8A0BF'
+                    pointHoverBorderColor: '#E8A0BF',
+                    borderWidth: 3
                 },
                 {
-                    label: 'Average',
-                    data: new Array(specificData.length).fill(0),
+                    label: 'Global Average',
+                    data: new Array(specificData.length).fill(65),
                     borderColor: '#C9B1E0',
-                    backgroundColor: 'rgba(201, 177, 224, 0.2)',
+                    backgroundColor: 'rgba(201, 177, 224, 0.15)',
                     pointBackgroundColor: '#C9B1E0',
                     pointBorderColor: '#ffffff',
                     pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: '#C9B1E0'
+                    pointHoverBorderColor: '#C9B1E0',
+                    borderDash: [5, 5],
+                    borderWidth: 2
                 }
             ];
             this.generalChartDatasets = [
                 {
-                    label: 'You',
+                    label: 'My Score',
                     data: generalData,
                     borderColor: '#E8A0BF',
-                    backgroundColor: 'rgba(232, 160, 191, 0.2)',
+                    backgroundColor: 'rgba(232, 160, 191, 0.25)',
                     pointBackgroundColor: '#E8A0BF',
                     pointBorderColor: '#ffffff',
                     pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: '#E8A0BF'
+                    pointHoverBorderColor: '#E8A0BF',
+                    borderWidth: 3
                 },
                 {
-                    label: 'Average',
-                    data: new Array(generalData.length).fill(0),
+                    label: 'Global Average',
+                    data: new Array(generalData.length).fill(70),
                     borderColor: '#C9B1E0',
-                    backgroundColor: 'rgba(201, 177, 224, 0.2)',
+                    backgroundColor: 'rgba(201, 177, 224, 0.15)',
                     pointBackgroundColor: '#C9B1E0',
                     pointBorderColor: '#ffffff',
                     pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: '#C9B1E0'
+                    pointHoverBorderColor: '#C9B1E0',
+                    borderDash: [5, 5],
+                    borderWidth: 2
                 }
             ];
         },
         async loadEvaluationData() {
             try {
+                console.group('Evaluation Load Debug');
                 const authUser = this.$store?.state?.auth?.user;
                 const email = authUser?.email || (() => {
                     try {
@@ -338,20 +387,40 @@ export default {
                         return '';
                     }
                 })();
-                if (!email) return;
-
-                const students = this.storedStudents || [];
-                const student = students.find(s => s?.email === email);
-                if (!student || !student._id) {
-                    console.warn('Evaluation load: student not found for email', email);
+                console.log('Lookup Email:', email);
+                if (!email && !this.targetStudentId) {
+                    console.warn('Skip eval load: no email/targetId');
+                    console.groupEnd();
                     return;
                 }
 
-                await this.$store.dispatch('competencies/evaluation/evaluations', { studentId: student._id });
+                const student = this.findStudent(this.targetStudentId || authUser?._id, email);
+                console.log('Found Student for Eval:', student);
+                
+                if (!student || !student._id) {
+                    console.warn('Evaluation load: student not identified', this.targetStudentId || email);
+                    console.groupEnd();
+                    return;
+                }
+
+                if (!this.storedEvaluations || this.storedEvaluations.length === 0) {
+                    console.log('Fetching evaluations...');
+                    await this.$store.dispatch('competencies/evaluation/evaluations');
+                }
+
                 const evalPayload = this.storedEvaluations || [];
+                console.log('Raw Evaluations Payload:', evalPayload);
+                
                 const evalData = Array.isArray(evalPayload)
-                    ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(student._id))
+                    ? evalPayload.find(e => {
+                        const sId = e?.studentId?._id || e?.studentId;
+                        return String(sId) === String(student._id);
+                    })
                     : evalPayload;
+                
+                console.log('Filtered Evaluation Data:', evalData);
+                console.groupEnd();
+
                 if (!evalData) return;
 
                 const softskills = Array.isArray(evalData) ? evalData[0]?.softskills : evalData.softskills;
@@ -376,9 +445,11 @@ export default {
             }
         },
         async loadStudentData() {
-            // Load student data from Vuex store and hydrate from DB by email
+            console.group('Student Load Debug');
             if (this.$store.state.auth && this.$store.state.auth.user) {
                 const user = this.$store.state.auth.user;
+                console.log('Auth User from Store:', user);
+                
                 const email = user?.email || (() => {
                     try {
                         const userStr = localStorage.getItem('auth_user');
@@ -387,6 +458,8 @@ export default {
                         return '';
                     }
                 })();
+                console.log('Determined Email:', email);
+
                 this.studentData = {
                     ...this.studentData,
                     name: user.name || user.email || this.studentData.name,
@@ -394,57 +467,71 @@ export default {
                     picture: user.picture || this.studentData.picture
                 };
 
-                // Ensure students are loaded into store
-                await this.$store.dispatch('member/students/students');
-
-                if (email) {
-                    try {
-                        const students = this.storedStudents || [];
-                        const student = students.find(s => s?.email === email);
-                        if (student) {
-                            const nameEn = Array.isArray(student.name)
-                                ? (student.name.find(n => n?.key === 'en')?.value || student.name.find(n => n?.value)?.value)
-                                : '';
-                            const schoolEn = Array.isArray(student.info?.school?.title)
-                                ? (student.info.school.title.find(t => t?.key === 'en')?.value || student.info.school.title.find(t => t?.value)?.value)
-                                : '';
-                            const programEn = Array.isArray(student.info?.program?.title)
-                                ? (student.info.program.title.find(t => t?.key === 'en')?.value || student.info.program.title.find(t => t?.value)?.value)
-                                : '';
-
-                            this.studentData = {
-                                ...this.studentData,
-                                name: nameEn || this.studentData.name,
-                                studentID: student.studentID || this.studentData.studentID,
-                                school: schoolEn || this.studentData.school,
-                                program: programEn || this.studentData.program
-                            };
-
-                            // Update auth store so header uses the latest student data
-                            if (this.$store?.commit) {
-                                this.$store.commit('auth/setUser', {
-                                    ...user,
-                                    name: nameEn || user.name,
-                                    email: student.email || user.email,
-                                    studentID: student.studentID || user.studentID
-                                });
-                            }
-                        }
-                        if (!student) {
-                            console.warn('Student profile not found for email', email);
-                            this.studentData = {
-                                ...this.studentData,
-                                name: email || this.studentData.name,
-                                studentID: this.studentData.studentID || '-',
-                                school: this.studentData.school || '-',
-                                program: this.studentData.program || '-'
-                            };
-                        }
-                    } catch (err) {
-                        console.error('Failed to load student profile', err);
+                // Fetch student data
+                const currentUserId = user?._id || this.targetStudentId;
+                console.log('ID to use (user._id || targetStudentId):', currentUserId);
+                
+                try {
+                    if (currentUserId) {
+                        console.log('Attempting explore by ID:', currentUserId);
+                        await this.$store.dispatch('member/students/explore', { id: currentUserId });
                     }
+                    
+                    let student = this.findStudent(currentUserId, email);
+                    console.log('Initial find target student:', student);
+
+                    if (!student) {
+                        console.warn('Student not found after explore. Trying to fetch all students as fallback...');
+                        await this.$store.dispatch('member/students/students');
+                        student = this.findStudent(currentUserId, email);
+                        console.log('Find result after fetching all:', student);
+                    }
+
+                    if (student) {
+                        console.log('Hydrating studentData with:', student);
+                        const nameEn = Array.isArray(student.name)
+                            ? (student.name.find(n => n?.key === 'en')?.value || student.name.find(n => n?.value)?.value)
+                            : '';
+                        const schoolEn = Array.isArray(student.info?.school?.title)
+                            ? (student.info.school.title.find(t => t?.key === 'en')?.value || student.info.school.title.find(t => t?.value)?.value)
+                            : '';
+                        const programEn = Array.isArray(student.info?.program?.title)
+                            ? (student.info.program.title.find(t => t?.key === 'en')?.value || student.info.program.title.find(t => t?.value)?.value)
+                            : '';
+
+                        this.studentData = {
+                            ...this.studentData,
+                            name: nameEn || this.studentData.name,
+                            studentID: student.studentID || this.studentData.studentID,
+                            school: schoolEn || this.studentData.school,
+                            program: programEn || this.studentData.program
+                        };
+
+                        if (this.$store?.commit) {
+                            this.$store.commit('auth/setUser', {
+                                ...user,
+                                name: nameEn || user.name,
+                                email: student.email || user.email,
+                                studentID: student.studentID || user.studentID
+                            });
+                        }
+                    } else {
+                        console.error('Student profile completely not found for email/ID', email, currentUserId);
+                        this.studentData = {
+                            ...this.studentData,
+                            name: email || this.studentData.name,
+                            studentID: this.studentData.studentID || 'Not Found',
+                            school: '-',
+                            program: '-'
+                        };
+                    }
+                } catch (err) {
+                    console.error('Failed in loadStudentData process', err);
                 }
+            } else {
+                console.warn('No auth user found in store during loadStudentData');
             }
+            console.groupEnd();
         },
         async openDownloadModal() {
             this.showDownloadModal = true;
@@ -512,332 +599,168 @@ export default {
 </script>
 
 <style scoped>
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.student-dashboard {
+  padding: 2.5rem 1.5rem;
+  background-color: #f4f7fa;
+  min-height: calc(100vh - 50px);
 }
 
-.header-title h1 {
-    margin: 0;
-    font-size: 28px;
-    color: #333;
+/* Hero Section */
+.profile-hero-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fdf5f8 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
 }
 
-.header-title .subtitle {
-    margin: 5px 0 0 0;
-    color: #666;
-    font-size: 14px;
+.profile-hero-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(232, 160, 191, 0.05) 0%, transparent 70%);
+  z-index: 0;
 }
 
-.btn-download-pdf {
-    background-color: #c41e3a;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.3s;
+.hero-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 24px;
+  object-fit: cover;
+  border: 4px solid #fff;
+  z-index: 1;
 }
 
-.btn-download-pdf:hover {
-    background-color: #a01a32;
+.text-primary-dark {
+  color: #2d3436;
+  font-size: 1.8rem;
+  letter-spacing: -0.5px;
 }
 
-/* Student Info Card */
-.student-info-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.badge-custom {
+  background-color: #fff;
+  border: 1px solid #edf2f7;
+  color: #636e72;
+  font-weight: 600;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
 }
 
-.student-profile {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+.download-btn {
+  background-color: #E8A0BF;
+  border: none;
+  border-radius: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #fff;
 }
 
-.student-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #e0e0e0;
+.download-btn:hover {
+  background-color: #d68ca9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(232, 160, 191, 0.35) !important;
 }
 
-.student-details h2 {
-    margin: 0;
-    font-size: 20px;
-    color: #333;
+/* Competency Cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 24px !important;
+  transition: all 0.3s ease;
 }
 
-.student-id {
-    margin: 5px 0;
-    color: #666;
-    font-size: 14px;
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.05) !important;
 }
 
-.student-school {
-    margin: 5px 0;
-    color: #666;
-    font-size: 14px;
+.text-secondary-dark {
+  color: #4a4a4a;
 }
 
-/* Competencies Section */
-.competencies-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
-}
-
-.competency-category {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.competency-category h3 {
-    margin: 0 0 20px 0;
-    font-size: 16px;
-    color: #333;
-    border-bottom: 2px solid #c41e3a;
-    padding-bottom: 10px;
-}
-
-.competency-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.competency-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.competency-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.skill-name {
-    font-size: 13px;
-    color: #333;
-    font-weight: 500;
-}
-
-.skill-percentage {
-    font-size: 13px;
-    color: #c41e3a;
-    font-weight: bold;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 6px;
-    background-color: #e0e0e0;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background-color: #c41e3a;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
-/* Charts Section */
-.charts-section {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 30px;
-    margin-bottom: 30px;
-}
-
-.chart-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-}
-
-.chart-container h4 {
-    margin: 0;
-    color: #333;
-    font-size: 14px;
-}
-
-.chart-container canvas {
-    max-width: 100%;
-    height: 250px;
-}
-
-.chart-container svg {
-    max-width: 100% !important;
-    height: 250px !important;
-}
-
-.chart-legend {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 10px;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: #666;
-}
-
-.legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+.text-small {
+  font-size: 0.85rem;
 }
 
 /* Feedback Section */
-.feedback-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+.feedback-container {
+  border-radius: 20px;
 }
 
-.feedback-category {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.border-right-divider {
+  border-right: 1px solid #f1f3f5;
 }
 
-.feedback-category h3 {
-    margin: 0 0 15px 0;
-    font-size: 16px;
-    color: #333;
-    border-bottom: 2px solid #c41e3a;
-    padding-bottom: 10px;
+.icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.feedback-item {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e0e0e0;
+.bg-light-success { background-color: #e6fffa; }
+.bg-light-info { background-color: #e6f6ff; }
+
+.feedback-card {
+  background: #fafbfc;
+  border-radius: 16px;
+  border-left: 4px solid #f1f3f5;
+  transition: all 0.2s ease;
 }
 
-.feedback-item:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+.feedback-card:hover {
+  background: #fff;
+  border-left-color: #E8A0BF;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
-.feedback-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
+.custom-list {
+  padding-left: 1.2rem;
+  list-style-type: circle;
 }
 
-.feedback-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.text-muted-dark {
+  color: #636e72;
 }
 
-.feedback-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #e0e0e0;
+/* Modal Styling */
+.custom-select-modern {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  height: auto;
+  padding: 0.3rem;
 }
 
-.feedback-author h4 {
-    margin: 0;
-    font-size: 13px;
-    color: #333;
-    font-weight: 600;
+.download-action-btn {
+  border-radius: 12px;
+  padding: 0.6rem 2rem;
 }
 
-.feedback-role {
-    margin: 2px 0 0 0;
-    font-size: 11px;
-    color: #999;
+@media (max-width: 991px) {
+  .border-right-divider {
+    border-right: none;
+    border-bottom: 1px solid #f1f3f5;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+  }
 }
 
-.feedback-date {
-    font-size: 11px;
-    color: #999;
-    background: #f5f5f5;
-    padding: 4px 8px;
-    border-radius: 4px;
+::v-deep .progress {
+  height: 6px;
+  background-color: #edf2f7;
+  border-radius: 10px;
 }
 
-.feedback-content ul {
-    margin: 10px 0 0 0;
-    padding-left: 20px;
-    list-style: disc;
+::v-deep .progress-bar {
+  border-radius: 10px;
 }
 
-.feedback-content li {
-    margin: 5px 0;
-    font-size: 12px;
-    color: #666;
-    line-height: 1.4;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-
-    .competencies-section,
-    .charts-section,
-    .feedback-section {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: flex-start;
-    }
-
-    .student-profile {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .student-avatar {
-        width: 80px;
-        height: 80px;
-    }
-
-    .competencies-section,
-    .charts-section,
-    .feedback-section {
-        grid-template-columns: 1fr;
-    }
+::v-deep .chart-container canvas {
+  filter: drop-shadow(0 0 5px rgba(0,0,0,0.02));
 }
 </style>
+

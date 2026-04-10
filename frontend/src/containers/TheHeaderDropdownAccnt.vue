@@ -118,7 +118,7 @@ export default {
   },
 
   created() {
-    this.$store.dispatch("profile/onGetPrfile")
+    this.$store.dispatch("profile/onGetProfile")
 
   },
   beforeDestroy() {

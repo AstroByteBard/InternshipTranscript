@@ -1,6 +1,11 @@
 <template>
     <div>
-        <CompetenciesHeader @export-assessment="exportAssessment" />
+        <CompetenciesHeader 
+            :show-create="true" 
+            create-label="Create Softskill" 
+            @create-click="showCreateModal = true"
+            @export-assessment="exportAssessment" 
+        />
         <WidgetsCompetencyDetail 
             :totalItems="softskillItems.length"
             :activeItems="activeSoftskillsCount"
@@ -10,256 +15,37 @@
             questionName="Questions"
             questionIcon="cil-comment-bubble"
         />
-        <!-- Navigation & Management Bar -->
-        <CCard class="management-card border-0 mb-4 shadow-sm">
-            <CCardBody class="p-3">
-                <CRow class="align-items-center">
-
-                    <!-- Search Bar -->
-                    <CCol lg="6" md="6" class="mb-3 mb-md-0">
-                        <div class="search-input-wrapper">
-                            <CIcon name="cil-search" class="search-icon" />
-                            <input type="text" class="form-control modern-search-input"
-                                placeholder="Search Softskill..." v-model="searchQuery" />
-                        </div>
-                    </CCol>
-
-                    <!-- Actions -->
-                    <CCol lg="6" md="6" class="d-flex justify-content-end align-items-center flex-wrap">
-                        <CButton class="btn-modern-action btn-modern-filter mr-2" @click="showFilters = !showFilters">
-                            <CIcon name="cil-filter" class="mr-2" /> Filters
-                        </CButton>
-                        <CButton color="danger" class="btn-modern-action btn-modern-red font-weight-bold" 
-                            style="border-radius: 6px;" @click="showCreateModal = true">
-                            <CIcon name="cil-plus" class="mr-2" /> Create Softskill
-                        </CButton>
-                    </CCol>
-                </CRow>
-
-                <!-- Expanded Filters -->
-                <transition name="slide">
-                    <div v-show="showFilters" class="mt-3 pt-3 border-top">
-                        <CRow>
-                            <CCol md="12">
-                                <label class="filter-mini-label">ACADEMIC YEAR</label>
-                                <CSelect 
-                                    custom 
-                                    class="modern-select-filter mb-0" 
-                                    :options="yearOptions"
-                                    :value.sync="selectionAcademicYear" 
-                                    placeholder="All Years" 
-                                />
-                            </CCol>
-                        </CRow>
-                    </div>
-                </transition>
-            </CCardBody>
-        </CCard>
         
-        <div>
-            <CCard class="table-card border-0 shadow-sm mb-4">
-                <CDataTable class="custom-table mb-0" :items="filteredSoftskillItems" :fields="softskillFields"
-                    :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePage">
-                    
-                    <!-- Year -->
-                    <template #year="{ item }">
-                        <td class="text-center align-middle">
-                            <div class="font-weight-bold" style="color: #1e293b;">
-                                {{ item.year || '-' }}
-                            </div>
-                        </td>
-                    </template>
+        <FilterSoftskill 
+            :searchQuery.sync="searchQuery"
+            :selectionAcademicYear.sync="selectionAcademicYear"
+            :yearOptions="yearOptions"
+        />
+        
+        <TableSoftskill 
+            :items="filteredSoftskillItems"
+            :fields="softskillFields"
+            :itemsPerPage="itemsPerPage"
+            :activePage.sync="activePage"
+            :totalPages="softskillTotalPages"
+            :tableStart="softskillTableStart"
+            :tableEnd="softskillTableEnd"
+            :totalItems="filteredSoftskillItems.length"
+            :translate="translate"
+            @toggle-status="toggleStatus"
+            @edit="editItem"
+            @delete="deleteItem"
+        />
 
-                    <!-- Title -->
-                    <template #title="{ item }">
-                        <td class="text-center align-middle">
-                            <div style="color: #334155;">
-                                {{ translate(item.title) }}
-                            </div>
-                        </td>
-                    </template>
-
-                    <!-- Active Status -->
-                    <template #status="{ item }">
-                        <td class="text-center align-middle">
-                            <div v-if="item.active"
-                                class="status-pill status-replied d-inline-flex align-items-center font-weight-bold"
-                                style="cursor: pointer;" title="Click to deactivate"
-                                @click="toggleStatus(item._id, 'softskill')">
-                                <CIcon name="cil-check-circle" class="mr-1" size="sm" />
-                                Active
-                            </div>
-                            <div v-else class="status-pill status-closed d-inline-flex align-items-center text-muted" 
-                                style="cursor: pointer;" title="Click to make active" 
-                                @click="toggleStatus(item._id, 'softskill')">
-                                <div class="mr-2"
-                                    style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
-                                </div>
-                                Inactive
-                            </div>
-                        </td>
-                    </template>
-
-                    <!-- Assessment Question -->
-                    <template #assessmentQuestion="{ item }">
-                        <td class="align-middle py-3">
-                            <div class="question-list" style="min-width: 300px;">
-                                <div v-for="(c, idx) in item.config" :key="idx" class="question-item"
-                                    :class="{ 'question-item--border': idx < item.config.length - 1 }">
-                                    <div class="question-category">
-                                        {{ translate(c.label, 'th') }} - {{ translate(c.label, 'en') }}
-                                    </div>
-                                    <div class="question-title">{{ translate(c.question, 'th') }}</div>
-                                    <div class="question-subtitle">{{ translate(c.question, 'en') }}</div>
-                                </div>
-                            </div>
-                        </td>
-                    </template>
-
-                    <!-- Actions -->
-                    <template #actions="{ item }">
-                        <td class="text-center align-middle">
-                            <CButton class="btn-action-icon mr-2" title="Edit" @click="editItem(item)">
-                                <CIcon name="cil-pencil" />
-                            </CButton>
-                            <CButton class="btn-action-icon" title="Delete" @click="deleteItem(item._id, 'softskill')">
-                                <CIcon name="cil-trash" />
-                            </CButton>
-                        </td>
-                    </template>
-
-                    <!-- Pagination -->
-                    <template #under-table>
-                        <div class="d-flex justify-content-between align-items-center px-4 py-3"
-                            style="border-top: 1px solid #f3f4f6;">
-                            <div class="text-muted" style="font-size: 13px;">
-                                Showing {{ softskillTableStart }} to {{ softskillTableEnd }} of {{ filteredSoftskillItems.length }} results
-                            </div>
-                            <CPagination :activePage.sync="activePage" :pages="softskillTotalPages" :doubleArrows="false"
-                                align="end" class="mb-0 custom-pagination" />
-                        </div>
-                    </template>
-                </CDataTable>
-            </CCard>
-        </div>
-
-        <!-- Create Modal -->
-        <CModal 
-            :centered="true" 
-            :show.sync="showCreateModal" 
-            :close-on-backdrop="true" 
-            size="lg"
+        <ModalSoftskill 
+            :show.sync="showCreateModal"
+            :isEdit="isEdit"
+            :form="form"
             @update:show="handleCreateModalClose"
-        >
-            <template #header>
-                <div>
-                    <h5 class="modal-title font-weight-bold mb-1" style="color: #111827;">{{ isEdit ? 'Edit' : 'Create New' }} Softskill</h5>
-                    <p class="mb-0 text-muted" style="font-size: 13px;">{{ isEdit ? 'Update' : 'Add a new bilingual' }} softskill assessment criteria.</p>
-                </div>
-                <CButtonClose @click="showCreateModal = false" class="text-black" />
-            </template>
-
-            <div class="px-3 py-3">
-                <!-- Basic Information Section -->
-                <div class="modal-section mb-4">
-                    <div class="section-header mb-3">
-                        <span class="section-bar"></span>
-                        <span class="section-title">BASIC INFORMATION</span>
-                    </div>
-                    <CRow class="mb-3">
-                        <CCol md="6">
-                            <label class="modal-field-label">Thai Title <span class="text-danger">*</span></label>
-                            <CInput v-model="form.titleTh" placeholder="e.g. การสื่อสาร" class="modal-input" />
-                        </CCol>
-                        <CCol md="6">
-                            <label class="modal-field-label">English Title <span class="text-danger">*</span></label>
-                            <CInput v-model="form.titleEn" placeholder="e.g. Communication" class="modal-input" />
-                        </CCol>
-                    </CRow>
-                    <CRow class="mb-3">
-                        <CCol md="6">
-                            <label class="modal-field-label">Thai Description</label>
-                            <CTextarea v-model="form.descriptionTh" placeholder="Description in Thai..." class="modal-input" rows="2" />
-                        </CCol>
-                        <CCol md="6">
-                            <label class="modal-field-label">English Description</label>
-                            <CTextarea v-model="form.descriptionEn" placeholder="Description in English..." class="modal-input" rows="2" />
-                        </CCol>
-                    </CRow>
-                    <CRow>
-                        <CCol md="6">
-                            <label class="modal-field-label">Academic Year <span class="text-danger">*</span></label>
-                            <CInput v-model="form.year" placeholder="e.g. 2026" class="modal-input" />
-                        </CCol>
-                    </CRow>
-                </div>
-
-                <!-- Assessment Questions Section -->
-                <div class="modal-section">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="section-header d-flex align-items-center">
-                            <span class="section-bar"></span>
-                            <span class="section-title">ASSESSMENT QUESTIONS</span>
-                        </div>
-                        <button type="button" class="btn btn-link d-flex align-items-center font-weight-bold p-0"
-                            style="color: #dc2626; font-size: 14px; text-decoration: none;" @click="addQuestion">
-                            <CIcon name="cil-plus" size="sm" class="mr-2" /> Add Question
-                        </button>
-                    </div>
-
-                    <div v-if="form.questions.length === 0" class="text-center text-muted py-4"
-                        style="border: 1px dashed #e2e8f0; border-radius: 8px; font-size: 14px;">
-                        No questions yet. Click "Add Question" to begin.
-                    </div>
-
-                    <div v-for="(q, idx) in form.questions" :key="idx" class="question-card mb-3">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <span class="question-number-badge">{{ idx + 1 }}</span>
-                            <CButton size="sm" variant="ghost" color="secondary" class="p-0" style="line-height:1;"
-                                @click="removeQuestion(idx)" title="Remove">
-                                <CIcon name="cil-x" size="sm" style="color:#94a3b8;" />
-                            </CButton>
-                        </div>
-                        <CRow class="mb-3">
-                            <CCol md="6">
-                                <label class="modal-field-label-sm">VARIABLE (THAI)</label>
-                                <CInput v-model="q.categoryTh" placeholder="e.g. การรับฟังอย่างตั้งใจ / Frontend"
-                                    class="modal-input" />
-                            </CCol>
-                            <CCol md="6">
-                                <label class="modal-field-label-sm">VARIABLE (ENGLISH)</label>
-                                <CInput v-model="q.categoryEn" placeholder="e.g. Active Listening / Frontend"
-                                    class="modal-input" />
-                            </CCol>
-                        </CRow>
-                        <CRow>
-                            <CCol md="6">
-                                <label class="modal-field-label-sm">QUESTION (THAI) <span class="text-danger">*</span></label>
-                                <CInput v-model="q.th" placeholder="คำถามสำหรับประเมิน..." class="modal-input" />
-                            </CCol>
-                            <CCol md="6">
-                                <label class="modal-field-label-sm">QUESTION (ENGLISH) <span class="text-danger">*</span></label>
-                                <CInput v-model="q.en" placeholder="Assessment question..." class="modal-input" />
-                            </CCol>
-                        </CRow>
-                    </div>
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="w-100 d-flex justify-content-end px-3 py-2">
-                    <CButton color="light" class="mr-3 font-weight-bold"
-                        style="color: #374151; padding: 10px 24px; border-radius: 6px; border: 1px solid #e5e7eb;"
-                        @click="showCreateModal = false">
-                        Cancel
-                    </CButton>
-                    <CButton color="danger" class="font-weight-bold d-flex align-items-center"
-                        style="padding: 10px 24px; border-radius: 6px;" @click="onSave">
-                        <CIcon name="cil-save" class="mr-2" /> {{ isEdit ? 'Update' : 'Create' }} Softskill
-                    </CButton>
-                </div>
-            </template>
-        </CModal>
+            @add-question="addQuestion"
+            @remove-question="removeQuestion"
+            @save="onSave"
+        />
     </div>
 </template>
 
@@ -267,18 +53,24 @@
 import { mapActions, mapState } from 'vuex'
 import CompetenciesHeader from '@/projects/components/Layout/CompetenciesHeader.vue'
 import WidgetsCompetencyDetail from '@/projects/components/widgets/WidgetsCompetencyDetail.vue'
+import FilterSoftskill from '@/projects/components/Filter/FilterSoftskill.vue'
+import TableSoftskill from '@/projects/components/Table/TableSoftskill.vue'
+import * as XLSX from "xlsx"
+import moment from "moment"
 
 export default {
     name: 'Softskill',
     components: {
         CompetenciesHeader,
         WidgetsCompetencyDetail,
+        FilterSoftskill,
+        TableSoftskill,
+        ModalSoftskill
     },
     data() {
         return {
             searchQuery: '',
             selectionAcademicYear: '',
-            showFilters: false,
             activePage: 1,
             itemsPerPage: 5,
             showCreateModal: false,
@@ -326,14 +118,15 @@ export default {
             }
         },
         yearOptions() {
-            const current = new Date().getFullYear() + 543
-            const years = [
+            const years = this.softskillItems
+                .map(item => item.year)
+                .filter(year => year && year !== '')
+            const uniqueYears = [...new Set(years)].sort((a, b) => b.localeCompare(a))
+            
+            return [
                 { value: '', label: 'All Years' },
-                { value: (current - 1).toString(), label: (current - 1).toString() },
-                { value: current.toString(), label: current.toString() },
-                { value: (current + 1).toString(), label: (current + 1).toString() },
+                ...uniqueYears.map(year => ({ value: year, label: year }))
             ]
-            return years
         },
         filteredSoftskillItems() {
             let source = this.softskillItems
@@ -369,7 +162,47 @@ export default {
             deleteSoftskill: 'deleteGeneral'
         }),
         exportAssessment() {
-            // Placeholder
+            if (!this.softskillItems.length) return
+
+            const lang = 'th' // Default for assessment form
+            const data = []
+
+            this.softskillItems.forEach(item => {
+                const titleTh = this.translate(item.title, 'th')
+                const titleEn = this.translate(item.title, 'en')
+                const descTh = this.translate(item.description, 'th')
+                const descEn = this.translate(item.description, 'en')
+
+                if (item.config && item.config.length > 0) {
+                    item.config.forEach((conf, idx) => {
+                        data.push({
+                            'Academic Year': item.year,
+                            'Competency Title (Thai)': titleTh,
+                            'Competency Title (English)': titleEn,
+                            'Description (Thai)': descTh,
+                            'Description (English)': descEn,
+                            'No.': idx + 1,
+                            'Category (Thai)': this.translate(conf.label, 'th'),
+                            'Category (English)': this.translate(conf.label, 'en'),
+                            'Assessment Question (Thai)': this.translate(conf.question, 'th'),
+                            'Assessment Question (English)': this.translate(conf.question, 'en'),
+                            'Score (1-5)': ''
+                        })
+                    })
+                }
+            })
+
+            if (data.length === 0) return
+
+            const worksheet = XLSX.utils.json_to_sheet(data)
+            const workbook = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Softskill Assessment")
+
+            // Adjust column widths
+            const wscols = Object.keys(data[0]).map(key => ({ wch: Math.max(key.length, 20) }))
+            worksheet['!cols'] = wscols
+
+            XLSX.writeFile(workbook, `Softskill_Assessment_Form_${moment().format('YYYY-MM-DD')}.xlsx`)
         },
         handleCreateModalClose(isOpen) {
             if (!isOpen) {
@@ -533,7 +366,7 @@ export default {
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
     padding: 10px 16px 10px 44px !important;
-    height: 48px !important;
+    height: 42px !important;
     font-size: 14px !important;
     transition: all 0.2s ease !important;
     width: 100%;
