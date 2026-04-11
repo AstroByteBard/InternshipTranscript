@@ -15,8 +15,10 @@ const AdministratorStudent = () => import('@/projects/views/administration/Admin
 const AdministratorAdviser = () => import('@/projects/views/administration/Administrator/Adviser')
 
 //documents
-const Documents = () => import('@/projects/views/administration/documents/index')
+const Document = () => import('@/projects/views/administration/documents/Document')
+const Certificate = () => import('@/projects/views/administration/documents/Certificate')
 const CreateDocument = () => import('@/projects/views/administration/documents/CreateDocument')
+const CreateCertificate = () => import('@/projects/views/administration/documents/CreateCertificate')
 
 // competencies
 const CompetenciesSoftskill = () => import('@/projects/views/administration/Competencies/Softskill')
@@ -105,8 +107,12 @@ export default new Router({
 
                 {
                     path: 'documents',
-                    name: 'Documents',
-                    component: Documents
+                    redirect: 'documents/document'
+                },
+                {
+                    path: 'documents/document',
+                    name: 'Document',
+                    component: Document
                 },
                 {
                     path: 'documents/create',
@@ -117,6 +123,21 @@ export default new Router({
                     path: 'documents/edit/:id',
                     name: 'EditDocument',
                     component: CreateDocument
+                },
+                {
+                    path: 'documents/certificate',
+                    name: 'Certificate',
+                    component: Certificate
+                },
+                {
+                    path: 'documents/certificate/create',
+                    name: 'CreateCertificate',
+                    component: CreateCertificate
+                },
+                {
+                    path: 'documents/certificate/edit/:id',
+                    name: 'EditCertificate',
+                    component: CreateCertificate
                 },
 
                 {

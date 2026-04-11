@@ -106,10 +106,20 @@ export default {
             ]
           },
           {
-            _name: 'CSidebarNavItem',
+            _name: 'CSidebarNavDropdown',
             name: 'Documents',
             to: '/documents',
             icon: 'cil-description',
+            items: [
+              {
+                name: 'Document',
+                to: '/documents/document',
+              },
+              {
+                name: 'Certificate',
+                to: '/documents/certificate',
+              },
+            ]
           },
           {
             _name: 'CSidebarNavTitle',

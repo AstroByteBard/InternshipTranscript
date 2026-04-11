@@ -87,7 +87,7 @@ export default {
             },
             softskillFields: [
                 { key: 'year', label: 'YEAR', _classes: 'text-center', _style: 'min-width: 100px' },
-                { key: 'title', label: 'TITLE', _classes: 'text-center', _style: 'min-width: 200px' },
+                { key: 'title', label: 'TITLE', _classes: 'text-left', _style: 'min-width: 200px' },
                 { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center' },
                 { key: 'assessmentQuestion', label: 'ASSESSMENT QUESTION', _classes: 'text-center', _style: 'min-width: 180px' },
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
