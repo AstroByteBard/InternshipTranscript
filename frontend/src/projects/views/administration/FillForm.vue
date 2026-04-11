@@ -29,7 +29,7 @@
           />
             <!-- Case 1: Assessment Already Completed (Locked State) -->
             <transition name="fade">
-              <div v-if="isAlreadySubmitted" class="locked-hero-container py-5 mt-4">
+              <div v-if="isAlreadySubmitted && !isPreview" class="locked-hero-container py-5 mt-4">
                 <CCard class="border-0 shadow-lg text-center p-5 rounded-xl">
                   <CCardBody>
                     <div class="locked-icon-wrapper mb-4">
@@ -56,6 +56,40 @@
                     <p class="text-muted mb-0 small">Please rate the student's performance based on the criteria below. Your feedback helps us improve our academic programs.</p>
                   </div>
                 </div>
+
+                <!-- Preview Filters -->
+                <transition name="fade">
+                  <CCard v-if="isPreview" class="preview-filters-card mb-5 border-0 shadow-sm rounded-xl overflow-hidden">
+                    <CCardHeader class="bg-light-info border-0 py-3 d-flex align-items-center">
+                      <CIcon name="cil-filter" class="mr-2 text-info" />
+                      <span class="font-weight-bold text-uppercase small letter-spacing-1 text-info">Assessment Preview Configuration</span>
+                    </CCardHeader>
+                    <CCardBody class="bg-white p-4">
+                      <p class="text-muted small mb-4">Select a School and Major to preview its specific hardskill assessment criteria.</p>
+                      <CRow>
+                        <CCol md="6" class="mb-3 mb-md-0">
+                          <label class="small font-weight-bold text-muted mb-2">Academic School</label>
+                          <CSelect 
+                            :options="schoolOptions" 
+                            :value.sync="previewSchool" 
+                            placeholder="Please select a school"
+                            class="modern-select-input"
+                          />
+                        </CCol>
+                        <CCol md="6">
+                          <label class="small font-weight-bold text-muted mb-2">Major / Program</label>
+                          <CSelect 
+                            :options="majorOptions" 
+                            :value.sync="previewMajor" 
+                            placeholder="Select a major first"
+                            :disabled="!previewSchool"
+                            class="modern-select-input"
+                          />
+                        </CCol>
+                      </CRow>
+                    </CCardBody>
+                  </CCard>
+                </transition>
 
                 <!-- Softskills Section -->
                 <div class="section-title-wrapper mb-3 d-flex align-items-center">
@@ -85,7 +119,7 @@
                                       </div>
                                   </CCol>
                                   <CCol lg="5" md="6">
-                                      <RatingSelector v-model="evaluation.softskills[item._id + '_' + cIdx]" :disabled="isAlreadySubmitted" />
+                                      <RatingSelector v-model="evaluation.softskills[item._id + '_' + cIdx]" :disabled="isAlreadySubmitted || isPreview" />
                                   </CCol>
                               </CRow>
                           </div>
@@ -125,7 +159,7 @@
                                       </div>
                                   </CCol>
                                   <CCol lg="5" md="6">
-                                      <RatingSelector v-model="evaluation.hardskills[item._id + '_' + cIdx]" :disabled="isAlreadySubmitted" />
+                                      <RatingSelector v-model="evaluation.hardskills[item._id + '_' + cIdx]" :disabled="isAlreadySubmitted || isPreview" />
                                   </CCol>
                               </CRow>
                           </div>
@@ -152,16 +186,19 @@
                       <div class="question-items-wrapper">
                           <div v-for="(q, qIdx) in (item.config || [])" :key="qIdx" class="question-row p-4 border-bottom-dashed">
                               <div class="mb-2">
-                                <div class="d-flex align-items-center mb-3">
+                                <div class="d-flex align-items-start mb-3">
                                   <div class="q-marker mr-3 text-info">{{ qIdx + 1 }}</div>
-                                  <div class="q-text">{{ translate(q.question) }}</div>
+                                  <div>
+                                    <div class="q-category mb-1 text-info" v-if="q.label || q.variable">{{ translate(q.label || q.variable) }}</div>
+                                    <div class="q-text">{{ translate(q.question) }}</div>
+                                  </div>
                                 </div>
                                 <CInput 
                                   rows="4" 
                                   class="form-control-modern" 
                                   placeholder="Write your suggestions here..."
                                   v-model="evaluation.suggestions[item._id + '_' + qIdx]"
-                                  :disabled="isAlreadySubmitted"
+                                  :disabled="isAlreadySubmitted || isPreview"
                                 />
                               </div>
                           </div>
@@ -177,13 +214,13 @@
                       color="danger" 
                       size="lg" 
                       class="px-5 py-3 font-weight-bold shadow btn-submit-evaluation rounded-pill" 
-                      :disabled="isSubmitting || isAlreadySubmitted"
+                      :disabled="isSubmitting || isAlreadySubmitted || isPreview"
                       @click="submitEvaluation"
                     >
                       <CIcon v-if="isSubmitting" name="cil-reload" class="mr-2 spin-icon" />
                       <CIcon v-else-if="isAlreadySubmitted" name="cil-lock-locked" class="mr-2" />
                       <CIcon v-else name="cil-check-circle" class="mr-2" />
-                      {{ isSubmitting ? 'Submitting...' : (isAlreadySubmitted ? 'Evaluation Submitted' : 'Submit Evaluation') }}
+                      {{ isSubmitting ? 'Submitting...' : (isAlreadySubmitted ? 'Evaluation Submitted' : (isPreview ? 'Form Preview Mode' : 'Submit Evaluation')) }}
                     </CButton>
                   </div>
                   <p class="text-muted small">By clicking submit, you confirm that all ratings provided are accurate.</p>
@@ -255,18 +292,41 @@ export default {
         hardskills: {},
         suggestions: {}
       },
+      previewSchool: '',
+      previewMajor: '',
+      schools: [],
+      programs: [],
       isSubmitting: false,
       showSuccessModal: false,
       isAlreadySubmitted: false,
+      isPreview: false,
       pageLoading: true
     }
   },
   async created() {
     this.pageLoading = true;
     
+    // Debug info for preview mode initialization
+    console.log('Assessment Form Initializing...');
+    console.log('Mode:', this.$route.query.mode);
+    console.log('Method availability check:', {
+      fetchSchools: typeof this.fetchSchools === 'function' ? 'Found' : 'MISSING',
+      fetchPrograms: typeof this.fetchPrograms === 'function' ? 'Found' : 'MISSING'
+    });
+
     // Ensure studentID is set from the route query
     if (this.$route.query.studentID) {
         this.studentID = this.$route.query.studentID;
+    }
+
+    if (this.$route.query.mode === 'preview') {
+        this.isPreview = true;
+        
+        // Use a slight delay to ensure methods are bound if there's any weird timing issue
+        this.$nextTick(() => {
+          if (typeof this.fetchSchools === 'function') this.fetchSchools();
+          if (typeof this.fetchPrograms === 'function') this.fetchPrograms();
+        });
     }
 
     try {
@@ -294,7 +354,28 @@ export default {
     ...mapState('competencies/proposition', ['proposition']),
     ...mapState('member/students', ['students']),
     softskillItems() { return this.general ? this.general.filter(i => i.active) : [] },
-    hardskillItems() { return this.specific ? this.specific.filter(i => i.active) : [] },
+    hardskillItems() {
+      if (!this.specific) return []
+      let items = this.specific.filter(i => i.active)
+      
+      // Filter by selection if in preview mode
+      if (this.isPreview && this.previewMajor) {
+        items = items.filter(item => {
+          const majorId = item.program?._id || item.program
+          return majorId === this.previewMajor
+        })
+      } 
+      // Filter by student program if not in preview or no selection
+      else if (this.studentDoc?.info?.program?._id) {
+        const studentMajorId = this.studentDoc.info.program._id;
+        items = items.filter(item => {
+           const majorId = item.program?._id || item.program
+           return majorId === studentMajorId
+        })
+      }
+      
+      return items
+    },
     suggestionItems() { return this.proposition ? this.proposition.filter(i => i.active) : [] },
     translate() {
       return (data, key = 'th') => {
@@ -303,7 +384,33 @@ export default {
         return found ? found.value : (data[0] ? data[0].value : '')
       }
     },
+    schoolOptions() {
+      return [
+        { value: '', label: 'All Schools' },
+        ...this.schools.map(s => ({
+          value: s._id,
+          label: this.translate(s.title)
+        }))
+      ]
+    },
+    majorOptions() {
+      let filtered = this.programs
+      if (this.previewSchool) {
+        filtered = filtered.filter(p => {
+          const schoolId = p.school?._id || p.school
+          return schoolId === this.previewSchool
+        })
+      }
+      return [
+        { value: '', label: 'All Majors' },
+        ...filtered.map(p => ({
+          value: p._id,
+          label: this.translate(p.title)
+        }))
+      ]
+    },
     displayName() {
+        if (this.isPreview) return 'Assessment Form Preview';
         if (!this.studentDoc) return 'Student Assessment';
         const lang = this.$store.getters['setting/lang'] || 'th';
         return this.translate(this.studentDoc.name, lang);
@@ -326,6 +433,7 @@ export default {
     }
   },
   methods: {
+    // 1. Vuex Actions
     ...mapActions('competencies/general', { fetchGeneral: 'general' }),
     ...mapActions('competencies/specific', { fetchSpecific: 'specific' }),
     ...mapActions('competencies/proposition', { fetchProposition: 'proposition' }),
@@ -334,15 +442,32 @@ export default {
         queryEvaluation: 'queryEvaluation',
         fetchEvaluations: 'evaluations'
     }),
+    ...mapActions('member/students', { fetchDetail: 'detail' }),
+
+    // 2. Custom Data Fetching
+    fetchSchools() {
+      console.log('Dispatching fetchSchools...');
+      return this.$store.dispatch('academic/schools/schools').then(() => {
+        this.schools = this.$store.state.academic.schools.schools || [];
+        console.log('Schools loaded:', this.schools.length);
+      }).catch(e => console.error('Error in fetchSchools:', e));
+    },
     
+    fetchPrograms() {
+      console.log('Dispatching fetchPrograms...');
+      return this.$store.dispatch('academic/programs/programs').then(() => {
+        this.programs = this.$store.state.academic.programs.programs || [];
+        console.log('Programs loaded:', this.programs.length);
+      }).catch(e => console.error('Error in fetchPrograms:', e));
+    },
+
+    // 3. Validation & Status Checks
     async checkExistingEvaluation() {
         if (!this.studentID) return;
         try {
-            // Using GET (via evaluations action) as the primary authority for checking status
             const resp = await this.fetchEvaluations({ studentId: this.studentID });
             if (resp && resp.data && resp.data.length > 0) {
                 this.isAlreadySubmitted = true;
-                // Optional: Map existing data back to form if needed
             }
         } catch (e) {
             console.error("Error checking existing evaluation", e);
@@ -352,7 +477,6 @@ export default {
     async fetchStudentInfo() {
         try {
             const students = await this.$store.dispatch('member/students/students', { id: this.studentID });
-            // Use the returned students array which is now guaranteed to be loaded
             if (students && Array.isArray(students)) {
                 this.studentDoc = students.find(s => s._id === this.studentID);
             }
@@ -361,32 +485,19 @@ export default {
         }
     },
 
+    // 4. Submission Logic
     async submitEvaluation() {
-        if (this.isSubmitting || this.isAlreadySubmitted) return;
+        if (this.isSubmitting || this.isAlreadySubmitted || this.isPreview) return;
         
         this.isSubmitting = true;
 
-        if (!this.studentID) {
-            alert("Error: No student ID provided for this evaluation.");
+        if (!this.studentID || !this.studentDoc) {
+            alert("Error: Verification failed. Please refresh the page.");
             this.isSubmitting = false;
             return;
         }
 
-        // Basic MongoDB ObjectId check (24-char hex)
-        const isObjectId = /^[0-9a-fA-F]{24}$/.test(this.studentID);
-        if (!isObjectId) {
-            alert("Error: The Student ID provided is invalid. Please use the link provided in the official email.");
-            this.isSubmitting = false;
-            return;
-        }
-
-        if (!this.studentDoc) {
-            alert("Error: Student information could not be verified. Please refresh the page.");
-            this.isSubmitting = false;
-            return;
-        }
-
-        // 1. Calculate Completion
+        // Validate Completion
         let totalQuestions = 0;
         this.softskillItems.forEach(i => totalQuestions += (i.config || []).length);
         this.hardskillItems.forEach(i => totalQuestions += (i.config || []).length);
@@ -395,29 +506,24 @@ export default {
         const hardRated = Object.keys(this.evaluation.hardskills).length;
         
         if ((softRated + hardRated) < totalQuestions) {
-            if (!confirm('You have not rated all competency criteria. Are you sure you want to submit the assessment anyway?')) {
+            if (!confirm('You have not rated all competency criteria. Are you sure you want to submit?')) {
                 this.isSubmitting = false;
                 return;
             }
         }
 
         try {
-            // 2. Transform evaluation data for backend (Competencies_Evaluation schema)
             const payload = {
                 studentId: this.studentID,
                 softskills: Object.keys(this.evaluation.softskills).map(key => {
                     const [id, cIdx] = key.split('_');
                     const category = this.softskillItems.find(i => i._id === id);
                     const config = category && category.config ? category.config[parseInt(cIdx)] : null;
-                    const catTitleTH = this.translate(category ? category.title : '', 'th');
-                    const catTitleEN = this.translate(category ? category.title : '', 'en');
-                    const qTitleTH = this.translate(config ? config.question : '', 'th');
-                    const qTitleEN = this.translate(config ? config.question : '', 'en');
                     return { 
                         answer: {
                             title: {
-                                th: qTitleTH ? `${catTitleTH} - ${qTitleTH}` : catTitleTH,
-                                en: qTitleEN ? `${catTitleEN} - ${qTitleEN}` : catTitleEN
+                                th: this.translate(category ? category.title : '', 'th') + ' - ' + this.translate(config ? config.question : '', 'th'),
+                                en: this.translate(category ? category.title : '', 'en') + ' - ' + this.translate(config ? config.question : '', 'en')
                             },
                             score: this.evaluation.softskills[key]
                         }
@@ -427,15 +533,11 @@ export default {
                     const [id, cIdx] = key.split('_');
                     const category = this.hardskillItems.find(i => i._id === id);
                     const config = category && category.config ? category.config[parseInt(cIdx)] : null;
-                    const catTitleTH = this.translate(category ? category.title : '', 'th');
-                    const catTitleEN = this.translate(category ? category.title : '', 'en');
-                    const qTitleTH = this.translate(config ? config.question : '', 'th');
-                    const qTitleEN = this.translate(config ? config.question : '', 'en');
                     return { 
                         answer: {
                             title: {
-                                th: qTitleTH ? `${catTitleTH} - ${qTitleTH}` : catTitleTH,
-                                en: qTitleEN ? `${catTitleEN} - ${qTitleEN}` : catTitleEN
+                                th: this.translate(category ? category.title : '', 'th') + ' - ' + this.translate(config ? config.question : '', 'th'),
+                                en: this.translate(category ? category.title : '', 'en') + ' - ' + this.translate(config ? config.question : '', 'en')
                             },
                             score: this.evaluation.hardskills[key]
                         }
@@ -445,15 +547,11 @@ export default {
                     const [id, cIdx] = key.split('_');
                     const category = this.suggestionItems.find(i => i._id === id);
                     const config = category && category.config ? category.config[parseInt(cIdx)] : null;
-                    const catTitleTH = this.translate(category ? category.title : '', 'th');
-                    const catTitleEN = this.translate(category ? category.title : '', 'en');
-                    const qTitleTH = this.translate(config ? config.question : '', 'th');
-                    const qTitleEN = this.translate(config ? config.question : '', 'en');
                     return { 
                         answer: {
                             title: {
-                                th: qTitleTH ? `${catTitleTH} - ${qTitleTH}` : catTitleTH,
-                                en: qTitleEN ? `${catTitleEN} - ${qTitleEN}` : catTitleEN
+                                th: this.translate(category ? category.title : '', 'th') + ' - ' + this.translate(config ? config.question : '', 'th'),
+                                en: this.translate(category ? category.title : '', 'en') + ' - ' + this.translate(config ? config.question : '', 'en')
                             },
                             value: this.evaluation.suggestions[key]
                         }
@@ -462,21 +560,16 @@ export default {
             };
             
             await this.createEvaluation(payload);
-            
-            // Success: Lock UI state
             this.isAlreadySubmitted = true;
             this.showSuccessModal = true;
         } catch (error) {
             console.error('Submission failed', error);
-            
-            // Check for Duplicate (400) - Lock the UI if already exists
-            if (error && error.response && error.response.status === 400) {
+            if (error?.response?.status === 400) {
                 this.isAlreadySubmitted = true;
                 return;
             }
-            
             alert('Failed to submit evaluation. Please try again.');
-            this.isSubmitting = false; // Allow retry on real connection errors
+            this.isSubmitting = false;
         }
     },
 
@@ -717,4 +810,32 @@ export default {
 .rounded-xl { border-radius: 24px !important; }
 
 .leading-relaxed { line-height: 1.625; }
+
+/* Preview Filters Styling */
+.preview-filters-card {
+  border: 1px solid rgba(0, 123, 255, 0.1) !important;
+  animation: slideIn 0.5s ease-out;
+}
+
+.modern-select-input /deep/ .custom-select,
+.modern-select-input /deep/ .form-control {
+  border-radius: 12px !important;
+  height: 48px !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #f8fafc !important;
+  font-weight: 500 !important;
+  transition: all 0.3s !important;
+}
+
+.modern-select-input /deep/ .custom-select:focus,
+.modern-select-input /deep/ .form-control:focus {
+  border-color: #3b82f6 !important;
+  background-color: white !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
 </style>

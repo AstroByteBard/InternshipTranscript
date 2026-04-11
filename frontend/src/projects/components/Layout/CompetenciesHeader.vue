@@ -24,7 +24,7 @@
           <CIcon name="cil-plus" class="mr-2 text-danger"/>
           {{ createLabel }}
         </CButton>
-        <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow" @click="$emit('export-assessment')">
+        <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow" @click="goToPreview">
           <CIcon name="cil-notes" class="mr-2 text-danger"/>
           Assessment Form
         </CButton>
@@ -48,6 +48,11 @@ export default {
     createLabel: {
       type: String,
       default: 'Create New'
+    }
+  },
+  methods: {
+    goToPreview() {
+      this.$router.push({ name: 'FillForm', query: { mode: 'preview' } });
     }
   }
 }

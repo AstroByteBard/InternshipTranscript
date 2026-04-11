@@ -269,8 +269,8 @@ export default {
                             'Course Title (Thai)': titleTh,
                             'Course Title (English)': titleEn,
                             'No.': idx + 1,
-                            'Variable (Thai)': this.translate(conf.variable, 'th'),
-                            'Variable (English)': this.translate(conf.variable, 'en'),
+                            'Variable (Thai)': this.translate(conf.label, 'th'),
+                            'Variable (English)': this.translate(conf.label, 'en'),
                             'Assessment Question (Thai)': this.translate(conf.question, 'th'),
                             'Assessment Question (English)': this.translate(conf.question, 'en'),
                             'Score (1-5)': ''
@@ -343,8 +343,8 @@ export default {
             this.form.school = item.program && item.program.school ? item.program.school._id : ''
             this.form.major = item.program ? item.program._id : ''
             this.form.questions = item.config.map(c => ({
-                categoryTh: this.translate(c.variable, 'th'),
-                categoryEn: this.translate(c.variable, 'en'),
+                categoryTh: this.translate(c.label, 'th'),
+                categoryEn: this.translate(c.label, 'en'),
                 th: this.translate(c.question, 'th'),
                 en: this.translate(c.question, 'en')
             }))
@@ -378,7 +378,7 @@ export default {
                 ],
                 program: this.form.major,
                 config: this.form.questions.map(q => ({
-                    variable: [
+                    label: [
                         { key: 'th', value: q.categoryTh },
                         { key: 'en', value: q.categoryEn }
                     ],

@@ -66,16 +66,16 @@ async function seed() {
             ],
             config: [
                 {
-                    question: [{ key: 'en', value: 'Technical Proficiency' }, { key: 'th', value: 'ความเชี่ยวชาญทางเทคนิค' }],
-                    variable: [{ key: 'en', value: 'Knowledge of tools and technologies.' }, { key: 'th', value: 'ความรู้เกี่ยวกับเครื่องมือและเทคโนโลยี' }]
+                    label: [{ key: 'en', value: 'Technical Proficiency' }, { key: 'th', value: 'ความเชี่ยวชาญทางเทคนิค' }],
+                    question: [{ key: 'en', value: 'Knowledge of tools and technologies.' }, { key: 'th', value: 'ความรู้เกี่ยวกับเครื่องมือและเทคโนโลยี' }]
                 },
                 {
-                    question: [{ key: 'en', value: 'Work Quality' }, { key: 'th', value: 'คุณภาพของงาน' }],
-                    variable: [{ key: 'en', value: 'Accuracy and completeness of technical outputs.' }, { key: 'th', value: 'ความถูกต้องและครบถ้วนของผลงานทางเทคนิค' }]
+                    label: [{ key: 'en', value: 'Work Quality' }, { key: 'th', value: 'คุณภาพของงาน' }],
+                    question: [{ key: 'en', value: 'Accuracy and completeness of technical outputs.' }, { key: 'th', value: 'ความถูกต้องและครบถ้วนของผลงานทางเทคนิค' }]
                 },
                 {
-                    question: [{ key: 'en', value: 'Innovation' }, { key: 'th', value: 'นวัตกรรม' }],
-                    variable: [{ key: 'en', value: 'Ability to apply creative solutions to technical challenges.' }, { key: 'th', value: 'ความสามารถในการประยุกต์ใช้วิธีการสร้างสรรค์ในการแก้ปัญหาทางเทคนิค' }]
+                    label: [{ key: 'en', value: 'Innovation' }, { key: 'th', value: 'นวัตกรรม' }],
+                    question: [{ key: 'en', value: 'Ability to apply creative solutions to technical challenges.' }, { key: 'th', value: 'ความสามารถในการประยุกต์ใช้วิธีการสร้างสรรค์ในการแก้ปัญหาทางเทคนิค' }]
                 }
             ],
             active: true

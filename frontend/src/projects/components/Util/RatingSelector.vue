@@ -1,6 +1,6 @@
 <template>
   <div class="rating-selector d-flex align-items-center justify-content-between" :class="{ 'rating-disabled': disabled }">
-    <div v-for="n in 5" :key="n" class="rating-item" :class="{ active: value === n }" @click="!disabled && $emit('input', n)">
+    <div v-for="n in [5, 4, 3, 2, 1]" :key="n" class="rating-item" :class="{ active: value === n }" @click="!disabled && $emit('input', n)">
       <div class="rating-circle shadow-sm">
         {{ n }}
       </div>

@@ -55,6 +55,7 @@ import CompetenciesHeader from '@/projects/components/Layout/CompetenciesHeader.
 import WidgetsCompetencyDetail from '@/projects/components/widgets/WidgetsCompetencyDetail.vue'
 import FilterSoftskill from '@/projects/components/Filter/FilterSoftskill.vue'
 import TableSoftskill from '@/projects/components/Table/TableSoftskill.vue'
+import ModalSoftskill from '@/projects/components/Modal/ModalSoftskill.vue'
 import * as XLSX from "xlsx"
 import moment from "moment"
 

@@ -15,11 +15,11 @@ var objsSchema = new Schema({
     }],
     program: { type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Program', default: null },
     config: [{
-        question: [{
+        label: [{
             key: { type: String, default: null },
             value: { type: String, default: null },
         }],
-        variable: [{
+        question: [{
             key: { type: String, default: null },
             value: { type: String, default: null },
         }],
