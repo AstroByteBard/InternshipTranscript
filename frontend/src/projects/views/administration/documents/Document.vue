@@ -1,17 +1,14 @@
 <template>
     <div>
-        <CRow class="mb-4 align-items-center">
-            <CCol sm="6">
-                <DocsSegmentControl v-model="selected" />
-            </CCol>
-            <CCol sm="6" class="d-flex justify-content-end">
-                <CButton class="btn-filter-action btn-filter-red" @click="$router.push('/documents/create')">
-                    <CIcon name="cil-plus" class="mr-2" /> Create New Document
-                </CButton>
-            </CCol>
-        </CRow>
+        <DocumentsHeader @create-click="$router.push('/documents/create')" />
 
-        <div v-if="selected === 'Document'">
+        <WidgetsDocuments 
+            :total="documentsData.length" 
+            :published="publishedCount" 
+            :draft="draftCount" 
+            :archived="archivedCount" 
+        />
+
             <CRow>
                 <CCol>
                     <DocsFilterCard @search="(q) => { }" />
@@ -20,34 +17,21 @@
                         @edit="onEdit" @copy="onCopy" @delete="onDelete" />
                 </CCol>
             </CRow>
-        </div>
 
-        <div v-if="selected === 'Certificate'">
-            <CRow>
-                <CCol>
-                    <CCard class="mb-4">
-                        <CCardHeader>
-                            <h4 class="mb-0">Certificates</h4>
-                        </CCardHeader>
-                        <CCardBody>
-                            <p>Certificate content goes here.</p>
-                        </CCardBody>
-                    </CCard>
-                </CCol>
-            </CRow>
-        </div>
     </div>
 </template>
 
 <script>
-import DocsSegmentControl from '../../../components/documents/list/DocsSegmentControl.vue'
+import DocumentsHeader from '../../../components/Layout/DocumentsHeader.vue'
+import WidgetsDocuments from '../../../components/widgets/WidgetsDocuments.vue'
 import DocsFilterCard from '../../../components/documents/list/DocsFilterCard.vue'
 import DocumentsTable from '../../../components/documents/list/DocumentsTable.vue'
 
 export default {
     name: 'DocumentsIndex',
     components: {
-        DocsSegmentControl,
+        DocumentsHeader,
+        WidgetsDocuments,
         DocsFilterCard,
         DocumentsTable
     },
@@ -116,6 +100,17 @@ export default {
         },
         onOptions(item) {
             this.$router.push(`/administration/documents/edit/${item._id}`);
+        }
+    },
+    computed: {
+        publishedCount() {
+            return this.documentsData.filter(d => d.status === 'Published').length;
+        },
+        draftCount() {
+            return this.documentsData.filter(d => d.status === 'Draft').length;
+        },
+        archivedCount() {
+            return this.documentsData.filter(d => d.status === 'Archived').length;
         }
     }
 }

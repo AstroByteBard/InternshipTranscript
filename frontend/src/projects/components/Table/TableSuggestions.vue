@@ -14,9 +14,8 @@
                 </td>
             </template>
 
-            <!-- Title -->
             <template #title="{ item }">
-                <td class="text-center align-middle">
+                <td class="text-left align-middle px-4 py-3">
                     <div style="color: #334155; font-weight: 700;">
                         {{ translate(item.title, 'th') }}
                     </div>

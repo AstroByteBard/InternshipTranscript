@@ -21,7 +21,7 @@
 
       <!-- Major & School Consolidated Column -->
       <template #major="{ item }">
-        <td class="text-left align-middle py-3">
+        <td class="text-left align-middle px-4 py-3">
           <div style="color: #1e293b; font-weight: 700; font-size: 15px;">
             {{ item.program && item.program.school ? translate(item.program.school.title) : '-' }}
           </div>
@@ -33,7 +33,7 @@
 
       <!-- Title -->
       <template #title="{ item }">
-        <td class="text-center align-middle">
+        <td class="text-left align-middle px-4 py-3">
           <div style="color: #334155; font-weight: 700;">
             {{ translate(item.title, 'th') }}
           </div>

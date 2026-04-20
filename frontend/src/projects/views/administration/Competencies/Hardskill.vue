@@ -26,7 +26,6 @@
             :yearOptions="yearOptions"
         />
         
-        <div>
         <TableHardskill 
             :items="filteredHardskillItems"
             :fields="hardskillFields"
@@ -41,8 +40,7 @@
             @edit="editItem"
             @delete="deleteItem"
         />
-        </div>
-
+        
         <!-- Create Modal -->
         <ModalHardskill 
             :show.sync="showCreateModal"
@@ -101,11 +99,11 @@ export default {
             },
             hardskillFields: [
                 { key: 'year', label: 'YEAR', _classes: 'text-center', _style: 'min-width: 100px' },
-                { key: 'major', label: 'SCHOOL & PROGRAM', _classes: 'text-left', _style: 'min-width: 200px' },
-                { key: 'title', label: 'COURSE / SUBJECT', _classes: 'text-center', _style: 'min-width: 200px' },
-                { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center' },
-                { key: 'assessmentQuestion', label: 'ASSESSMENT QUESTION', _classes: 'text-center', _style: 'min-width: 180px' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
+                { key: 'major', label: 'SCHOOL & PROGRAM', _classes: 'text-left', _style: 'min-width: 350px' },
+                { key: 'title', label: 'COURSE / SUBJECT', _classes: 'text-left', _style: 'min-width: 150px' },
+                { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center', _style: 'min-width: 150px' },
+                { key: 'assessmentQuestion', label: 'ASSESSMENT QUESTION', _classes: 'text-center', _style: 'min-width: 220px' },
+                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', _style: 'min-width: 120px', sorter: false, filter: false },
             ],
             schools: [],
             programs: [],

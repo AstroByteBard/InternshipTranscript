@@ -86,9 +86,9 @@ export default {
             },
             suggestionFields: [
                 { key: 'year', label: 'YEAR', _classes: 'text-center', _style: 'min-width: 100px' },
-                { key: 'title', label: 'TITLE', _classes: 'text-center', _style: 'min-width: 200px' },
-                { key: 'suggestionContent', label: 'SUGGESTION CONTENT', _classes: 'text-center', _style: 'min-width: 300px' },
+                { key: 'title', label: 'TITLE', _classes: 'text-left', _style: 'min-width: 200px' },
                 { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center' },
+                { key: 'suggestionContent', label: 'SUGGESTION CONTENT', _classes: 'text-center', _style: 'min-width: 300px' },
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
             ],
         }
