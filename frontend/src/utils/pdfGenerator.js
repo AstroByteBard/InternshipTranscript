@@ -69,22 +69,42 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     // for variable-backed images so their dashed stroke/placeholder does not
     // end up embedded in the exported PDF.
     const preloads = templateJSON.elements.map(async (el) => {
-        if (el.className === 'Image' && el.src && el.src !== '') {
-            const srcStr = String(el.src || '');
-            const isDataUrl = srcStr.indexOf('data:') === 0;
-            const hasVariable = !!(el.attrs && el.attrs.variableName);
-            // Only skip dataURL images that are editor placeholders (they are
-            // created by the editor and tagged with a `variableName`). This
-            // preserves legitimate generated/dataURL images (charts, etc.).
-            if (isDataUrl && hasVariable) {
-                el._loadedImage = null;
-            } else {
-                el._loadedImage = await loadImage(el.src);
-                if (el._loadedImage && el._loadedImage.width && el._loadedImage.height) {
-                    const isBanner = el._loadedImage.width > el._loadedImage.height * 2;
-                    if (isBanner) {
-                        // Trim 1px from each edge to avoid embedded border lines in banner images.
-                        el._loadedImage = await cropImage(el._loadedImage, 1);
+        if (el.className === 'Image') {
+            const attrs = el.attrs || {};
+            // Support preloading of chart images passed via dataMap.__chartImages
+            if (attrs.name === 'graph-placeholder') {
+                const graphType = attrs.graphType || '';
+                const cleanKey = graphType.replace(/Graph_/g, '').toLowerCase();
+                const chartImages = dataMap && dataMap.__chartImages ? dataMap.__chartImages : null;
+                let imgSrc = null;
+                if (chartImages) {
+                    if (cleanKey.indexOf('general') >= 0 && (chartImages.general || chartImages.General)) imgSrc = chartImages.general || chartImages.General;
+                    else if (cleanKey.indexOf('specific') >= 0 && (chartImages.specific || chartImages.Specific)) imgSrc = chartImages.specific || chartImages.Specific;
+                    else if (chartImages[cleanKey]) imgSrc = chartImages[cleanKey];
+                }
+                if (imgSrc) {
+                    el._loadedImage = await loadImage(imgSrc);
+                    return el;
+                }
+            }
+
+            if (el.src && el.src !== '') {
+                const srcStr = String(el.src || '');
+                const isDataUrl = srcStr.indexOf('data:') === 0;
+                const hasVariable = !!(el.attrs && el.attrs.variableName);
+                // Only skip dataURL images that are editor placeholders (they are
+                // created by the editor and tagged with a `variableName`). This
+                // preserves legitimate generated/dataURL images (charts, etc.).
+                if (isDataUrl && hasVariable) {
+                    el._loadedImage = null;
+                } else {
+                    el._loadedImage = await loadImage(el.src);
+                    if (el._loadedImage && el._loadedImage.width && el._loadedImage.height) {
+                        const isBanner = el._loadedImage.width > el._loadedImage.height * 2;
+                        if (isBanner) {
+                            // Trim 1px from each edge to avoid embedded border lines in banner images.
+                            el._loadedImage = await cropImage(el._loadedImage, 1);
+                        }
                     }
                 }
             }
@@ -122,6 +142,29 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         if (num <= 10) return Math.max(0, Math.min(1, num / 10));
         if (num <= 100) return Math.max(0, Math.min(1, num / 100));
         return Math.max(0, Math.min(1, num));
+    };
+
+    const valueToPercent = (value) => {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return 0;
+        if (num >= 0 && num < 1) return Math.round(num * 100);
+        if (num >= 1 && num <= 5) return Math.round((num / 5) * 100);
+        if (num > 5 && num <= 10) return Math.round((num / 10) * 100);
+        if (num >= 0 && num <= 100) return Math.round(num);
+        return Math.max(0, Math.min(100, Math.round(num)));
+    };
+
+    const getPercentForItem = (item) => {
+        if (item === undefined || item === null) return 0;
+        if (typeof item === 'number' || (typeof item === 'string' && item.trim() !== '' && !isNaN(item))) {
+            return valueToPercent(item);
+        }
+        if (typeof item === 'object') {
+            if (item.percentage !== undefined && item.percentage !== null) return Number(item.percentage);
+            if (item.score !== undefined && item.score !== null) return valueToPercent(item.score);
+            if (item.value !== undefined && item.value !== null) return valueToPercent(item.value);
+        }
+        return 0;
     };
 
     const defaultGeneralCompetencies = [
@@ -185,10 +228,23 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             group.add(new Konva.Line({ points, closed: true, stroke: '#e2e8f0', strokeWidth: 1 }));
         }
 
-        const values = (graphData.you && graphData.you.length) ? graphData.you : items.map((item) => item.score || item.percentage || item.value || 0);
+        // Draw radial tick labels (20,40,60,80,100) along vertical axis for PDF readability
+        for (let r = 1; r <= 5; r++) {
+            const val = r * 20;
+            const y = centerY - (radius / 5) * r;
+            // center the small label horizontally near the vertical center
+            group.add(new Konva.Text({ x: centerX - 16, y: y - 6, text: String(val), fontSize: 10, fontFamily: 'Inter, Arial', fill: '#64748b', width: 32, align: 'center' }));
+        }
+
+        const values = (graphData.you && graphData.you.length) ? graphData.you : items.map((item) => getPercentForItem(item));
         const avgValues = (graphData.average && graphData.average.length)
             ? graphData.average
-            : items.map((item) => item.average || (Math.max(0, (item.percentage || item.score || 0) - 10)));
+            : items.map((item) => {
+                if (item && item.average !== undefined && item.average !== null) {
+                    return (typeof item.average === 'number') ? Number(item.average) : valueToPercent(item.average);
+                }
+                return Math.max(0, getPercentForItem(item) - 10);
+            });
 
         const buildPolygon = (vals) => {
             const points = [];
@@ -257,16 +313,15 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
         rows.forEach((item) => {
             const label = item.name || item.label || 'Skill';
-            let value = item.score || item.percentage || item.value || 0;
+            let value = getPercentForItem(item);
             const ratio = normalizeScore(value) || 0;
 
             group.add(new Konva.Text({ x: barX, y: currentY - 2, text: String(label), fontSize: 11, fontFamily: 'Inter, Arial', fill: '#475569' }));
             group.add(new Konva.Text({ x: barX + barW - 40, y: currentY - 2, text: Math.round(ratio * 100) + '%', fontSize: 11, fontFamily: 'Inter, Arial', fill: '#475569', align: 'right', width: 40 }));
             group.add(new Konva.Rect({ x: barX, y: currentY + 12, width: barW, height: 6, fill: '#e2e8f0', cornerRadius: 3 }));
 
-            let fillC = '#dc2626'; // < 50%
-            if (ratio >= 0.8) fillC = '#22c55e';
-            else if (ratio >= 0.5) fillC = '#eab308';
+            // Force red bars for PDF export
+            const fillC = '#dc2626';
 
             group.add(new Konva.Rect({ x: barX, y: currentY + 12, width: Math.max(4, barW * ratio), height: 6, fill: fillC, cornerRadius: 3 }));
             currentY += rowH;
@@ -420,13 +475,17 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     const resolveValue = (key) => {
         if (!key) return '';
         const cleanKey = String(key).replace(/[{}]/g, '');
+        const normalized = String(cleanKey).replace(/\s+/g, '').toLowerCase();
+
+        // Handle Academic/Academy Year variants first so we can return formatted text
+        if (normalized === 'academicyear' || normalized === 'academyyear') {
+            const year = dataMap.AcademyYear || dataMap.academyYear || dataMap.AcademicYear || dataMap.academicYear || dataMap['Academic Year'] || dataMap['academic year'] || '';
+            return year ? 'Academic Year ' + year : 'Academic Year';
+        }
+
         if (dataMap[cleanKey] !== undefined) return dataMap[cleanKey];
         if (dataMap[key] !== undefined) return dataMap[key];
         if (dataMap.student && dataMap.student[cleanKey] !== undefined) return dataMap.student[cleanKey];
-        if (cleanKey === 'AcademyYear' || cleanKey === 'academyYear') {
-            const year = dataMap.AcademyYear || dataMap.academyYear || '';
-            return year ? 'Academic Year ' + year : 'Academic Year';
-        }
         return '';
     };
 
@@ -486,9 +545,9 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 let pData = {
                     labels: fallbackItems.map(i => i.name),
                     datasets: [{
-                        label: 'You', data: fallbackItems.map(i => i.percentage || i.score || 0)
+                        label: 'You', data: fallbackItems.map(i => getPercentForItem(i))
                     }, {
-                        label: 'Average', data: fallbackItems.map(i => i.average || Math.max(0, (i.percentage || i.score || 0) - 10))
+                        label: 'Average', data: fallbackItems.map(i => (i && i.average !== undefined && i.average !== null) ? (typeof i.average === 'number' ? Number(i.average) : valueToPercent(i.average)) : Math.max(0, getPercentForItem(i) - 10))
                     }]
                 };
 
@@ -525,8 +584,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 const items = isGeneral
                     ? (dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
                     : (dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
+                // Use actual provided general competency items when available.
+                // Fallback to defaults only when the provided list is empty.
                 const safeItems = isGeneral
-                    ? completeCompetencies(items, defaultGeneralCompetencies)
+                    ? ((Array.isArray(items) && items.length) ? items : defaultGeneralCompetencies)
                     : ((Array.isArray(items) && items.length) ? items : [{ name: 'N/A', score: 'X.X' }]);
                 const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
                 addCompetencyTable(attrs, safeItems, title);

@@ -28,6 +28,7 @@ export default {
             historyIndex: -1,
             isLoading: false,
             generalCompetencyLabels: [],
+            generalCompetencyDocName: '',
             specificCompetencyLabels: [],
             suggestionLabels: [],
             suggestionCharCount: 200,
@@ -426,25 +427,41 @@ export default {
                 const canvas = document.createElement('canvas');
                 canvas.width = 1000;
                 canvas.height = 700;
-                const ctx = canvas.getContext('2d');
-
-                // Background
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                let ctx = canvas.getContext('2d');
 
                 const isRadar = graphType.includes('Radar');
                 const isGeneral = graphType.includes('General');
                 const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
 
                 if (isRadar) {
+                    // ensure background when radar is drawn
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
                     // ... (keep radar chart logic)
                     ctx.fillStyle = '#1e293b';
                     ctx.font = 'bold 32px Inter, Arial';
                     ctx.textAlign = 'left';
                     ctx.fillText(title, 50, 60);
 
+                    // Subtitle: show active softskill model name for General radar (if available)
+                    // Skip drawing the generic 'Soft Skills' title to avoid duplication
+                    let legendY = 110;
+                    let showDocName = false;
+                    if (isGeneral && this.generalCompetencyDocName) {
+                        const nameNorm = String(this.generalCompetencyDocName).trim().toLowerCase();
+                        if (nameNorm && nameNorm !== 'soft skills' && nameNorm !== 'soft skill') {
+                            showDocName = true;
+                        }
+                    }
+                    if (showDocName) {
+                        ctx.font = '18px Inter, Arial';
+                        ctx.fillStyle = '#475569';
+                        ctx.fillText(this.generalCompetencyDocName, 50, 100);
+                        legendY = 150;
+                    }
+
                     // Legend
-                    const legendY = 110;
                     ctx.fillStyle = '#7c3aed';
                     ctx.beginPath();
                     ctx.arc(380, legendY, 10, 0, Math.PI * 2);
@@ -460,12 +477,27 @@ export default {
                     ctx.fillText('Average', 545, legendY + 6);
 
                     const centerX = canvas.width / 2;
-                    const centerY = canvas.height / 2 + 50;
+                    let centerY = canvas.height / 2 + 50;
                     const radius = 180;
-                    const sides = 6;
-                    const labels = isGeneral
-                        ? ['Creativity', 'Problem Solving', 'Digital Literacy', 'Learning', 'Agility', 'Communication']
-                        : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing'];
+
+                    // Ensure there's extra space below the legend (You/Average)
+                    // so the radar doesn't overlap the legend. Compute minimal
+                    // centerY required and move the chart down if needed.
+                    const legendTextHeight = showDocName ? 28 : 18;
+                    const extraGap = 80; // pixels of extra spacing under legend (increased to avoid overlap)
+                    const minCenterY = radius + legendY + legendTextHeight + extraGap;
+                    if (centerY < minCenterY) {
+                        centerY = minCenterY;
+                    }
+                    // Prefer active labels from the store/config when available
+                    // For Specific radar previews, use placeholder 'XXX' entries instead of real labels
+                    let labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders();
+                    if (!Array.isArray(labels) || !labels.length) {
+                        labels = isGeneral
+                            ? ['Creativity', 'Problem Solving', 'Digital Literacy', 'Learning', 'Agility', 'Communication']
+                            : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing'];
+                    }
+                    const sides = Math.max(3, labels.length);
 
                     ctx.strokeStyle = '#e2e8f0';
                     ctx.lineWidth = 1.5;
@@ -483,8 +515,12 @@ export default {
                         ctx.stroke();
                     }
 
-                    ctx.textAlign = 'center';
-                    ctx.font = 'bold 16px Inter, Arial';
+                    // Draw radial spokes and labels with wrapping and smarter alignment
+                    ctx.font = 'bold 14px Inter, Arial';
+                    const lineHeight = 18;
+                    const maxLabelWidth = 140; // max pixel width per label line
+                    const outerOffsetX = 65; // how far labels sit from the radius
+                    const outerOffsetY = 45;
                     for (let i = 0; i < sides; i++) {
                         const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
                         const x = centerX + radius * Math.cos(angle);
@@ -494,14 +530,64 @@ export default {
                         ctx.lineTo(x, y);
                         ctx.stroke();
 
-                        const labelX = centerX + (radius + 45) * Math.cos(angle);
-                        const labelY = centerY + (radius + 30) * Math.sin(angle);
+                        // compute base label position (pushed out from the radius)
+                        const labelX = centerX + (radius + outerOffsetX) * Math.cos(angle);
+                        const labelY = centerY + (radius + outerOffsetY) * Math.sin(angle);
+
+                        // choose text alignment based on angle (left/right/center)
+                        const cos = Math.cos(angle);
+                        if (Math.abs(cos) < 0.25) {
+                            ctx.textAlign = 'center';
+                        } else if (cos > 0) {
+                            ctx.textAlign = 'left';
+                        } else {
+                            ctx.textAlign = 'right';
+                        }
+
+                        // wrap long labels into multiple lines (word-based, fallback to char-split)
+                        const raw = String(labels[i] || '');
+                        const words = raw.split(/\s+/).filter(Boolean);
+                        const lines = [];
+                        if (words.length === 0) {
+                            lines.push('');
+                        } else {
+                            let cur = words[0] || '';
+                            for (let w = 1; w < words.length; w++) {
+                                const test = cur + ' ' + words[w];
+                                if (ctx.measureText(test).width <= maxLabelWidth) {
+                                    cur = test;
+                                } else {
+                                    lines.push(cur);
+                                    cur = words[w];
+                                }
+                            }
+                            if (cur) lines.push(cur);
+                            // fallback: if single very long token (e.g., XXXXXX...), split by chars
+                            if (lines.length === 1 && ctx.measureText(lines[0]).width > maxLabelWidth) {
+                                const token = lines[0];
+                                lines.length = 0;
+                                const approxChars = Math.max(6, Math.floor(maxLabelWidth / 8));
+                                for (let p = 0; p < token.length; p += approxChars) {
+                                    lines.push(token.slice(p, p + approxChars));
+                                }
+                            }
+                        }
+
+                        // draw lines vertically centered around labelY
+                        const totalH = lines.length * lineHeight;
+                        let drawY = labelY - (totalH / 2) + (lineHeight / 2);
                         ctx.fillStyle = '#1e293b';
-                        ctx.fillText(labels[i], labelX, labelY);
+                        ctx.font = 'bold 14px Inter, Arial';
+                        for (const ln of lines) {
+                            ctx.fillText(ln, labelX, drawY);
+                            drawY += lineHeight;
+                        }
                     }
 
-                    const avgValues = [0.75, 0.65, 0.85, 0.72, 0.68, 0.82];
-                    const youValues = [0.92, 0.88, 0.78, 0.94, 0.85, 0.76];
+                    // create sample values that match the number of axes
+                    const samplePattern = [0.75, 0.65, 0.85, 0.72, 0.68, 0.82];
+                    const avgValues = labels.map((_, i) => samplePattern[i % samplePattern.length]);
+                    const youValues = labels.map((_, i) => Math.min(1, (samplePattern[(i + 1) % samplePattern.length] || 0.75) + 0.12));
 
                     ctx.fillStyle = 'rgba(251, 113, 133, 0.35)';
                     ctx.strokeStyle = '#fb7185';
@@ -534,54 +620,94 @@ export default {
                     ctx.stroke();
 
                 } else {
-                    // ... (keep progress bars logic)
+                    // Retrieve labels/placeholders from the store/config if present
+                    // For General: use real labels. For Specific: use placeholder 'XXX' entries (from config placeholders).
+                    const labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders();
+                    const competencies = Array.isArray(labels) && labels.length
+                        ? labels.map(l => ({ name: String(l || ''), desc: isGeneral ? '' : '' }))
+                        : [
+                            { name: 'Competency A', desc: isGeneral ? 'Demonstrative description.' : '' },
+                            { name: 'Competency B', desc: isGeneral ? 'Demonstrative description.' : '' },
+                            { name: 'Competency C', desc: isGeneral ? 'Demonstrative description.' : '' }
+                        ];
+
+                    // decide row height and required canvas height to fit all items
+                    const topOffset = 140;
+                    const bottomPadding = 40;
+                    const rowHeight = 90; // increased row height for more vertical spacing
+                    const requiredHeight = topOffset + bottomPadding + (competencies.length * rowHeight);
+
+                    // enlarge canvas height if needed so no items are cut off
+                    if (requiredHeight > canvas.height) {
+                        canvas.height = requiredHeight;
+                        // re-acquire context after resizing canvas
+                        ctx = canvas.getContext('2d');
+                    }
+
+                    // Background (redraw after potential resize)
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Title
                     ctx.fillStyle = '#1e293b';
                     ctx.font = 'bold 36px Inter, Arial';
                     ctx.textAlign = 'left';
                     ctx.fillText(title, 50, 70);
 
-                    const competencies = isGeneral
-                        ? [
-                            { name: 'Creativity', desc: 'Demonstrates strong creativity by generating original ideas and applying innovative approaches.' },
-                            { name: 'Analytical thinking and Problem solving', desc: 'Develops effective strategies to resolve complex issues through logical analysis.' },
-                            { name: 'Digital literacy', desc: 'Proficiently uses digital tools and technology for efficient work and communication.' },
-                            { name: 'Curiosity and life-long learning', desc: 'Shows continuous desire to gain new knowledge and improve professional skills.' },
-                            { name: 'Resilience, flexibility and agility', desc: 'Adapts quickly to changing environments and maintains productivity under pressure.' }
-                        ]
-                        : [
-                            { name: 'Technical Execution', desc: 'Implements complex features with high precision and adherence to best practices.' },
-                            { name: 'Code Quality', desc: 'Writes maintainable, clean, and well-documented code following team standards.' },
-                            { name: 'Security Awareness', desc: 'Identifies and mitigates potential security vulnerabilities in developed solutions.' },
-                            { name: 'Performance Optimization', desc: 'Ensures application efficiency and smooth user experience across all devices.' },
-                            { name: 'Architectural Thinking', desc: 'Contributes to system design discussions with scalable and modular perspectives.' }
-                        ];
+                    // Sample percentage pattern to make the preview visually varied
+                    const samplePattern = [1.0, 0.8, 0.6, 0.4, 0.2, 0.4, 0.6, 0.8, 1.0, 0.8, 0.6, 0.4];
+                    const percentages = competencies.map(() => 80);
+                    // Use a fixed 80% preview for all items (General and Specific)
 
-                    let startY = 140;
+                    // Draw rows
+                    let startY = topOffset;
+                    const barW = canvas.width - 120;
+                    const barH = Math.max(10, Math.min(18, Math.floor(rowHeight * 0.18)));
+
                     competencies.forEach((item, idx) => {
                         ctx.fillStyle = '#1e293b';
                         ctx.font = 'bold 20px Inter, Arial';
                         ctx.fillText(item.name, 60, startY);
+
                         ctx.fillStyle = '#475569';
                         ctx.font = '18px Inter, Arial';
                         ctx.textAlign = 'right';
+                        // show placeholder text in preview (do not reveal real percentages)
                         ctx.fillText('xx%', canvas.width - 60, startY);
+
                         ctx.textAlign = 'left';
                         ctx.fillStyle = '#64748b';
                         ctx.font = 'normal 14px Inter, Arial';
-                        ctx.fillText(item.desc, 60, startY + 25);
-                        const barW = canvas.width - 120;
-                        const barH = 12;
-                        const fillW = barW * (0.65 + (idx * 0.04));
+                        ctx.fillText(item.desc, 60, startY + 22);
+
+                        const percent = percentages[idx] || 0;
+                        const fillW = Math.max(0, Math.floor(barW * (percent / 100)));
                         ctx.fillStyle = '#f1f5f9';
-                        this.drawRoundRect(ctx, 60, startY + 45, barW, barH, 6);
+                        this.drawRoundRect(ctx, 60, startY + 40, barW, barH, 6);
                         ctx.fill();
                         ctx.fillStyle = '#dc2626';
-                        this.drawRoundRect(ctx, 60, startY + 45, fillW, barH, 6);
+                        this.drawRoundRect(ctx, 60, startY + 40, fillW, barH, 6);
                         ctx.fill();
-                        startY += 100;
+
+                        startY += rowHeight;
                     });
+
+                    // create data URL and scale image to requested width while keeping aspect ratio
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const imageWidth = opts.width || 600;
+                    const imageHeight = opts.height || Math.max(1, Math.round((canvas.height / canvas.width) * imageWidth));
+
+                    this.addImage(dataUrl, {
+                        width: imageWidth,
+                        height: imageHeight,
+                        ...opts,
+                        isGraphPlaceholder: true,
+                        graphType: graphType
+                    }).then(resolve);
+                    return;
                 }
 
+                // For radar branch fallthrough: keep existing export size
                 const dataUrl = canvas.toDataURL('image/png');
                 this.addImage(dataUrl, {
                     width: 600,
@@ -648,7 +774,7 @@ export default {
                 competencies.forEach((comp) => {
                     group.add(new Konva.Text({ text: comp, fontSize: 14, fontFamily: 'Inter, Arial', fill: '#64748b', y: currentY }));
                     group.add(new Konva.Text({ text: 'X.X', fontSize: 14, fontFamily: 'Inter, Arial', fill: '#64748b', x: 350, y: currentY }));
-                    currentY += 35;
+                    currentY += 56; // increased spacing between rows
                 });
                 hitRect.height(currentY);
 
@@ -1438,6 +1564,8 @@ export default {
                 const specificDoc = this.pickSpecificByProgram(activeSpecific, this.exampleData);
 
                 this.generalCompetencyLabels = this.extractSoftskillLabels(generalDoc);
+                // store active general softskill document's localized title for display
+                this.generalCompetencyDocName = generalDoc ? this.getLocalizedValue(generalDoc.title, 'en') : '';
                 this.specificCompetencyLabels = this.extractHardskillLabels(specificDoc, true);
                 this.suggestionLabels = this.extractSuggestionLabels(suggestionDoc);
             } catch (err) {

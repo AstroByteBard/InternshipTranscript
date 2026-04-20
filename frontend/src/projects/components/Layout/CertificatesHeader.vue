@@ -3,29 +3,27 @@
     <div class="hero-content d-flex justify-content-between align-items-center">
       <div class="hero-text-section px-4">
         <h1 class="hero-title animate-slide-up">Certificate Management</h1>
-        <p class="hero-subtitle animate-slide-up-delay-1">Official Verification & Student Awards | Internship Achievement</p>
+        <p class="hero-subtitle animate-slide-up-delay-1">Official Verification & Student Awards | Internship
+          Achievement</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2 flex-wrap">
-            <div class="hero-badge mr-3 mb-2">
-                <CIcon name="cil-star" class="mr-2 icon-gold" size="sm"/>
-                Official
-            </div>
-            <div class="hero-badge mr-3 mb-2">
-                <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm"/>
-                Authenticated
-            </div>
-            <div class="hero-badge mb-2">
-                <CIcon name="cil-education" class="mr-2 icon-gold" size="sm"/>
-                Transcript Ready
-            </div>
+          <div class="hero-badge mr-3 mb-2">
+            <CIcon name="cil-star" class="mr-2 icon-gold" size="sm" />
+            Official
+          </div>
+          <div class="hero-badge mr-3 mb-2">
+            <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm" />
+            Authenticated
+          </div>
+          <div class="hero-badge mb-2">
+            <CIcon name="cil-school" class="mr-2 icon-gold" size="sm" />
+            Transcript Ready
+          </div>
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in d-flex align-items-center">
-        <CButton 
-          color="light" 
-          class="btn-hero-action mr-3 px-4 py-3 font-weight-bold shadow create-btn" 
-          @click="$emit('create-click')"
-        >
-          <CIcon name="cil-plus" class="mr-2 text-danger"/>
+        <CButton color="light" class="btn-hero-action mr-3 px-4 py-3 font-weight-bold shadow create-btn"
+          @click="$emit('create-click')">
+          <CIcon name="cil-plus" class="mr-2 text-danger" />
           Create New Certificate
         </CButton>
       </div>
@@ -74,7 +72,8 @@ export default {
   font-size: 18px;
   opacity: 0.95;
   font-weight: 500;
-  color: #FEC260; /* MFU Gold accent */
+  color: #FEC260;
+  /* MFU Gold accent */
 }
 
 .hero-badge {
@@ -179,8 +178,13 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -188,6 +192,7 @@ export default {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -199,6 +204,7 @@ export default {
     opacity: 0;
     transform: scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

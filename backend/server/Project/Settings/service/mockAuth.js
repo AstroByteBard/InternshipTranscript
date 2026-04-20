@@ -20,6 +20,15 @@ const MOCK_USERS = {
         studentID: '6631503016',
         picture: 'https://via.placeholder.com/150?text=Student'
     }
+    ,
+    '6631503038@lamduan.mfu.ac.th': {
+        id: '6631503038',
+        email: '6631503038@lamduan.mfu.ac.th',
+        name: 'Student 6631503038',
+        role: 'student',
+        studentID: '6631503038',
+        picture: 'https://via.placeholder.com/150?text=Student'
+    }
 };
 
 // JWT Secret (use from .env in production)

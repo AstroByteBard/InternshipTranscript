@@ -120,7 +120,7 @@ const actions = {
      * Login as Student (mock)
      */
     async loginAsStudent({ dispatch }) {
-        return dispatch('mockLogin', '6631503016@lamduan.mfu.ac.th');
+        return dispatch('mockLogin', '6631503038@lamduan.mfu.ac.th');
     },
 
     /**
