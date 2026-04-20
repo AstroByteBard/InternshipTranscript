@@ -1,51 +1,21 @@
 <template>
     <div>
-        <CompetenciesHeader 
-            :show-create="true" 
-            create-label="Create Softskill" 
-            @create-click="showCreateModal = true"
-            @export-assessment="exportAssessment" 
-        />
-        <WidgetsCompetencyDetail 
-            :totalItems="softskillItems.length"
-            :activeItems="activeSoftskillsCount"
-            :inactiveItems="inactiveSoftskillsCount"
-            :totalQuestions="totalSoftskillQuestions"
-            itemName="Softskills"
-            questionName="Questions"
-            questionIcon="cil-comment-bubble"
-        />
-        
-        <FilterSoftskill 
-            :searchQuery.sync="searchQuery"
-            :selectionAcademicYear.sync="selectionAcademicYear"
-            :yearOptions="yearOptions"
-        />
-        
-        <TableSoftskill 
-            :items="filteredSoftskillItems"
-            :fields="softskillFields"
-            :itemsPerPage="itemsPerPage"
-            :activePage.sync="activePage"
-            :totalPages="softskillTotalPages"
-            :tableStart="softskillTableStart"
-            :tableEnd="softskillTableEnd"
-            :totalItems="filteredSoftskillItems.length"
-            :translate="translate"
-            @toggle-status="toggleStatus"
-            @edit="editItem"
-            @delete="deleteItem"
-        />
+        <CompetenciesHeader :show-create="true" create-label="Create Softskill" @create-click="showCreateModal = true"
+            @export-assessment="exportAssessment" />
+        <WidgetsCompetencyDetail :totalItems="softskillItems.length" :activeItems="activeSoftskillsCount"
+            :inactiveItems="inactiveSoftskillsCount" :totalQuestions="totalSoftskillQuestions" itemName="Softskills"
+            questionName="Questions" questionIcon="cil-comment-bubble" />
 
-        <ModalSoftskill 
-            :show.sync="showCreateModal"
-            :isEdit="isEdit"
-            :form="form"
-            @update:show="handleCreateModalClose"
-            @add-question="addQuestion"
-            @remove-question="removeQuestion"
-            @save="onSave"
-        />
+        <FilterSoftskill :searchQuery.sync="searchQuery" :selectionAcademicYear.sync="selectionAcademicYear"
+            :yearOptions="yearOptions" />
+
+        <TableSoftskill :items="filteredSoftskillItems" :fields="softskillFields" :itemsPerPage="itemsPerPage"
+            :activePage.sync="activePage" :totalPages="softskillTotalPages" :tableStart="softskillTableStart"
+            :tableEnd="softskillTableEnd" :totalItems="filteredSoftskillItems.length" :translate="translate"
+            @toggle-status="toggleStatus" @edit="editItem" @delete="deleteItem" />
+
+        <ModalSoftskill :show.sync="showCreateModal" :isEdit="isEdit" :form="form" @update:show="handleCreateModalClose"
+            @add-question="addQuestion" @remove-question="removeQuestion" @save="onSave" />
     </div>
 </template>
 
@@ -123,7 +93,7 @@ export default {
                 .map(item => item.year)
                 .filter(year => year && year !== '')
             const uniqueYears = [...new Set(years)].sort((a, b) => b.localeCompare(a))
-            
+
             return [
                 { value: '', label: 'All Years' },
                 ...uniqueYears.map(year => ({ value: year, label: year }))
@@ -237,11 +207,11 @@ export default {
             try {
                 let items = this.softskillItems
                 const target = items.find(i => i._id === id)
-                if(!target) return
-                
+                if (!target) return
+
                 await this.updateSoftskill({ _id: id, active: !target.active })
                 this.fetchSoftskills()
-            } catch(e) {
+            } catch (e) {
                 console.error(e)
             }
         },
@@ -262,17 +232,17 @@ export default {
             this.showCreateModal = true
         },
         async deleteItem(id) {
-            if(confirm('Are you sure you want to delete this Softskill?')) {
+            if (confirm('Are you sure you want to delete this Softskill?')) {
                 await this.deleteSoftskill(id)
                 this.fetchSoftskills()
             }
         },
         async onSave() {
-            if(!this.form.titleTh || !this.form.titleEn || !this.form.year) {
+            if (!this.form.titleTh || !this.form.titleEn || !this.form.year) {
                 alert('Please fill out all required basic information (*)')
                 return
             }
-            if(this.form.questions.some(q => !q.th || !q.en)) {
+            if (this.form.questions.some(q => !q.th || !q.en)) {
                 alert('Please fill out all required question fields (*)')
                 return
             }
@@ -299,7 +269,7 @@ export default {
                 }))
             }
 
-            if(this.isEdit) {
+            if (this.isEdit) {
                 payload._id = this.editingId
                 await this.updateSoftskill(payload)
             } else {
@@ -605,4 +575,3 @@ export default {
     color: #475569;
 }
 </style>
-

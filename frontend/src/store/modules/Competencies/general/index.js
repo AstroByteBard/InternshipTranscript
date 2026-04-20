@@ -3,7 +3,7 @@ import Service from "../../../../service/api";
 const ServerModule = {
     namespaced: true,
     state: {
-        general : [],
+        general: [],
     },
 
     mutations: {
@@ -13,41 +13,44 @@ const ServerModule = {
     },
 
     actions: {
-        general({commit}, data) {
-            Service.general('get', data, {})
+        general({ commit }, data) {
+            return Service.general('get', data, {})
                 .then((response) => {
                     commit('general', response.data.data)
+                    return response
                 }).catch((err) => {
                     console.log(err)
-            });
+                    throw err
+                });
         },
-        createGeneral({ dispatch },data) {
+        createGeneral({ dispatch }, data) {
             Service.general('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
-                    return dispatch ('general')
+                    return dispatch('general')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    console.log(err)
+                });
         },
-        updateGeneral({ dispatch },data) {
+        updateGeneral({ dispatch }, data) {
             Service.general('put', data, {})
                 .then((response) => {
                     console.log('สถานนะการแก้ไข : ', response.data)
                     alert('Updated successfully')
-                    return dispatch ('general')
+                    return dispatch('general')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    console.log(err)
+                });
         },
-        deleteGeneral({ dispatch },data) {
-            Service.general('delete', data, {})
+        deleteGeneral({ dispatch }, data) {
+            const payload = (data && typeof data === 'object') ? data : { _id: data }
+            Service.general('delete', payload, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
-                    return dispatch ('general')
+                    return dispatch('general')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    console.log(err)
+                });
         },
     },
 

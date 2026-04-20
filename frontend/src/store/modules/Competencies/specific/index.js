@@ -3,7 +3,7 @@ import Service from "../../../../service/api";
 const ServerModule = {
     namespaced: true,
     state: {
-        specific : [],
+        specific: [],
     },
 
     mutations: {
@@ -13,41 +13,44 @@ const ServerModule = {
     },
 
     actions: {
-        specific({commit}, data) {
-            Service.specific('get', data, {})
+        specific({ commit }, data) {
+            return Service.specific('get', data, {})
                 .then((response) => {
                     commit('specific', response.data.data)
+                    return response
                 }).catch((err) => {
                     console.log(err)
-            });
+                    throw err
+                });
         },
-        createSpecific({ dispatch },data) {
+        createSpecific({ dispatch }, data) {
             Service.specific('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
-                    return dispatch ('specific')
+                    return dispatch('specific')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    console.log(err)
+                });
         },
-        updateSpecific({ dispatch },data) {
+        updateSpecific({ dispatch }, data) {
             Service.specific('put', data, {})
                 .then((response) => {
                     alert('Updated successfully')
-                    return dispatch ('specific')
+                    return dispatch('specific')
                 }).catch((err) => {
                     alert('Update failed: ' + err.message)
                     console.log(err)
                 });
         },
-        deleteSpecific({ dispatch },data) {
-            Service.specific('delete', data, {})
+        deleteSpecific({ dispatch }, data) {
+            const payload = (data && typeof data === 'object') ? data : { _id: data }
+            Service.specific('delete', payload, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
-                    return dispatch ('specific')
+                    return dispatch('specific')
                 }).catch((err) => {
-                        console.log(err)
-            });
+                    console.log(err)
+                });
         },
     },
 

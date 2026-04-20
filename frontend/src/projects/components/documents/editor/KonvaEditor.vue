@@ -27,6 +27,10 @@ export default {
             history: [],
             historyIndex: -1,
             isLoading: false,
+            generalCompetencyLabels: [],
+            specificCompetencyLabels: [],
+            suggestionLabels: [],
+            suggestionCharCount: 200,
             // Example data from database
             exampleData: {
                 studentName: 'Name',
@@ -44,7 +48,7 @@ export default {
     },
     mounted() {
         this.createStage()
-        this.fetchExampleData()
+        this.fetchExampleData().then(() => this.fetchTemplateData())
         window.addEventListener('resize', this.onResize)
         window.addEventListener('keydown', this.onKeyDown)
     },
@@ -625,8 +629,8 @@ export default {
                 const y = hasY ? Number(typeof opts.y !== 'undefined' ? opts.y : opts.top) : 50;
 
                 const competencies = isGeneral
-                    ? ['Creativity', 'Analytical thinking and Problem solving', 'Digital literacy', 'Curiosity and life-long learning', 'Resilience, flexibility and agility', 'Voluntary and empathy', 'Leadership and social influence', 'Collaboration', 'Cultural and civic literacy', 'Entrepreneurial mindset', 'Foreign language', 'Communication']
-                    : ['xxxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxxx', 'xxxxxxxxxxxxxxxxx'];
+                    ? this.getGeneralCompetencyLabels()
+                    : this.getSpecificCompetencyPlaceholders();
 
                 const group = new Konva.Group({ x, y, draggable: true, name: 'competency-table', variableName });
                 this.assignCreationOrder(group);
@@ -675,53 +679,129 @@ export default {
                 const hasY = typeof opts.y !== 'undefined' || typeof opts.top !== 'undefined'
                 const x = hasX ? Number(typeof opts.x !== 'undefined' ? opts.x : opts.left) : Math.max(10, Math.floor((maxW - defaultW) / 2));
                 const y = hasY ? Number(typeof opts.y !== 'undefined' ? opts.y : opts.top) : 100;
+                const labels = opts.labels && opts.labels.length
+                    ? opts.labels
+                    : this.getSuggestionLabels();
 
-                const group = new Konva.Group({ x, y, draggable: true, name: 'suggestion-table' });
-                this.assignCreationOrder(group);
-                const hitRect = new Konva.Rect({ width: defaultW, height: 400, fill: 'rgba(0,0,0,0)', listening: true });
-                group.add(hitRect);
+                const splitIndex = Math.ceil(labels.length / 2);
+                const leftLabels = labels.slice(0, splitIndex);
+                const rightLabels = labels.slice(splitIndex);
+                const columnGap = 20;
+                const columnWidth = labels.length > 1
+                    ? Math.floor((defaultW - columnGap) / 2)
+                    : defaultW;
 
-                let currentY = 0;
-                const addSection = (title) => {
-                    group.add(new Konva.Text({ text: title, fontSize: 22, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#1e293b', y: currentY }));
-                    currentY += 40;
-                    group.add(new Konva.Text({ text: 'Name Advisor - Name Company', fontSize: 14, fontFamily: 'Inter, Arial', fontStyle: '500', fill: '#475569', y: currentY }));
-                    const iconX = 540;
-                    const calendarGroup = new Konva.Group({ x: iconX, y: currentY - 2 });
-                    calendarGroup.add(new Konva.Rect({ width: 16, height: 16, stroke: '#475569', strokeWidth: 1.5, cornerRadius: 2 }));
-                    calendarGroup.add(new Konva.Line({ points: [0, 5, 16, 5], stroke: '#475569', strokeWidth: 1.5 }));
-                    group.add(calendarGroup);
-                    group.add(new Konva.Text({ text: '26-7-2025', fontSize: 14, fontFamily: 'Inter, Arial', fill: '#475569', x: iconX + 40, y: currentY }));
-                    currentY += 35;
-                    for (let i = 0; i < 3; i++) {
-                        group.add(new Konva.Circle({ x: 10, y: currentY + 7, radius: 2, fill: '#1e293b' }));
-                        group.add(new Konva.Text({ text: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', fontSize: 14, fontFamily: 'Inter, Arial', fill: '#1e293b', x: 25, y: currentY }));
-                        currentY += 35;
-                    }
-                    currentY += 40;
-                };
-                addSection('Outstanding');
-                addSection('Opportunities');
-                hitRect.height(currentY);
-
-                this.layer.add(group);
-                if (typeof opts.onCreate === 'function') opts.onCreate(group);
-
-                group.on('click tap', (e) => {
-                    this.handleNodeSelection(group, e.evt.shiftKey)
+                const groups = [];
+                const leftGroup = this.addSuggestionColumn({
+                    labels: leftLabels,
+                    x,
+                    y,
+                    columnWidth
                 });
-                group.on('dragend', () => {
-                    this.layer.draw();
-                    this.saveHistory();
-                });
-                group.on('transformend', () => {
-                    this.layer.draw();
-                    this.saveHistory();
-                });
+                if (leftGroup) groups.push(leftGroup);
+
+                if (rightLabels.length) {
+                    const rightGroup = this.addSuggestionColumn({
+                        labels: rightLabels,
+                        x: x + columnWidth + columnGap,
+                        y,
+                        columnWidth
+                    });
+                    if (rightGroup) groups.push(rightGroup);
+                }
+
+                if (typeof opts.onCreate === 'function') {
+                    groups.forEach((node) => opts.onCreate(node));
+                }
+
                 this.layer.draw();
                 this.saveHistory();
-                resolve(group);
+                resolve(groups[0] || null);
             });
+        },
+        addSuggestionColumn(opts = {}) {
+            if (!this.layer || !opts.labels || !opts.labels.length) return null;
+            const columnWidth = Number(opts.columnWidth) || 1000;
+            const x = typeof opts.x !== 'undefined' ? Number(opts.x) : 0;
+            const y = typeof opts.y !== 'undefined' ? Number(opts.y) : 0;
+
+            const group = new Konva.Group({ x, y, draggable: true, name: 'suggestion-table-part' });
+            this.assignCreationOrder(group);
+            group.setAttr('labels', opts.labels);
+            group.setAttr('columnWidth', columnWidth);
+
+            const hitRect = new Konva.Rect({ width: columnWidth, height: 400, fill: 'rgba(0,0,0,0)', listening: true });
+            group.add(hitRect);
+
+            let currentY = 0;
+
+            opts.labels.forEach((label) => {
+                group.add(new Konva.Text({
+                    text: label,
+                    fontSize: 20,
+                    fontFamily: 'Inter, Arial',
+                    fontStyle: '600',
+                    fill: '#1e293b',
+                    y: currentY
+                }));
+                currentY += 34;
+
+                const textNode = new Konva.Text({
+                    text: '',
+                    fontSize: 14,
+                    fontFamily: 'Inter, Arial',
+                    fill: '#1e293b',
+                    x: 10,
+                    y: currentY,
+                    width: columnWidth - 20,
+                    lineHeight: 1.4
+                });
+                textNode.setAttr('placeholderType', 'suggestion');
+                group.add(textNode);
+                currentY += textNode.height() + 28;
+            });
+
+            hitRect.height(currentY);
+            this.layer.add(group);
+
+            this.updateSuggestionPlaceholderForGroup(group);
+
+            group.on('click tap', (e) => {
+                this.handleNodeSelection(group, e.evt.shiftKey)
+            });
+            group.on('dragend', () => {
+                this.layer.draw();
+                this.saveHistory();
+            });
+            group.on('transform', () => {
+                this.updateSuggestionPlaceholderForGroup(group);
+                this.layer.batchDraw();
+            });
+            group.on('transformend', () => {
+                this.updateSuggestionPlaceholderForGroup(group);
+                this.layer.draw();
+                this.saveHistory();
+            });
+
+            return group;
+        },
+        updateSuggestionPlaceholderForGroup(group) {
+            if (!group || !group.find) return;
+            const fontSize = 14;
+            const fontFamily = 'Inter, Arial';
+            const baseWidth = Number(group.getAttr('columnWidth')) || 0;
+            const scaleX = typeof group.scaleX === 'function' ? group.scaleX() : 1;
+            const effectiveWidth = Math.max(20, (baseWidth * (scaleX || 1)) - 20);
+            const charWidth = Math.max(1, this.measureTextWidth('X', fontSize, fontFamily));
+            const lineLength = Math.max(1, Math.floor(effectiveWidth / charWidth));
+            const placeholderText = this.buildSuggestionPlaceholder(this.suggestionCharCount, lineLength);
+            const localWidth = Math.max(1, baseWidth - 20);
+
+            group.find(node => node.getAttr && node.getAttr('placeholderType') === 'suggestion')
+                .forEach((node) => {
+                    node.text(placeholderText);
+                    node.width(localWidth);
+                });
         },
         drawRoundRect(ctx, x, y, width, height, radius) {
             ctx.beginPath();
@@ -1211,7 +1291,7 @@ export default {
                     '{StudentID}': this.exampleData.studentID || 'Student ID',
                     '{School}': this.exampleData.school || 'School',
                     '{Program}': this.exampleData.program || 'Major',
-                    '{AcademyYear}': 'Academic Year ' + (this.exampleData.academyYear || 'XXXX')
+                    '{AcademyYear}': 'Academic Year XXXX'
                 };
                 const text = mapping[variableName] || variableName;
                 return this.addTextBlock(text, {
@@ -1320,12 +1400,200 @@ export default {
                             ...el.attrs,
                             onCreate: (node) => this.applySavedAttrs(node, el.attrs)
                         });
+                    } else if (el.attrs.name === 'suggestion-table-part') {
+                        const node = this.addSuggestionColumn({
+                            labels: el.attrs.labels,
+                            columnWidth: el.attrs.columnWidth,
+                            x: el.attrs.x,
+                            y: el.attrs.y
+                        });
+                        if (node) {
+                            this.applySavedAttrs(node, el.attrs)
+                        }
                     }
                 }
             }
             this.transformer.moveToTop()
             this.layer.batchDraw();
             this.isLoading = false;
+        },
+        async fetchTemplateData() {
+            try {
+                await Promise.all([
+                    this.$store.dispatch('competencies/general/general'),
+                    this.$store.dispatch('competencies/specific/specific'),
+                    this.$store.dispatch('competencies/proposition/proposition')
+                ]);
+
+                const generalList = this.getStoreList('competencies/general/general');
+                const specificList = this.getStoreList('competencies/specific/specific');
+                const suggestionList = this.getStoreList('competencies/proposition/proposition');
+
+                const activeGeneral = generalList.filter(item => item && item.active === true);
+                const activeSpecific = specificList.filter(item => item && item.active === true);
+                const activeSuggestions = suggestionList.filter(item => item && item.active === true);
+
+                const generalDoc = this.pickFirst(activeGeneral);
+                const suggestionDoc = this.pickFirst(activeSuggestions);
+                const specificDoc = this.pickSpecificByProgram(activeSpecific, this.exampleData);
+
+                this.generalCompetencyLabels = this.extractSoftskillLabels(generalDoc);
+                this.specificCompetencyLabels = this.extractHardskillLabels(specificDoc, true);
+                this.suggestionLabels = this.extractSuggestionLabels(suggestionDoc);
+            } catch (err) {
+                console.warn('Failed to fetch competency templates:', err);
+            }
+        },
+        getStoreList(getterKey) {
+            const list = this.$store && this.$store.getters
+                ? this.$store.getters[getterKey]
+                : null;
+            return Array.isArray(list) ? list : [];
+        },
+        pickFirst(list) {
+            return Array.isArray(list) && list.length ? list[0] : null;
+        },
+        pickSpecificByProgram(list, exampleData) {
+            if (!Array.isArray(list) || !list.length) return null;
+
+            const programName = this.normalizeText(exampleData && exampleData.program);
+            if (programName) {
+                const exact = list.find(item => {
+                    const programTitle = this.getProgramTitleEn(item && item.program);
+                    return this.normalizeText(programTitle) === programName;
+                });
+                if (exact) return exact;
+            }
+
+            const byProgramTitleLength = list
+                .map(item => ({
+                    item,
+                    title: this.getProgramTitleEn(item && item.program)
+                }))
+                .sort((a, b) => (b.title || '').length - (a.title || '').length);
+
+            if (byProgramTitleLength.length && byProgramTitleLength[0].item) {
+                return byProgramTitleLength[0].item;
+            }
+
+            return list[0];
+        },
+        getProgramTitleEn(program) {
+            if (!program || !Array.isArray(program.title)) return '';
+            return this.getLocalizedValue(program.title, 'en');
+        },
+        normalizeText(value) {
+            return (value || '').toString().trim().toLowerCase();
+        },
+        getLocalizedValue(list, key = 'en') {
+            if (!Array.isArray(list)) return '';
+            const found = list.find(item => item && item.key === key);
+            return found && found.value ? found.value : '';
+        },
+        extractSoftskillLabels(doc) {
+            if (!doc || !Array.isArray(doc.config)) return [];
+            return doc.config
+                .map(item => this.getLocalizedValue(item && item.label, 'en'))
+                .filter(Boolean);
+        },
+        extractHardskillLabels(doc, sortByLength) {
+            if (!doc || doc.active !== true || !Array.isArray(doc.config)) return [];
+            const labels = doc.config
+                .map(item => {
+                    const label = this.getLocalizedValue(item && item.label, 'en');
+                    if (label) return label;
+                    return this.getLocalizedValue(item && item.question, 'en');
+                })
+                .filter(Boolean);
+            if (!sortByLength) return labels;
+            return labels.slice().sort((a, b) => b.length - a.length);
+        },
+        extractSuggestionLabels(doc) {
+            if (!doc || !Array.isArray(doc.config)) return [];
+            return doc.config
+                .map(item => this.getLocalizedValue(item && item.label, 'en'))
+                .filter(Boolean);
+        },
+        getGeneralCompetencyLabels() {
+            if (this.generalCompetencyLabels && this.generalCompetencyLabels.length) {
+                return this.generalCompetencyLabels;
+            }
+            return [
+                'Creativity',
+                'Analytical thinking and Problem solving',
+                'Digital literacy',
+                'Curiosity and life-long learning',
+                'Resilience, flexibility and agility',
+                'Voluntary and empathy',
+                'Leadership and social influence',
+                'Collaboration',
+                'Cultural and civic literacy',
+                'Entrepreneurial mindset',
+                'Foreign language',
+                'Communication'
+            ];
+        },
+        getSpecificCompetencyLabels() {
+            if (this.specificCompetencyLabels && this.specificCompetencyLabels.length) {
+                return this.specificCompetencyLabels;
+            }
+            return [
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx'
+            ];
+        },
+        getSpecificCompetencyPlaceholders() {
+            const fromConfig = this.getSpecificCompetencyLabels();
+            if (Array.isArray(fromConfig) && fromConfig.length) {
+                const maxLength = fromConfig.reduce((max, label) => {
+                    const length = Math.max(1, String(label || '').trim().length || 1);
+                    return Math.max(max, length);
+                }, 1);
+                return fromConfig.map(() => 'X'.repeat(maxLength));
+            }
+
+            const list = (this.exampleData && this.exampleData.competencies && this.exampleData.competencies.competenciesList)
+                ? this.exampleData.competencies.competenciesList
+                : [];
+            if (Array.isArray(list) && list.length) {
+                const maxLength = list.reduce((max, item) => {
+                    const name = item && item.name ? String(item.name) : '';
+                    const length = Math.max(1, name.trim().length || 1);
+                    return Math.max(max, length);
+                }, 1);
+                return list.map(() => 'X'.repeat(maxLength));
+            }
+
+            const fallbackLabels = [
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx',
+                'xxxxxxxxxxxxxxxxx'
+            ];
+            return fallbackLabels.map((label) => {
+                const length = Math.max(1, String(label || '').trim().length || 1);
+                return 'X'.repeat(length);
+            });
+        },
+        getSuggestionLabels() {
+            if (this.suggestionLabels && this.suggestionLabels.length) {
+                return this.suggestionLabels;
+            }
+            return ['Outstanding', 'Opportunities'];
+        },
+        buildSuggestionPlaceholder(count, lineLength) {
+            const total = Math.max(0, Number(count) || 0);
+            const chunk = Math.max(1, Number(lineLength) || 1);
+            const chars = 'X'.repeat(total);
+            const lines = [];
+            for (let i = 0; i < chars.length; i += chunk) {
+                lines.push(chars.slice(i, i + chunk));
+            }
+            return lines.join('\n');
         },
         async fetchExampleData() {
             try {

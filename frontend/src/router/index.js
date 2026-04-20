@@ -1,10 +1,10 @@
+// const LLMMistralPage = () => import('@/projects/views/administration/LLMMistralPage')
+const SentimentUI = () => import('@/projects/views/administration/SentimentUI.vue')
+const TheContainer_Project = () => import('@/containers/TheContainer_Project.vue')
+const TheContainer_Student = () => import('@/containers/TheContainer_Student.vue')
 import Vue from 'vue'
 import Router from 'vue-router'
-
-// Containers
-const TheContainer_Project = () => import('@/containers/TheContainer_Project')
-const TheContainer_Student = () => import('@/containers/TheContainer_Student')
-
+// Removed misplaced route objects here. Route definitions must be inside the routes: [] array only.
 // project 
 const Dashboard = () => import('@/projects/views/administration/Dashboard')
 const StudentDashboard = () => import('@/projects/views/student/StudentDashboard')
@@ -23,6 +23,7 @@ const CompetenciesSoftskill = () => import('@/projects/views/administration/Comp
 const CompetenciesHardskill = () => import('@/projects/views/administration/Competencies/Hardskill')
 const CompetenciesSuggestions = () => import('@/projects/views/administration/Competencies/Suggestions')
 const FillForm = () => import('@/projects/views/administration/FillForm')
+
 
 //correspondence
 const CorrespondenceStudent = () => import('@/projects/views/administration/Correspondence/Student')
@@ -133,6 +134,12 @@ export default new Router({
                     name: 'AdministratorAdviser',
                     component: AdministratorAdviser
                 },
+                {
+                    path: 'sentiment-ui',
+                    name: 'SentimentUI',
+                    component: SentimentUI
+                }
+
 
             ]
         },
@@ -141,5 +148,10 @@ export default new Router({
             name: 'FillForm',
             component: FillForm
         },
+        // {
+        //     path: '/llm-mistral',
+        //     name: 'LLMMistralPage',
+        //     component: LLMMistralPage
+        // },
     ]
 })
