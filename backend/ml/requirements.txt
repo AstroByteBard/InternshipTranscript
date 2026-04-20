@@ -1,8 +1,0 @@
-transformers==4.41.2
-huggingface_hub==0.23.4
-torch==2.9.0
-fastapi==0.111.0
-uvicorn==0.29.0
-sentencepiece==0.2.0
-protobuf==5.27.2
-pythainlp>=4.0.0
