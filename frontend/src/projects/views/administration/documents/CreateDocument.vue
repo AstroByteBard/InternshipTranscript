@@ -1,7 +1,7 @@
 <template>
     <div class="create-document-container">
         <DocumentTopNav :isPreview.sync="isPreview" :showSettings.sync="showSettings"
-            @cancel="$router.push('/administration/documents')" @save="handleSave" />
+            @cancel="$router.push('/documents')" @save="handleSave" />
 
         <!-- Main Content Area -->
         <CRow class="px-4">

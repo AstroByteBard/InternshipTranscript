@@ -1051,7 +1051,10 @@ export default {
                 fontWeight = 'normal'
             }
 
-            this.addTextBlock(text, { fontSize, fontWeight })
+            return this.addTextBlock(text, { fontSize, fontWeight }).then((node) => {
+                try { this.startInlineEditing(node) } catch (e) { /* ignore */ }
+                return node
+            })
         },
         addTextBlock(text = 'Add Text', opts = {}) {
             return new Promise((resolve) => {
@@ -1388,6 +1391,7 @@ export default {
             this.history.push(JSON.stringify(data));
             if (this.history.length > 50) this.history.shift();
             this.historyIndex = this.history.length - 1;
+
         },
         undo() {
             if (this.historyIndex > 0) {
@@ -1543,6 +1547,7 @@ export default {
             this.layer.batchDraw();
             this.isLoading = false;
         },
+
         async fetchTemplateData() {
             try {
                 await Promise.all([
