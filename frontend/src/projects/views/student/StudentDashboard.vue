@@ -318,21 +318,93 @@ export default {
       });
     },
     mapSuggestionList(list) {
-      if (!Array.isArray(list)) return [];
-      const points = list
-        .map(item => item?.answer?.value)
-        .filter(Boolean);
-      if (!points.length) return [];
-      return [
-        {
-          id: 1,
-          name: this.studentData.name || 'Student',
-          role: 'Student',
-          picture: this.studentData.picture,
-          date: '',
-          points
+      const items = Array.isArray(list) ? list : (list ? [list] : []);
+      if (items.length === 0) return [];
+      
+      const outstanding = [];
+      const opportunity = [];
+
+      // Helper to recursively find and extract points from an object
+      const extractFromObject = (obj) => {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+        
+        // Check current level for common keys (including typos)
+        const outData = obj.outstanding || obj.Outstanding || obj.outstandings;
+        const oppData = obj.opportunity || obj.Opportunity || obj.opportunities || obj.oppotunity || obj.Oppotunity;
+        
+        let found = false;
+        if (outData) {
+          if (Array.isArray(outData)) outstanding.push(...outData.filter(v => v !== null && v !== undefined));
+          else outstanding.push(String(outData));
+          found = true;
         }
-      ];
+        if (oppData) {
+          if (Array.isArray(oppData)) opportunity.push(...oppData.filter(v => v !== null && v !== undefined));
+          else opportunity.push(String(oppData));
+          found = true;
+        }
+
+        if (found) return true;
+
+        // Recursively check nested objects if not found at this level
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+              if (extractFromObject(obj[key])) return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      items.forEach(item => {
+        const val = item?.answer?.value || item?.value;
+        if (!val) return;
+
+        try {
+          let parsed = null;
+          if (typeof val === 'string') {
+            const trimmed = val.trim();
+            if (trimmed.startsWith('{')) {
+              try {
+                parsed = JSON.parse(trimmed);
+              } catch (e) {
+                // Handle potential trailing garbage (like extra braces)
+                const lastIdx = trimmed.lastIndexOf('}');
+                if (lastIdx !== -1) {
+                  try {
+                    parsed = JSON.parse(trimmed.substring(0, lastIdx + 1));
+                  } catch (e2) {
+                    // Try one more time by escaping newlines
+                    try {
+                      parsed = JSON.parse(trimmed.replace(/\n/g, '\\n').replace(/\r/g, '\\r'));
+                    } catch (e3) { /* Give up */ }
+                  }
+                }
+              }
+            }
+          } else if (typeof val === 'object' && !Array.isArray(val)) {
+            parsed = val;
+          }
+
+          if (parsed && extractFromObject(parsed)) return;
+        } catch (e) { }
+        
+        // Fallback: treat the whole value as an outstanding performance point
+        outstanding.push(String(val));
+      });
+
+      if (outstanding.length === 0 && opportunity.length === 0) return [];
+
+      return [{
+        id: 1,
+        name: this.studentData.name || 'Student',
+        role: 'Evaluator',
+        picture: this.studentData.picture,
+        date: '',
+        outstanding,
+        opportunity
+      }];
     },
     updateChartsFromCompetencies() {
       const specificLabels = this.specificCompetencies.map(s => this.formatChartLabel(s.name, 14));
@@ -487,12 +559,23 @@ export default {
 
         const general = this.mapEvaluationList(softskills);
         const specific = this.mapEvaluationList(hardskills);
-        const suggestionList = this.mapSuggestionList(suggestions);
 
         if (general.length) this.generalCompetencies = general;
         if (specific.length) this.specificCompetencies = specific;
-        if (suggestionList.length) {
-          this.Outstanding = suggestionList;
+
+        const suggestionList = this.mapSuggestionList(suggestions);
+        if (suggestionList.length > 0) {
+          const feedback = suggestionList[0];
+          // Assign to separate categories based on parsed content
+          // Ensure we use the exact array of points for rendering
+          this.Outstanding = feedback.outstanding && feedback.outstanding.length > 0 
+            ? [{ ...feedback, points: feedback.outstanding }] 
+            : [];
+          this.Opportunities = feedback.opportunity && feedback.opportunity.length > 0 
+            ? [{ ...feedback, points: feedback.opportunity }] 
+            : [];
+        } else {
+          this.Outstanding = [];
           this.Opportunities = [];
         }
         this.updateChartsFromCompetencies();

@@ -129,6 +129,30 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         ctx.closePath();
     };
 
+    // Helper to allow Thai text to wrap in Konva by inserting zero-width spaces
+    // Uses Intl.Segmenter for "Grammar-aware" word breaking if available
+    const addThaiWordBreaks = (text) => {
+        if (!text || typeof text !== 'string') return text;
+        
+        try {
+            // Check if Intl.Segmenter is available (modern browsers/Node)
+            if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+                const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+                const segments = segmenter.segment(text);
+                let result = '';
+                for (const segment of segments) {
+                    result += segment.segment + '\u200B';
+                }
+                return result;
+            }
+        } catch (e) {
+            // Fall back to character-level wrapping if Segmenter fails
+        }
+
+        // Fallback: Insert zero-width space (\u200B) after every Thai character
+        return text.replace(/([\u0E00-\u0E7F]|[.,\-_/\\()\[\]{}])/g, "$1\u200B");
+    };
+
     const applyZIndex = (node, attrs) => {
         if (typeof attrs.zIndex === 'number') {
             node.zIndex(attrs.zIndex);
@@ -331,7 +355,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         applyZIndex(group, attrs);
     };
 
-    const addCompetencyTable = (attrs, items, title) => {
+    const addCompetencyTable = (attrs, items, title, placeholderChildren) => {
         const group = new Konva.Group({
             x: attrs.x || 0,
             y: attrs.y || 0,
@@ -340,55 +364,89 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             rotation: attrs.rotation || 0
         });
 
-        const titleText = new Konva.Text({
-            text: title,
-            fontSize: 18,
-            fontFamily: 'Inter, Arial',
-            fontStyle: '600',
-            fill: '#4b5563',
-            y: 0
-        });
-        group.add(titleText);
+        // Try to extract styles from attrs or template placeholder if available
+        let titleFontSize = 20;
+        let contentFontSize = attrs.fontSize || 14;
+        let contentFill = attrs.fill || '#475569';
+        let contentFontFamily = attrs.fontFamily || 'Inter, Arial';
+        let contentFontStyle = attrs.fontStyle || 'normal';
+        let titleFill = attrs.fill || '#1e293b';
 
-        const scoreHeader = new Konva.Text({
-            text: 'Score',
-            fontSize: 18,
-            fontFamily: 'Inter, Arial',
+        if (Array.isArray(placeholderChildren) && placeholderChildren.length) {
+            placeholderChildren.forEach(child => {
+                const cAttrs = child.attrs || {};
+                if (cAttrs.text === title || cAttrs.text === 'Score') {
+                    titleFontSize = cAttrs.fontSize || titleFontSize;
+                    titleFill = cAttrs.fill || titleFill;
+                } else if (cAttrs.text === 'X.X' || (cAttrs.fontSize && cAttrs.fontSize < 18)) {
+                    contentFontSize = cAttrs.fontSize || contentFontSize;
+                    contentFill = cAttrs.fill || contentFill;
+                }
+            });
+        }
+
+        group.add(new Konva.Text({
+            text: title || 'Competencies',
+            fontSize: titleFontSize,
+            fontFamily: contentFontFamily,
             fontStyle: '600',
-            fill: '#4b5563',
+            fill: titleFill,
+            y: 0
+        }));
+
+        group.add(new Konva.Text({
+            text: 'Score',
+            fontSize: titleFontSize,
+            fontFamily: contentFontFamily,
+            fontStyle: '600',
+            fill: titleFill,
             x: 350,
             y: 0
-        });
-        group.add(scoreHeader);
+        }));
 
         let currentY = 50;
-        const safeItems = (Array.isArray(items) && items.length) ? items : [{ name: 'N/A', score: 'X.X' }];
-        safeItems.forEach((it) => {
-            const name = typeof it === 'string' ? it : (it.name || 'N/A');
-            const scoreVal = typeof it === 'string' ? 'X.X' : (it.score !== undefined ? it.score : (it.percentage !== undefined ? it.percentage : 'X.X'));
+        const groupX = attrs.x || 0;
+        const maxTableWidth = 794 - groupX - 10;
+        const nameWidth = Math.min(320, maxTableWidth - 80); // Ensure space for Score column
 
-            group.add(new Konva.Text({
-                text: String(name),
-                fontSize: 14,
-                fontFamily: 'Inter, Arial',
-                fill: '#64748b',
+        items.forEach((item) => {
+            const name = addThaiWordBreaks(item.name || 'N/A');
+            const score = item.score !== undefined ? String(item.score) : 'X.X';
+
+            const nameNode = new Konva.Text({
+                text: name,
+                fontSize: contentFontSize,
+                fontFamily: contentFontFamily,
+                fontStyle: contentFontStyle,
+                fill: contentFill,
+                y: currentY,
+                width: nameWidth,
+                wrap: 'word'
+            });
+            group.add(nameNode);
+
+            const scoreNode = new Konva.Text({
+                text: score,
+                fontSize: contentFontSize,
+                fontFamily: contentFontFamily,
+                fontStyle: contentFontStyle,
+                fill: contentFill,
+                x: nameWidth + 30,
                 y: currentY
-            }));
-            group.add(new Konva.Text({
-                text: String(scoreVal),
-                fontSize: 14,
-                fontFamily: 'Inter, Arial',
-                fill: '#64748b',
-                x: 350,
-                y: currentY
-            }));
-            currentY += 35;
+            });
+            group.add(scoreNode);
+
+            const rowH = Math.max(nameNode.height(), scoreNode.height());
+            // Match Editor spacing: use a larger multiplier for vertical separation
+            currentY += Math.max(rowH + 8, contentFontSize * 2.8); 
         });
+
         layer.add(group);
         applyZIndex(group, attrs);
+        return group;
     };
 
-    const addSuggestionTable = (attrs, suggestionsObj) => {
+    const addSuggestionTable = (attrs, suggestionsObj, placeholderChildren) => {
         const group = new Konva.Group({
             x: attrs.x || 0,
             y: attrs.y || 0,
@@ -398,77 +456,379 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         });
 
         let currentY = 0;
-        const addSection = (title, itemsArray) => {
-            if (!itemsArray || !itemsArray.length) return;
-            group.add(new Konva.Text({
-                text: title,
-                fontSize: 22,
-                fontFamily: 'Inter, Arial',
-                fontStyle: '600',
-                fill: '#1e293b',
-                y: currentY
-            }));
-            currentY += 40;
 
-            const firstItem = itemsArray[0];
-            const nameRole = `${firstItem.name || firstItem.advisor || 'Advisor'} - ${firstItem.role || firstItem.company || 'Company'}`;
-            group.add(new Konva.Text({
-                text: nameRole,
-                fontSize: 14,
-                fontFamily: 'Inter, Arial',
-                fontStyle: '500',
-                fill: '#475569',
-                y: currentY
-            }));
-
-            const currentBoxWidth = attrs.width || 650;
-            const iconX = Math.max(400, currentBoxWidth - 120);
-            const calendarGroup = new Konva.Group({ x: iconX, y: currentY - 2 });
-            // Avoid drawing line elements inside the calendar icon; when the
-            // suggestion group is scaled, that small line can stretch into a
-            // full-width separator.
-            calendarGroup.add(new Konva.Rect({ width: 16, height: 16, stroke: '#475569', strokeWidth: 1.5, cornerRadius: 2 }));
-            group.add(calendarGroup);
-
-            group.add(new Konva.Text({
-                text: firstItem.date || 'XX-XX-XXXX',
-                fontSize: 14,
-                fontFamily: 'Inter, Arial',
-                fill: '#475569',
-                x: iconX + 40,
-                y: currentY
-            }));
-            currentY += 35;
-
-            itemsArray.forEach(adv => {
-                if (Array.isArray(adv.points)) {
-                    adv.points.forEach(pt => {
-                        group.add(new Konva.Circle({ x: 10, y: currentY + 7, radius: 2, fill: '#1e293b' }));
-
-                        let txt = String(pt);
-                        if (txt.length > 70) txt = txt.substring(0, 67) + '...';
-
-                        group.add(new Konva.Text({
-                            text: txt,
-                            fontSize: 14,
-                            fontFamily: 'Inter, Arial',
-                            fill: '#1e293b',
-                            x: 25,
-                            y: currentY
-                        }));
-                        currentY += 35;
-                    });
-                }
-            });
-            currentY += 40;
+        const ptToString = (pt) => {
+            if (pt === null || pt === undefined) return '';
+            if (typeof pt === 'string') return pt;
+            if (typeof pt === 'number') return String(pt);
+            if (typeof pt === 'object') {
+                if (pt.text) return String(pt.text);
+                if (pt.value && typeof pt.value === 'string') return pt.value;
+                if (Array.isArray(pt)) return pt.map(p => ptToString(p)).join(', ');
+                if (pt.answer && pt.answer.value) return ptToString(pt.answer.value);
+                return JSON.stringify(pt);
+            }
+            return String(pt);
         };
 
-        if (suggestionsObj) {
-            addSection('Outstanding', suggestionsObj.Outstanding || suggestionsObj.outstanding);
-            addSection('Opportunities', suggestionsObj.Opportunities || suggestionsObj.opportunities);
+        const getName = (item, fallbackName) => {
+            if (!item) return fallbackName || 'Advisor';
+            if (typeof item === 'string') return item;
+            if (item.name) {
+                if (typeof item.name === 'string') return item.name;
+                if (typeof item.name === 'object') return item.name.en || item.name.th || JSON.stringify(item.name);
+                if (Array.isArray(item.name)) return item.name.join(' ');
+            }
+            if (item.advisor) return String(item.advisor);
+            if (item.role && item.role !== 'Student') return String(item.role);
+            return fallbackName || 'Advisor';
+        };
+
+        const normalize = (maybeItems, defaultName) => {
+            const items = Array.isArray(maybeItems) ? maybeItems : (maybeItems ? [maybeItems] : []);
+            if (!items.length) return [];
+
+            if (typeof items[0] === 'string') {
+                return [{ id: 1, name: defaultName || dataMap.StudentName || 'Student', role: 'Student', picture: dataMap.StudentPhoto || '', date: '', points: items.map(ptToString) }];
+            }
+
+            const groups = items.map((it, idx) => {
+                if (!it) return null;
+                if (Array.isArray(it.points)) {
+                    return {
+                        id: it.id || idx + 1,
+                        name: getName(it, defaultName || dataMap.StudentName || 'Student'),
+                        role: it.role || 'Student',
+                        picture: it.picture || dataMap.StudentPhoto || '',
+                        date: it.date || '',
+                        points: it.points.map(ptToString)
+                    };
+                }
+
+                const val = (it.answer && it.answer.value) ? it.answer.value : (it.value || null);
+                if (val && typeof val === 'object') {
+                    const pts = [].concat(val.outstanding || val.opportunity || val.suggestion || val.suggestions || []);
+                    if (pts.length) {
+                        return {
+                            id: it.id || idx + 1,
+                            name: getName(it, defaultName || dataMap.StudentName || 'Student'),
+                            role: it.role || 'Student',
+                            picture: it.picture || dataMap.StudentPhoto || '',
+                            date: it.date || '',
+                            points: pts.map(ptToString)
+                        };
+                    }
+                }
+
+                const single = ptToString(it);
+                return {
+                    id: it.id || idx + 1,
+                    name: getName(it, defaultName || dataMap.StudentName || 'Student'),
+                    role: it.role || 'Student',
+                    picture: it.picture || dataMap.StudentPhoto || '',
+                    date: it.date || '',
+                    points: single ? [single] : []
+                };
+            }).filter(Boolean);
+
+            return groups;
+        };
+
+        // If the template provided saved children for suggestion-table, use their
+        // widths/positions and text styles (fontSize/lineHeight) when rendering.
+        const columns = [];
+        if (Array.isArray(placeholderChildren) && placeholderChildren.length) {
+            placeholderChildren.forEach((child) => {
+                const cAttrs = child.attrs || {};
+                const cChildren = Array.isArray(child.children) ? child.children : (Array.isArray(cAttrs.children) ? cAttrs.children : []);
+                let colX = Number(cAttrs.x || 0);
+                let colW = (typeof cAttrs.width === 'number' && cAttrs.width > 0) ? Number(cAttrs.width) : 0;
+                let labelText = null;
+                let labelFontSize = (typeof cAttrs.labelFontSize === 'number') ? cAttrs.labelFontSize : 20;
+                let contentFontSize = (typeof cAttrs.contentFontSize === 'number') ? cAttrs.contentFontSize : 14;
+                let contentLineHeight = (typeof cAttrs.lineHeight === 'number') ? cAttrs.lineHeight : 1.4;
+                let contentPlaceholderWidth = null;
+
+                for (const ch of cChildren) {
+                    if (!ch || !ch.attrs) continue;
+                    const a = ch.attrs || {};
+                    if (!labelText && a.text && (a.fontSize && a.fontSize >= 16)) {
+                        labelText = a.text;
+                        labelFontSize = a.fontSize || labelFontSize;
+                    }
+                    if ((a.placeholderType === 'suggestion-item' || a.placeholderType === 'suggestion') || (/^X{4,}$/.test(String(a.text || '')))) {
+                        contentFontSize = a.fontSize || contentFontSize;
+                        contentLineHeight = a.lineHeight || contentLineHeight;
+                        contentPlaceholderWidth = a.width || contentPlaceholderWidth;
+                    }
+                    if (!colW && typeof a.width === 'number') colW = Math.max(colW, a.width || 0);
+                }
+
+                if (!colW || colW < 20) {
+                    const bbox = computeBBox(cChildren);
+                    colW = Math.max(20, (bbox.maxX - bbox.minX) || (attrs.width ? (attrs.width / 2) : 300));
+                }
+
+                // If label extraction failed or picked up a generic placeholder, use fallback
+                if (!labelText || /^[X\s]+$/.test(labelText)) {
+                    labelText = (columns.length === 0) ? 'Outstanding' : 'Opportunity';
+                }
+
+                columns.push({ x: colX, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
+            });
+            columns.sort((a, b) => a.x - b.x);
+
+            // Re-verify label names after sorting to ensure left is Outstanding, right is Opportunity
+            if (columns.length >= 2) {
+                if (!columns[0].labelText || columns[0].labelText.toLowerCase().includes('oppor')) columns[0].labelText = 'Outstanding';
+                if (!columns[1].labelText || columns[1].labelText.toLowerCase().includes('outstand')) columns[1].labelText = 'Opportunity';
+            }
+
+            // Validate column positions and widths; fall back to computed two-column
+            // layout when template placeholders don't include reliable x/width values.
+            try {
+                const totalW = (typeof attrs.width === 'number' && attrs.width > 0) ? attrs.width : 650;
+                const gap = Number(attrs.columnGap || 20);
+                const xs = columns.map(c => Math.round(Number(c.x || 0)));
+                const uniqueXs = new Set(xs);
+                const invalid = columns.length === 0 || columns.some(c => !Number.isFinite(c.x) || !Number.isFinite(c.width) || c.width <= 8) || uniqueXs.size !== columns.length;
+                if (invalid) {
+                    if (columns.length >= 2) {
+                        const w1 = Math.floor((totalW - gap) / 2);
+                        const w2 = totalW - gap - w1;
+                        columns[0] = Object.assign({}, columns[0] || {}, { x: 0, width: w1, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
+                        columns[1] = Object.assign({}, columns[1] || {}, { x: w1 + gap, width: w2, labelFontSize: (columns[1] && columns[1].labelFontSize) || 18, contentFontSize: (columns[1] && columns[1].contentFontSize) || 12, contentLineHeight: (columns[1] && columns[1].contentLineHeight) || 1.2 });
+                    } else if (columns.length === 1) {
+                        columns[0] = Object.assign({}, columns[0], { x: 0, width: totalW, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
+                    } else {
+                        const w = totalW;
+                        columns.push({ x: 0, width: w, labelText: 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.2 });
+                    }
+                } else {
+                    // Relax font size normalization to respect template styles
+                    columns.forEach(c => {
+                        c.labelFontSize = Math.max(10, Math.min(48, c.labelFontSize || 18));
+                        c.contentFontSize = Math.max(8, Math.min(32, c.contentFontSize || 12));
+                        c.contentLineHeight = c.contentLineHeight || 1.2;
+                        c.x = Math.round(c.x || 0);
+                        c.width = Math.round(c.width || 0);
+                    });
+                }
+            } catch (e) {
+                // fall back silently
+            }
+        } else {
+            // fallback: try attrs to infer two columns if saved
+            const leftLabels = Array.isArray(attrs.labelsLeft) ? attrs.labelsLeft : (Array.isArray(attrs.labels) ? attrs.labels.slice(0, 1) : ['Outstanding']);
+            const rightLabels = Array.isArray(attrs.labelsRight) ? attrs.labelsRight : (Array.isArray(attrs.labels) ? attrs.labels.slice(1) : ['Opportunity']);
+            const defaultW = typeof attrs.width === 'number' ? attrs.width : 650;
+            if (rightLabels && rightLabels.length) {
+                const w = Math.floor((defaultW - (attrs.columnGap || 20)) / 2);
+                columns.push({ x: 0, width: w, labelText: leftLabels && leftLabels[0] ? leftLabels[0] : 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
+                columns.push({ x: w + (attrs.columnGap || 20), width: defaultW - w - (attrs.columnGap || 20), labelText: rightLabels && rightLabels[0] ? rightLabels[0] : 'Opportunity', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
+            } else {
+                columns.push({ x: 0, width: defaultW, labelText: 'Outstanding', labelFontSize: 20, contentFontSize: 12, contentLineHeight: 1.4 });
+            }
         }
+
+        // Determine if this entire table is forced to one type via attributes
+        const isForcedOpportunity = attrs.placeholderType?.toLowerCase().includes('oppor') || attrs.variableName?.toLowerCase().includes('oppor');
+        const isForcedOutstanding = attrs.placeholderType?.toLowerCase().includes('outstand') || attrs.variableName?.toLowerCase().includes('outstand');
+
+        const outstandingGroups = normalize(suggestionsObj.Outstanding || suggestionsObj.outstanding || [], dataMap.StudentName || 'Student');
+        const opportunityGroups = normalize(suggestionsObj.Opportunities || suggestionsObj.opportunities || suggestionsObj.Opportunity || [], dataMap.StudentName || 'Student');
+
+        // Render into columns when template provides column layout
+        if (columns.length >= 2) {
+            const renderColumn = (colDef, groups, isOpp = false) => {
+                const colGroup = new Konva.Group({ x: colDef.x || 0, y: 0 });
+                group.add(colGroup);
+                let y = 0;
+
+                const labelText = isOpp ? 'Opportunity' : 'Outstanding';
+                const labelNode = new Konva.Text({ text: labelText, fontSize: colDef.labelFontSize || 16, fontFamily: attrs.fontFamily || 'Inter, Arial', fontStyle: '600', fill: attrs.fill || '#1e293b', x: 0, y, width: colDef.width });
+                colGroup.add(labelNode);
+                y += (labelNode.height() || (colDef.labelFontSize || 16)) + 8;
+
+                // Flatten groups into item points to fill the column
+                const itemsFlat = [];
+                groups.forEach(g => {
+                    if (!g) return;
+                    if (Array.isArray(g.points) && g.points.length) {
+                        g.points.forEach(pt => itemsFlat.push({ owner: g, text: pt }));
+                    }
+                });
+
+                const leftMargin = 6;
+                const textX = 24;
+                const groupX = attrs.x || 0;
+                const sX = attrs.scaleX || 1;
+                // Clamp width based on paper edge, accounting for scale and indentation (740 is safer than 794)
+                const maxColWidth = ((740 - groupX) / sX) - colDef.x - textX - 10;
+
+                // Prioritize contentPlaceholderWidth from the template if it exists
+                let targetWidth = colDef.contentPlaceholderWidth || (colDef.width ? (colDef.width - textX - 8) : 250);
+                const contentWidth = Math.max(20, Math.min(targetWidth, maxColWidth));
+
+                itemsFlat.forEach((it, idx) => {
+                    const fontSize = colDef.contentFontSize || 12;
+                    const bullet = new Konva.Circle({ x: leftMargin, y: y + (fontSize * 0.6), radius: 2.5, fill: attrs.fill || '#1e293b' });
+                    colGroup.add(bullet);
+
+                    const txtFull = addThaiWordBreaks(ptToString(it.text));
+                    const txtNode = new Konva.Text({
+                        text: txtFull,
+                        fontSize: colDef.contentFontSize || 14,
+                        fontFamily: attrs.fontFamily || 'Inter, Arial',
+                        fontStyle: attrs.fontStyle || 'normal',
+                        fill: attrs.fill || '#1e293b',
+                        x: textX,
+                        y,
+                        width: contentWidth,
+                        align: 'left',
+                        lineHeight: colDef.contentLineHeight || 1.4,
+                        wrap: 'word'
+                    });
+                    colGroup.add(txtNode);
+                    const h = txtNode.height() || ((colDef.contentFontSize || 14) * (colDef.contentLineHeight || 1.4));
+                    // Match Editor spacing: add proportional padding below each suggestion
+                    y += h + Math.max(8, (colDef.contentFontSize || 14) * 0.8);
+                });
+
+                return y;
+            };
+
+            const leftH = renderColumn(columns[0], outstandingGroups, isForcedOpportunity ? true : false);
+            const rightH = renderColumn(columns[1], opportunityGroups, isForcedOutstanding ? false : true);
+            currentY = Math.max(leftH, rightH) + 12;
+        } else if (columns.length === 1) {
+            const col = columns[0];
+            const isOpp = isForcedOpportunity || (outstandingGroups.length === 0 && opportunityGroups.length > 0);
+            const data = isOpp ? opportunityGroups : outstandingGroups;
+            
+            const colGroup = new Konva.Group({ x: col.x || 0, y: 0 });
+            group.add(colGroup);
+            let y = 0;
+
+            const labelText = isOpp ? 'Opportunity' : 'Outstanding';
+            const labelNode = new Konva.Text({ 
+                text: labelText, 
+                fontSize: col.labelFontSize || 16, 
+                fontFamily: attrs.fontFamily || 'Inter, Arial', 
+                fontStyle: '600', 
+                fill: attrs.fill || '#1e293b', 
+                x: 0, 
+                y, 
+                width: col.width 
+            });
+            colGroup.add(labelNode);
+            y += (labelNode.height() || (col.labelFontSize || 16)) + 8;
+
+            const itemsFlat = [];
+            data.forEach(g => {
+                if (!g) return;
+                if (Array.isArray(g.points) && g.points.length) {
+                    g.points.forEach(pt => itemsFlat.push({ owner: g, text: pt }));
+                }
+            });
+
+            const leftMargin = 6;
+            const textX = 24;
+            const groupX = attrs.x || 0;
+            const sX = attrs.scaleX || 1;
+            const maxColWidth = ((740 - groupX) / sX) - (col.x || 0) - textX - 10;
+            const targetWidth = col.contentPlaceholderWidth || (col.width ? (col.width - textX - 8) : 250);
+            const contentWidth = Math.max(20, Math.min(targetWidth, maxColWidth));
+
+            itemsFlat.forEach((it, idx) => {
+                const fontSize = col.contentFontSize || 12;
+                const bullet = new Konva.Circle({ x: leftMargin, y: y + (fontSize * 0.6), radius: 2.5, fill: attrs.fill || '#1e293b' });
+                colGroup.add(bullet);
+
+                const txtFull = addThaiWordBreaks(ptToString(it.text));
+                const txtNode = new Konva.Text({ 
+                    text: txtFull, 
+                    fontSize: col.contentFontSize || 14, 
+                    fontFamily: attrs.fontFamily || 'Inter, Arial', 
+                    fontStyle: attrs.fontStyle || 'normal', 
+                    fill: attrs.fill || '#1e293b', 
+                    x: textX, 
+                    y, 
+                    width: contentWidth, 
+                    align: 'left', 
+                    lineHeight: col.contentLineHeight || 1.4,
+                    wrap: 'word'
+                });
+                colGroup.add(txtNode);
+                const h = txtNode.height() || ((col.contentFontSize || 14) * (col.contentLineHeight || 1.4));
+                y += h + 8;
+            });
+
+            currentY = y + 12;
+        } else {
+            // fallback to stacked sections when only single column is available
+            const addSection = (title, itemsArray) => {
+                if (!itemsArray || !itemsArray.length) return;
+                const boxWidth = (attrs.width && typeof attrs.width === 'number') ? attrs.width : 650;
+                const leftMargin = 10;
+                const textX = leftMargin + 15;
+                const textWidth = Math.max(120, boxWidth - textX - 20);
+
+                const titleNode = new Konva.Text({ text: title, fontSize: 22, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#1e293b', x: 0, y: currentY, width: boxWidth });
+                group.add(titleNode);
+                currentY += (titleNode.height() || 28) + 8;
+
+                const firstItem = itemsArray[0] || {};
+                const nameRole = `${getName(firstItem, dataMap.StudentName || 'Student')} - ${firstItem.role || 'Student'}`;
+                const nameNode = new Konva.Text({ text: nameRole, fontSize: 14, fontFamily: 'Inter, Arial', fontStyle: '500', fill: '#475569', x: 0, y: currentY, width: Math.max(120, boxWidth - 120) });
+                group.add(nameNode);
+
+                const iconX = Math.max(400, boxWidth - 120);
+                const calendarGroup = new Konva.Group({ x: iconX, y: currentY - 2 });
+                calendarGroup.add(new Konva.Rect({ width: 16, height: 16, stroke: '#475569', strokeWidth: 1.5, cornerRadius: 2 }));
+                group.add(calendarGroup);
+
+                const dateNode = new Konva.Text({ text: firstItem.date || 'XX-XX-XXXX', fontSize: 14, fontFamily: 'Inter, Arial', fill: '#475569', x: iconX + 40, y: currentY, width: 120 });
+                group.add(dateNode);
+
+                currentY += Math.max(nameNode.height() || 18, dateNode.height() || 18) + 8;
+
+                itemsArray.forEach(adv => {
+                    if (Array.isArray(adv.points)) {
+                        adv.points.forEach(pt => {
+                            const bullet = new Konva.Circle({ x: leftMargin, y: currentY + 7, radius: 3, fill: '#1e293b' });
+                            group.add(bullet);
+
+                            const txtFull = addThaiWordBreaks(ptToString(pt));
+                            const txtNode = new Konva.Text({
+                                text: txtFull,
+                                fontSize: 14,
+                                fontFamily: 'Inter, Arial',
+                                fill: '#1e293b',
+                                x: textX,
+                                y: currentY,
+                                width: textWidth,
+                                align: 'left',
+                                wrap: 'word'
+                            });
+                            group.add(txtNode);
+
+                            const h = txtNode.height() || (14 * 1.4);
+                            currentY += h + 8;
+                        });
+                    }
+                });
+                currentY += 12;
+            };
+
+            addSection('Outstanding', outstandingGroups);
+            addSection('Opportunities', opportunityGroups);
+        }
+
         layer.add(group);
         applyZIndex(group, attrs);
+
+        return group;
     };
 
     // Replace inline text like "Name {StudentName}" or just "{StudentName}"
@@ -477,16 +837,53 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         const cleanKey = String(key).replace(/[{}]/g, '');
         const normalized = String(cleanKey).replace(/\s+/g, '').toLowerCase();
 
+        // Helper: stringify arrays/objects into readable text for Text nodes
+        const stringify = (val) => {
+            if (val === null || val === undefined) return '';
+            if (typeof val === 'string') return val;
+            if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+            if (Array.isArray(val)) {
+                const parts = val.map(el => {
+                    if (el === null || el === undefined) return '';
+                    if (typeof el === 'string') return el;
+                    if (typeof el === 'number' || typeof el === 'boolean') return String(el);
+                    if (typeof el === 'object') {
+                        if (el.name) return String(el.name);
+                        if (el.title) return (typeof el.title === 'string') ? el.title : (el.title.en || el.title.th || JSON.stringify(el.title));
+                        if (Array.isArray(el.points)) return el.points.map(p => (typeof p === 'object' ? (p.text || p.value || JSON.stringify(p)) : String(p))).join('; ');
+                        if (Array.isArray(el.outstanding)) return el.outstanding.join('; ');
+                        if (Array.isArray(el.opportunity)) return el.opportunity.join('; ');
+                        return JSON.stringify(el);
+                    }
+                    return String(el);
+                }).filter(Boolean);
+                return parts.join(', ');
+            }
+            if (typeof val === 'object') {
+                if (val.name) return String(val.name);
+                if (val.title) return (typeof val.title === 'string') ? val.title : (val.title.en || val.title.th || JSON.stringify(val.title));
+                if (Array.isArray(val.outstanding)) return val.outstanding.join('; ');
+                if (Array.isArray(val.opportunity)) return val.opportunity.join('; ');
+                if (val.text) return String(val.text);
+                if (val.value && (typeof val.value === 'string' || typeof val.value === 'number')) return String(val.value);
+                return JSON.stringify(val);
+            }
+            return String(val);
+        };
+
         // Handle Academic/Academy Year variants first so we can return formatted text
         if (normalized === 'academicyear' || normalized === 'academyyear') {
             const year = dataMap.AcademyYear || dataMap.academyYear || dataMap.AcademicYear || dataMap.academicYear || dataMap['Academic Year'] || dataMap['academic year'] || '';
             return year ? 'Academic Year ' + year : 'Academic Year';
         }
 
-        if (dataMap[cleanKey] !== undefined) return dataMap[cleanKey];
-        if (dataMap[key] !== undefined) return dataMap[key];
-        if (dataMap.student && dataMap.student[cleanKey] !== undefined) return dataMap.student[cleanKey];
-        return '';
+        let v;
+        if (dataMap[cleanKey] !== undefined) v = dataMap[cleanKey];
+        else if (dataMap[key] !== undefined) v = dataMap[key];
+        else if (dataMap.student && dataMap.student[cleanKey] !== undefined) v = dataMap.student[cleanKey];
+        else v = '';
+
+        return stringify(v);
     };
 
     const replaceTextVariables = (text) => {
@@ -509,6 +906,86 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         return result;
     };
 
+    // computeBBox helper — reused for pre-scan and suggestion-table alignment
+    const computeBBox = (children) => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const walk = (arr) => {
+            for (const ch of arr) {
+                if (!ch || !ch.attrs) continue;
+                const a = ch.attrs || {};
+                const x = (typeof a.x === 'number') ? a.x : 0;
+                const y = (typeof a.y === 'number') ? a.y : 0;
+                const w = (typeof a.width === 'number') ? a.width : 0;
+                const h = (typeof a.height === 'number') ? a.height : 0;
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x + w);
+                maxY = Math.max(maxY, y + h);
+                if (Array.isArray(ch.children) && ch.children.length) walk(ch.children);
+            }
+        };
+        try { walk(children); } catch (e) { }
+        if (!isFinite(minX)) minX = 0;
+        if (!isFinite(minY)) minY = 0;
+        if (!isFinite(maxX)) maxX = minX;
+        if (!isFinite(maxY)) maxY = minY;
+        return { minX, minY, maxX, maxY };
+    };
+
+    // Pre-scan template elements to compute competency bottom Y so suggestions can be placed below
+    let competencyBottom = null;
+    try {
+        (templateJSON.elements || []).forEach((el) => {
+            const attrs = el && el.attrs ? el.attrs : {};
+            const topY = Number(attrs.y || 0);
+            let elHeight = 0;
+            let isCompetency = false;
+
+            // Explicit Group named competency-table
+            if (el.className === 'Group' && String(attrs.name || '').toLowerCase() === 'competency-table') {
+                isCompetency = true;
+                if (Array.isArray(attrs.children) && attrs.children.length) {
+                    const bbox = computeBBox(attrs.children);
+                    elHeight = Math.max(elHeight, (bbox.maxY - bbox.minY) || 0);
+                }
+                if (!elHeight && typeof attrs.height === 'number') elHeight = attrs.height;
+            }
+
+            // Text nodes that likely label the competency section
+            if (!isCompetency && el.className === 'Text') {
+                const textVal = String(attrs.text || attrs.placeholder || attrs.variableName || '').toLowerCase();
+                if ((textVal.indexOf('specific') >= 0 && textVal.indexOf('compet') >= 0) || (textVal.indexOf('general') >= 0 && textVal.indexOf('compet') >= 0) || /specificcompetencies|generalcompetencies/.test(String(attrs.variableName || '').toLowerCase())) {
+                    isCompetency = true;
+                    elHeight = (typeof attrs.height === 'number' && attrs.height > 0) ? attrs.height : (typeof attrs.fontSize === 'number' ? attrs.fontSize * (attrs.lineHeight || 1.2) * (String(attrs.text || '').split('\n').length || 1) : 20);
+                }
+            }
+
+            // Graph placeholders used for competency visuals
+            if (!isCompetency && el.className === 'Image') {
+                const name = String(attrs.name || '').toLowerCase();
+                const gtype = String(attrs.graphType || '').toLowerCase();
+                if (name === 'graph-placeholder' && (gtype.indexOf('specific') >= 0 || gtype.indexOf('general') >= 0 || String(attrs.variableName || '').toLowerCase().indexOf('compet') >= 0)) {
+                    isCompetency = true;
+                    elHeight = (typeof attrs.height === 'number' && attrs.height > 0) ? attrs.height : elHeight || 220;
+                }
+            }
+
+            // Variable name hints
+            if (!isCompetency && typeof attrs.variableName === 'string') {
+                const vn = attrs.variableName.toLowerCase();
+                if (vn.indexOf('specificcompet') >= 0 || vn.indexOf('generalcompet') >= 0 || vn.indexOf('competenc') >= 0) {
+                    isCompetency = true;
+                    if (!elHeight && typeof attrs.height === 'number') elHeight = attrs.height;
+                }
+            }
+
+            if (isCompetency) {
+                const bottom = topY + (elHeight || 0);
+                if (!competencyBottom || bottom > competencyBottom) competencyBottom = bottom;
+            }
+        });
+    } catch (e) { competencyBottom = null; }
+
     // Load nodes
     templateJSON.elements.forEach((el) => {
         const attrs = Object.assign({}, el.attrs || {});
@@ -526,14 +1003,19 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 finalValue = replaceTextVariables(originalText);
             }
 
-            attrs.text = finalValue;
-
-            const node = new Konva.Text(attrs);
+            const sX = (attrs.scaleX || 1);
+            const finalWidth = attrs.width || ((794 - (attrs.x || 0)) / sX - 10);
+            const node = new Konva.Text(Object.assign({}, attrs, {
+                text: addThaiWordBreaks(finalValue),
+                width: finalWidth,
+                wrap: 'word'
+            }));
             layer.add(node);
             applyZIndex(node, el.attrs);
         } else if (el.className === 'Image') {
-            if (attrs.name === 'graph-placeholder') {
-                const graphType = attrs.graphType || '';
+            const isGraph = attrs.name === 'graph-placeholder' || (attrs.variableName && attrs.variableName.includes('Graph_'));
+            if (isGraph) {
+                const graphType = attrs.graphType || attrs.variableName || '';
                 const isRadar = graphType.includes('Radar');
                 const cleanKey = graphType.replace(/Graph_/g, '');
                 const isGeneral = cleanKey.includes('General');
@@ -578,8 +1060,11 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 applyZIndex(node, el.attrs);
             }
         } else if (el.className === 'Group') {
-            if (attrs.name === 'competency-table') {
-                const key = attrs.variableName || '{GeneralCompetencies}';
+            const vn = String(attrs.variableName || '').toLowerCase();
+            const isCompTable = attrs.name === 'competency-table' || vn.includes('generalcompet') || vn.includes('specificcompet') || (vn.includes('competenc') && !vn.includes('graph'));
+            
+            if (isCompTable) {
+                const key = attrs.variableName || (vn.includes('general') ? '{GeneralCompetencies}' : '{SpecificCompetencies}');
                 const isGeneral = String(key).indexOf('General') >= 0;
                 const items = isGeneral
                     ? (dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
@@ -590,13 +1075,89 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     ? ((Array.isArray(items) && items.length) ? items : defaultGeneralCompetencies)
                     : ((Array.isArray(items) && items.length) ? items : [{ name: 'N/A', score: 'X.X' }]);
                 const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
-                addCompetencyTable(attrs, safeItems, title);
-            } else if (attrs.name === 'suggestion-table') {
+                // record bottom Y of competency area if possible (attrs.height expected)
+                try {
+                    const topY = (attrs.y || 0);
+                    const h = (typeof attrs.height === 'number' && attrs.height > 0) ? attrs.height : 0;
+                    const bottom = topY + h;
+                    if (bottom && (!competencyBottom || bottom > competencyBottom)) competencyBottom = bottom;
+                } catch (e) { }
+
+                addCompetencyTable(attrs, safeItems, title, attrs.children);
+            } else if (attrs.name === 'suggestion-table' || attrs.name === 'suggestion-table-part') {
+                const isPart = attrs.name === 'suggestion-table-part';
+                const savedChildren = Array.isArray(attrs.children) ? attrs.children : null;
                 const sug = dataMap.Suggestion || dataMap.suggestion || {};
-                addSuggestionTable(attrs, {
-                    Outstanding: dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding,
-                    Opportunities: dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities
-                });
+
+                let suggestionsObj;
+                if (isPart) {
+                    const vn = String(attrs.variableName || '').toLowerCase();
+                    const isOutstanding = vn.includes('outstanding');
+                    const data = isOutstanding
+                        ? (dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding || [])
+                        : (dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities || []);
+
+                    suggestionsObj = isOutstanding ? { Outstanding: data } : { Opportunities: data };
+                } else {
+                    suggestionsObj = {
+                        Outstanding: dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding,
+                        Opportunities: dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities
+                    };
+                }
+
+                // computeBBox helper is defined above and reused here
+                const bbox = savedChildren && savedChildren.length ? computeBBox(savedChildren) : null;
+                const localAttrs = Object.assign({}, attrs);
+                if (bbox) {
+                    // position group so its origin aligns with saved children min
+                    localAttrs.x = (attrs.x || 0) + (bbox.minX || 0);
+                    localAttrs.y = (attrs.y || 0) + (bbox.minY || 0);
+                    if (!localAttrs.width) {
+                        const w = (bbox.maxX - bbox.minX) || attrs.width;
+                        if (w && w > 0) localAttrs.width = w;
+                    }
+                }
+
+                // Ensure suggestions sit below competency area when available
+                if (competencyBottom && (!localAttrs.y || localAttrs.y < (competencyBottom + 12))) {
+                    localAttrs.y = competencyBottom + 12; // 12px padding
+                }
+
+                const sugGroup = addSuggestionTable(localAttrs, suggestionsObj, savedChildren);
+
+                // Collision avoidance: nudge the suggestion group below any competency area
+                try {
+                    let compMax = competencyBottom || 0;
+                    const childrenArr = (typeof layer.getChildren === 'function') ? layer.getChildren().toArray() : (layer.children || []);
+                    for (const node of childrenArr) {
+                        try {
+                            const nName = (node.getAttr && node.getAttr('name')) || node.name || '';
+                            const vName = (node.getAttr && (node.getAttr('variableName') || node.getAttr('placeholder'))) || '';
+                            const cls = (typeof node.getClassName === 'function') ? node.getClassName() : (node.className || '');
+                            let isCompNode = false;
+                            if (String(nName).toLowerCase() === 'competency-table') isCompNode = true;
+                            if (vName && /specific|general|competenc/i.test(String(vName))) isCompNode = true;
+                            if (cls === 'Text') {
+                                const textVal = typeof node.text === 'function' ? node.text() : (node.getAttr && node.getAttr('text') || '');
+                                if (textVal && /specific\s*compet|general\s*compet/i.test(String(textVal))) isCompNode = true;
+                            }
+                            if (isCompNode) {
+                                const r = (typeof node.getClientRect === 'function') ? node.getClientRect() : null;
+                                if (r) compMax = Math.max(compMax, r.y + r.height);
+                            }
+                        } catch (e) { /* ignore per-node errors */ }
+                    }
+
+                    if (compMax && sugGroup) {
+                        const gRect = (typeof sugGroup.getClientRect === 'function') ? sugGroup.getClientRect() : null;
+                        const padding = 12;
+                        if (gRect && gRect.y < (compMax + padding)) {
+                            const delta = compMax + padding - gRect.y;
+                            const currentY = (typeof sugGroup.y === 'function') ? sugGroup.y() : ((sugGroup.attrs && sugGroup.attrs.y) || 0);
+                            sugGroup.y(currentY + delta);
+                        }
+                    }
+                } catch (e) { /* best-effort repositioning */ }
             }
         }
     });

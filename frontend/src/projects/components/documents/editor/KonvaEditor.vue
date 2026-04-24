@@ -759,6 +759,12 @@ export default {
                     : this.getSpecificCompetencyPlaceholders();
 
                 const group = new Konva.Group({ x, y, draggable: true, name: 'competency-table', variableName });
+                group.setAttrs({
+                    fontSize: opts.fontSize || 14,
+                    fontFamily: opts.fontFamily || 'Inter, Arial',
+                    fill: opts.fill || '#64748b',
+                    fontStyle: opts.fontStyle || 'normal'
+                });
                 this.assignCreationOrder(group);
 
                 const hitRect = new Konva.Rect({ width: defaultW, height: 100, fill: 'rgba(0,0,0,0)', listening: true });
@@ -771,12 +777,34 @@ export default {
                 group.add(scoreHeader);
 
                 let currentY = 50;
+                const rowFontSize = opts.fontSize ? Number(opts.fontSize) : 14;
+                const rowFontFamily = opts.fontFamily || 'Inter, Arial';
+                const rowFill = opts.fill || '#64748b';
+                const rowFontStyle = opts.fontStyle || 'normal';
+
                 competencies.forEach((comp) => {
-                    group.add(new Konva.Text({ text: comp, fontSize: 14, fontFamily: 'Inter, Arial', fill: '#64748b', y: currentY }));
-                    group.add(new Konva.Text({ text: 'X.X', fontSize: 14, fontFamily: 'Inter, Arial', fill: '#64748b', x: 350, y: currentY }));
-                    currentY += 56; // increased spacing between rows
+                    group.add(new Konva.Text({ 
+                        text: comp, 
+                        fontSize: rowFontSize, 
+                        fontFamily: rowFontFamily, 
+                        fill: rowFill, 
+                        fontStyle: rowFontStyle,
+                        y: currentY,
+                        width: 320
+                    }));
+                    group.add(new Konva.Text({ 
+                        text: 'X.X', 
+                        fontSize: rowFontSize, 
+                        fontFamily: rowFontFamily, 
+                        fill: rowFill, 
+                        fontStyle: rowFontStyle,
+                        x: 350, 
+                        y: currentY 
+                    }));
+                    currentY += Math.max(30, rowFontSize * 3); // Increased spacing as requested
                 });
-                hitRect.height(currentY);
+                hitRect.height(currentY + 10);
+                hitRect.width(420); // Narrower width to fit content better than 450
 
                 this.layer.add(group);
                 if (typeof opts.onCreate === 'function') opts.onCreate(group);
@@ -805,35 +833,37 @@ export default {
                 const hasY = typeof opts.y !== 'undefined' || typeof opts.top !== 'undefined'
                 const x = hasX ? Number(typeof opts.x !== 'undefined' ? opts.x : opts.left) : Math.max(10, Math.floor((maxW - defaultW) / 2));
                 const y = hasY ? Number(typeof opts.y !== 'undefined' ? opts.y : opts.top) : 100;
-                const labels = opts.labels && opts.labels.length
-                    ? opts.labels
-                    : this.getSuggestionLabels();
-
-                const splitIndex = Math.ceil(labels.length / 2);
-                const leftLabels = labels.slice(0, splitIndex);
-                const rightLabels = labels.slice(splitIndex);
-                const columnGap = 20;
-                const columnWidth = labels.length > 1
-                    ? Math.floor((defaultW - columnGap) / 2)
-                    : defaultW;
+                
+                // Explicitly split into two columns: Outstanding and Opportunity
+                const labels = ['Outstanding', 'Opportunity'];
+                const columnGap = 30;
+                const columnWidth = Math.floor((defaultW - columnGap) / 2);
 
                 const groups = [];
+                // Left Column: Outstanding
                 const leftGroup = this.addSuggestionColumn({
-                    labels: leftLabels,
+                    ...opts,
+                    labels: [labels[0]],
                     x,
                     y,
                     columnWidth
                 });
-                if (leftGroup) groups.push(leftGroup);
+                if (leftGroup) {
+                    leftGroup.setAttr('variableName', '{Outstanding}');
+                    groups.push(leftGroup);
+                }
 
-                if (rightLabels.length) {
-                    const rightGroup = this.addSuggestionColumn({
-                        labels: rightLabels,
-                        x: x + columnWidth + columnGap,
-                        y,
-                        columnWidth
-                    });
-                    if (rightGroup) groups.push(rightGroup);
+                // Right Column: Opportunity
+                const rightGroup = this.addSuggestionColumn({
+                    ...opts,
+                    labels: [labels[1]],
+                    x: x + columnWidth + columnGap,
+                    y,
+                    columnWidth
+                });
+                if (rightGroup) {
+                    rightGroup.setAttr('variableName', '{Opportunities}');
+                    groups.push(rightGroup);
                 }
 
                 if (typeof opts.onCreate === 'function') {
@@ -858,25 +888,36 @@ export default {
 
             const hitRect = new Konva.Rect({ width: columnWidth, height: 400, fill: 'rgba(0,0,0,0)', listening: true });
             group.add(hitRect);
-
             let currentY = 0;
+            const baseFontSize = (opts.fontSize && !isNaN(Number(opts.fontSize))) ? Number(opts.fontSize) : 14;
+            // If we have a saved fontSize, use it as is. Only use the 1.4x ratio for new insertions.
+            const labelFontSize = opts.fontSize ? baseFontSize : Math.max(16, Math.floor(baseFontSize * 1.4));
+            const fontFamily = opts.fontFamily || 'Inter, Arial';
+            const fill = opts.fill || '#1e293b';
+            const fontStyle = opts.fontStyle || 'normal';
+            const textDecoration = opts.textDecoration || '';
 
             opts.labels.forEach((label) => {
-                group.add(new Konva.Text({
+                const labelNode = new Konva.Text({
                     text: label,
-                    fontSize: 20,
-                    fontFamily: 'Inter, Arial',
-                    fontStyle: '600',
-                    fill: '#1e293b',
-                    y: currentY
-                }));
-                currentY += 34;
-
+                    fontSize: labelFontSize,
+                    fontFamily: fontFamily,
+                    fontStyle: fontStyle.includes('bold') ? fontStyle : (fontStyle === 'normal' ? '600' : fontStyle + ' 600'),
+                    fill: fill,
+                    textDecoration: textDecoration,
+                    y: currentY,
+                    width: columnWidth
+                });
+                group.add(labelNode);
+                currentY += (labelFontSize * 1.4);
+ 
                 const textNode = new Konva.Text({
                     text: '',
-                    fontSize: 14,
-                    fontFamily: 'Inter, Arial',
-                    fill: '#1e293b',
+                    fontSize: baseFontSize,
+                    fontFamily: fontFamily,
+                    fontStyle: fontStyle,
+                    fill: fill,
+                    textDecoration: textDecoration,
                     x: 10,
                     y: currentY,
                     width: columnWidth - 20,
@@ -884,10 +925,11 @@ export default {
                 });
                 textNode.setAttr('placeholderType', 'suggestion');
                 group.add(textNode);
-                currentY += textNode.height() + 28;
+                currentY += textNode.height() + (baseFontSize * 1.5);
             });
-
-            hitRect.height(currentY);
+ 
+            hitRect.height(currentY + 10);
+            hitRect.width(columnWidth);
             this.layer.add(group);
 
             this.updateSuggestionPlaceholderForGroup(group);
@@ -1376,6 +1418,27 @@ export default {
             } else if (type === 'fontSize') {
                 node.fontSize(value);
             }
+
+            // If node is part of a table group, mirror the attribute to the group for saving/persistence
+            const parent = node.getParent();
+            if (parent && parent instanceof Konva.Group) {
+                const groupName = parent.name() || '';
+                if (groupName.includes('suggestion-table-part') || groupName.includes('competency-table')) {
+                    if (type === 'bold' || type === 'italic') {
+                        parent.setAttrs({ fontStyle: node.fontStyle() });
+                    } else if (type === 'underline') {
+                        parent.setAttrs({ textDecoration: node.textDecoration() });
+                    } else if (type === 'color') {
+                        parent.setAttrs({ fill: value });
+                    } else if (type === 'align') {
+                        parent.setAttrs({ align: value });
+                    } else if (type === 'fontFamily') {
+                        parent.setAttrs({ fontFamily: value });
+                    } else if (type === 'fontSize') {
+                        parent.setAttrs({ fontSize: Number(value) });
+                    }
+                }
+            }
             this.saveHistory();
         },
         saveHistory() {
@@ -1450,6 +1513,17 @@ export default {
                     zIndex: node.zIndex()
                 };
                 el._orderIndex = elements.length
+
+                // Ensure custom attributes on groups are captured (Konva.Group.getAttrs might skip non-standard ones in some versions)
+                if (node instanceof Konva.Group) {
+                    const gn = node.name() || '';
+                    if (gn.includes('table')) {
+                        ['fontSize', 'fontFamily', 'fill', 'fontStyle', 'textDecoration', 'align', 'labels', 'columnWidth', 'variableName'].forEach(attr => {
+                            const val = node.getAttr(attr);
+                            if (val !== undefined) el.attrs[attr] = val;
+                        });
+                    }
+                }
 
                 // Remove large/circular refs if any
                 delete el.attrs.image;
@@ -1532,6 +1606,7 @@ export default {
                         });
                     } else if (el.attrs.name === 'suggestion-table-part') {
                         const node = this.addSuggestionColumn({
+                            ...el.attrs,
                             labels: el.attrs.labels,
                             columnWidth: el.attrs.columnWidth,
                             x: el.attrs.x,
@@ -1716,7 +1791,7 @@ export default {
             if (this.suggestionLabels && this.suggestionLabels.length) {
                 return this.suggestionLabels;
             }
-            return ['Outstanding', 'Opportunities'];
+            return ['Outstanding', 'Opportunity'];
         },
         buildSuggestionPlaceholder(count, lineLength) {
             const total = Math.max(0, Number(count) || 0);
