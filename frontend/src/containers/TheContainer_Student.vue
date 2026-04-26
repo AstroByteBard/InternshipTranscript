@@ -23,16 +23,24 @@
 </template>
 
 <script>
-import TheSidebar_Student from '@/containers/TheSidebar_Student'
+import TheSidebar_Student from '@/containers/TheSidebar_Student.vue'
 import TheHeader_Student from '@/containers/TheHeader_Student.vue'
 import TheFooter from '@/containers/TheFooter.vue'
+import TheAside from './TheAside'
+import DialogMessage from '@/projects/components/dialog/DialogMessage.vue'
+import CenterLoading from '@/projects/components/dialog/CenterLoading.vue'
+import SignIn from '@/projects/components/dialog/SignIn.vue'
 
 export default {
   name: 'TheContainer_Student',
   components: {
     TheSidebar_Student,
     TheHeader_Student,
-    TheFooter
+    TheFooter,
+    TheAside,
+    CenterLoading,
+    DialogMessage,
+    SignIn
   }
 }
 </script>

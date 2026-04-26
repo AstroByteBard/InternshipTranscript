@@ -249,7 +249,7 @@ export default {
         exportAssessment() {
             if (!this.hardskillItems.length) return
 
-            const lang = 'th'
+            const lang = this.$store.getters['setting/lang'] || 'th';
             const data = []
 
             this.hardskillItems.forEach(item => {

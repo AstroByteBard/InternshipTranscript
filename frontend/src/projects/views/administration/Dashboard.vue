@@ -170,7 +170,7 @@ export default {
     },
 
     programOptions() {
-      const lang = this.$i18n.locale || 'en';
+      const lang = this.$store.getters['setting/lang'] || 'en';
       let source = this.storedPrograms || [];
 
       if (this.selectedSchool) {
@@ -217,7 +217,7 @@ export default {
       this.$store.dispatch("competencies/specific/specific")
     },
     downloadReport() {
-      const lang = this.$i18n.locale || 'en';
+      const lang = this.$store.getters['setting/lang'] || 'en';
       const students = this.filteredStudents;
       if (!students.length) return;
 

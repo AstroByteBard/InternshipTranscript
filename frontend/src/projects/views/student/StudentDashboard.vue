@@ -109,7 +109,8 @@
                 <div v-if="Outstanding.length > 0">
                   <div v-for="feedback in Outstanding" :key="feedback.id" class="feedback-card p-3 mb-3">
                     <ul class="mb-0 custom-list">
-                      <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">{{ point }}
+                      <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">
+                        {{ typeof point === 'object' && point !== null ? (point[selectedLanguage || 'en'] || point.en || point.th || '') : point }}
                       </li>
                     </ul>
                   </div>
@@ -128,7 +129,8 @@
                 <div v-if="Opportunities.length > 0">
                   <div v-for="feedback in Opportunities" :key="feedback.id" class="feedback-card p-3 mb-3">
                     <ul class="mb-0 custom-list">
-                      <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">{{ point }}
+                      <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">
+                        {{ typeof point === 'object' && point !== null ? (point[selectedLanguage || 'en'] || point.en || point.th || '') : point }}
                       </li>
                     </ul>
                   </div>
@@ -153,6 +155,10 @@
           <label class="font-weight-bold small text-uppercase text-muted mb-2">Report Template</label>
           <CSelect :options="publicDocumentOptions" :value.sync="selectedDocumentId" placeholder="Select a template..."
             class="custom-select-modern" />
+        </div>
+        <div class="text-left px-2 mt-3">
+          <label class="font-weight-bold small text-uppercase text-muted mb-2">Language</label>
+          <CSelect :options="[{value: 'en', label: 'English'}, {value: 'th', label: 'Thai'}]" :value.sync="selectedLanguage" class="custom-select-modern" />
         </div>
       </div>
       <template #footer>
@@ -300,9 +306,10 @@ export default {
         const raw = (item && item.answer && item.answer.score !== undefined) ? item.answer.score : (item && item.score !== undefined ? item.score : undefined);
         const rawNum = raw !== undefined && raw !== null ? Number(raw) : undefined;
 
-        // Derive display name: prefer en -> th -> criteriaId. If stored as "Category - Question",
-        // keep only the question part to avoid showing the category prefix (e.g. "Hard Skills - ...").
-        let rawTitle = (item?.answer?.title?.en) || (item?.answer?.title?.th) || item?.criteriaId || 'Criteria';
+        // Derive display name: prefer selectedLanguage -> alternative language -> criteriaId.
+        const lang = this.selectedLanguage || 'en';
+        const altLang = lang === 'en' ? 'th' : 'en';
+        let rawTitle = (item?.answer?.title?.[lang]) || (item?.answer?.title?.[altLang]) || item?.criteriaId || 'Criteria';
         rawTitle = String(rawTitle || '');
         let displayName = rawTitle;
         if (rawTitle.includes(' - ')) {
@@ -320,18 +327,18 @@ export default {
     mapSuggestionList(list) {
       const items = Array.isArray(list) ? list : (list ? [list] : []);
       if (items.length === 0) return [];
-      
+
       const outstanding = [];
       const opportunity = [];
 
       // Helper to recursively find and extract points from an object
       const extractFromObject = (obj) => {
         if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
-        
+
         // Check current level for common keys (including typos)
         const outData = obj.outstanding || obj.Outstanding || obj.outstandings;
         const oppData = obj.opportunity || obj.Opportunity || obj.opportunities || obj.oppotunity || obj.Oppotunity;
-        
+
         let found = false;
         if (outData) {
           if (Array.isArray(outData)) outstanding.push(...outData.filter(v => v !== null && v !== undefined));
@@ -389,7 +396,7 @@ export default {
 
           if (parsed && extractFromObject(parsed)) return;
         } catch (e) { }
-        
+
         // Fallback: treat the whole value as an outstanding performance point
         outstanding.push(String(val));
       });
@@ -405,6 +412,51 @@ export default {
         outstanding,
         opportunity
       }];
+    },
+
+    // New: parse suggestions into two lists (outstanding & opportunities)
+    parseSuggestionLists(list) {
+      const outstandingPoints = [];
+      const opportunityPoints = [];
+      if (!Array.isArray(list)) return { outstandingGroups: [], opportunityGroups: [] };
+
+      list.forEach(item => {
+        const val = item?.answer?.value;
+        if (!val) return;
+
+        // If stored as object with outstanding/opportunity
+        if (typeof val === 'object') {
+          if (Array.isArray(val.outstanding)) {
+            val.outstanding.forEach(p => { if (p) outstandingPoints.push(p); });
+          }
+          if (Array.isArray(val.opportunity)) {
+            val.opportunity.forEach(p => { if (p) opportunityPoints.push(p); });
+          }
+          // support alternative keys
+          if (Array.isArray(val.suggestion)) {
+            val.suggestion.forEach(p => { if (p) opportunityPoints.push(p); });
+          }
+          if (Array.isArray(val.suggestions)) {
+            val.suggestions.forEach(p => { if (p) opportunityPoints.push(p); });
+          }
+        } else if (typeof val === 'string') {
+          // fallback: treat plain string as an opportunity (growth suggestion)
+          opportunityPoints.push(val);
+        }
+      });
+
+      const base = {
+        id: 1,
+        name: this.studentData.name || 'Student',
+        role: 'Student',
+        picture: this.studentData.picture,
+        date: ''
+      };
+
+      const outstandingGroups = outstandingPoints.length ? [{ ...base, points: outstandingPoints }] : [];
+      const opportunityGroups = opportunityPoints.length ? [{ ...base, points: opportunityPoints }] : [];
+
+      return { outstandingGroups, opportunityGroups };
     },
     updateChartsFromCompetencies() {
       const specificLabels = this.specificCompetencies.map(s => this.formatChartLabel(s.name, 14));
@@ -568,11 +620,11 @@ export default {
           const feedback = suggestionList[0];
           // Assign to separate categories based on parsed content
           // Ensure we use the exact array of points for rendering
-          this.Outstanding = feedback.outstanding && feedback.outstanding.length > 0 
-            ? [{ ...feedback, points: feedback.outstanding }] 
+          this.Outstanding = feedback.outstanding && feedback.outstanding.length > 0
+            ? [{ ...feedback, points: feedback.outstanding }]
             : [];
-          this.Opportunities = feedback.opportunity && feedback.opportunity.length > 0 
-            ? [{ ...feedback, points: feedback.opportunity }] 
+          this.Opportunities = feedback.opportunity && feedback.opportunity.length > 0
+            ? [{ ...feedback, points: feedback.opportunity }]
             : [];
         } else {
           this.Outstanding = [];
@@ -719,7 +771,7 @@ export default {
         const hards = (res && res.data && res.data.data) ? res.data.data : [];
 
         // helper to read localized value
-        const getVal = (arr, k = (this.$i18n && this.$i18n.locale) ? this.$i18n.locale : 'en') => {
+        const getVal = (arr, k = this.selectedLanguage) => {
           if (!Array.isArray(arr)) return '';
           const found = arr.find(i => i.key === k);
           return found ? found.value : (arr[0] ? arr[0].value : '');
@@ -741,15 +793,20 @@ export default {
         let activeDoc = candidates.find(h => h.active) || candidates[0];
 
         if (activeDoc && Array.isArray(activeDoc.config)) {
-          // Build a map from question text -> label for quick lookup
+          // Build a map from question text and labels -> target label for quick lookup
           const qToLabel = new Map();
           activeDoc.config.forEach(conf => {
             const qTh = getVal(conf.question, 'th');
             const qEn = getVal(conf.question, 'en');
             const labelTh = getVal(conf.label, 'th');
             const labelEn = getVal(conf.label, 'en');
-            if (qTh) qToLabel.set(String(qTh).trim().toLowerCase(), labelTh || labelEn || '');
-            if (qEn) qToLabel.set(String(qEn).trim().toLowerCase(), labelEn || labelTh || '');
+            // Fetch the label in the target language (fallback to English if not found)
+            const labelTarget = getVal(conf.label, this.selectedLanguage) || getVal(conf.label, 'en');
+            if (qTh) qToLabel.set(String(qTh).trim().toLowerCase(), labelTarget);
+            if (qEn) qToLabel.set(String(qEn).trim().toLowerCase(), labelTarget);
+            // Crucial: also map the exact labels to the target label!
+            if (labelTh) qToLabel.set(String(labelTh).trim().toLowerCase(), labelTarget);
+            if (labelEn) qToLabel.set(String(labelEn).trim().toLowerCase(), labelTarget);
           });
 
           // Map specificRaw names to labels when possible
@@ -785,30 +842,148 @@ export default {
         specificMapped = specificRaw;
       }
 
-      // Capture rendered chart canvases (if present) to embed exact charts into PDF
+      // Disabled capturing rendered chart canvases (so generator falls back to native drawing for translated text)
       const chartImages = {};
+
+      // Locate raw evaluation suggestions for this student (so generator can use answer.value)
+      let rawSuggestions = [];
       try {
-        const genRef = this.$refs && this.$refs.generalChart && this.$refs.generalChart.$el ? this.$refs.generalChart.$el.querySelector('canvas') : null;
-        if (genRef && typeof genRef.toDataURL === 'function') chartImages.general = genRef.toDataURL('image/png');
-      } catch (e) { /* ignore */ }
+        const authUser = this.$store?.state?.auth?.user;
+        const email = authUser?.email || (() => {
+          try { const userStr = localStorage.getItem('auth_user'); return userStr ? JSON.parse(userStr)?.email : ''; } catch (e) { return ''; }
+        })();
+        const student = this.findStudent(this.targetStudentId || authUser?._id, email);
+        const evalPayload = this.storedEvaluations || [];
+        const evalDataRecord = Array.isArray(evalPayload)
+          ? evalPayload.find(e => {
+            const sId = e?.studentId?._id || e?.studentId;
+            return String(sId) === String(student?._id);
+          })
+          : evalPayload;
+        rawSuggestions = Array.isArray(evalDataRecord)
+          ? (evalDataRecord[0]?.sugestion || evalDataRecord[0]?.suggestions || [])
+          : (evalDataRecord?.sugestion || evalDataRecord?.suggestions || []);
+      } catch (e) { rawSuggestions = []; }
+
+      // Fetch translated Student Name, School, and Program if available
+      let studentForLang = null;
       try {
-        const specRef = this.$refs && this.$refs.specificChart && this.$refs.specificChart.$el ? this.$refs.specificChart.$el.querySelector('canvas') : null;
-        if (specRef && typeof specRef.toDataURL === 'function') chartImages.specific = specRef.toDataURL('image/png');
-      } catch (e) { /* ignore */ }
+        const authUser = this.$store?.state?.auth?.user;
+        const email = authUser?.email || (() => { try { const userStr = localStorage.getItem('auth_user'); return userStr ? JSON.parse(userStr)?.email : ''; } catch(e){ return ''; } })();
+        studentForLang = this.findStudent(this.targetStudentId || authUser?._id, email);
+      } catch (e) {}
+
+      let studentNameString = this.studentData.name;
+      let schoolLang = this.studentData.school;
+      let programLang = this.studentData.program;
+      
+      if (studentForLang) {
+        const sLang = this.selectedLanguage || 'en';
+        if (Array.isArray(studentForLang.name)) {
+            const found = studentForLang.name.find(n => n?.key === sLang);
+            if (found && found.value) studentNameString = found.value;
+        } else if (typeof studentForLang.name === 'object' && studentForLang.name !== null) {
+            if (studentForLang.name[sLang]) studentNameString = studentForLang.name[sLang];
+        }
+        
+        if (studentForLang.info) {
+            if (Array.isArray(studentForLang.info.school?.title)) {
+                const found = studentForLang.info.school.title.find(t => t?.key === sLang);
+                if (found && found.value) schoolLang = found.value;
+            }
+            if (Array.isArray(studentForLang.info.program?.title)) {
+                const found = studentForLang.info.program.title.find(t => t?.key === sLang);
+                if (found && found.value) programLang = found.value;
+            }
+        }
+      }
+
+      if (typeof studentNameString !== 'string') {
+        studentNameString = String(studentNameString || '');
+      }
+
+      // Prepare flattened fallback arrays from raw suggestion value objects
+      const outstandingFlatten = (Array.isArray(rawSuggestions) ? rawSuggestions.reduce((acc, it) => {
+        try {
+          const val = (it && it.answer && it.answer.value) ? it.answer.value : (it && it.value ? it.value : null);
+          if (val) {
+            const list = [].concat(val.outstanding || val.outcome || val.Opportunity || val.opportunity || []);
+            list.forEach(p => { 
+              if (p) {
+                let obj = p;
+                if (typeof p === 'string' && p.trim().startsWith('{')) {
+                  try { obj = JSON.parse(p); } catch (e) { }
+                }
+                if (typeof obj === 'object' && obj !== null && (obj.th || obj.en)) {
+                  acc.push(obj[this.selectedLanguage || 'en'] || obj.en || obj.th || '');
+                } else {
+                  acc.push(p);
+                }
+              } 
+            });
+          }
+        } catch (e) { }
+        return acc;
+      }, []) : []);
+
+      const opportunityFlatten = (Array.isArray(rawSuggestions) ? rawSuggestions.reduce((acc, it) => {
+        try {
+          const val = (it && it.answer && it.answer.value) ? it.answer.value : (it && it.value ? it.value : null);
+          if (val) {
+            const list = [].concat(val.opportunity || val.opportunities || val.suggestion || val.suggestions || []);
+            list.forEach(p => { 
+              if (p) {
+                let obj = p;
+                if (typeof p === 'string' && p.trim().startsWith('{')) {
+                  try { obj = JSON.parse(p); } catch (e) { }
+                }
+                if (typeof obj === 'object' && obj !== null && (obj.th || obj.en)) {
+                  acc.push(obj[this.selectedLanguage || 'en'] || obj.en || obj.th || '');
+                } else {
+                  acc.push(p);
+                }
+              } 
+            });
+          }
+        } catch (e) { }
+        return acc;
+      }, []) : []);
+
+      // Use existing Outstanding/Opportunities groups if available; otherwise fall back to flattened arrays
+      const outForPdf = (Array.isArray(this.Outstanding) && this.Outstanding.length) ? this.Outstanding : outstandingFlatten;
+      const oppForPdf = (Array.isArray(this.Opportunities) && this.Opportunities.length) ? this.Opportunities : opportunityFlatten;
+
+      // Re-map evaluation data into the selected language for the PDF without updating the UI state
+      let generalMapped = this.generalCompetencies;
+      try {
+        const evalPayload = this.storedEvaluations || [];
+        const evalData = Array.isArray(evalPayload)
+            ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
+            : evalPayload;
+        if (evalData && evalData.softskills) {
+            generalMapped = this.mapEvaluationList(evalData.softskills);
+        }
+      } catch (e) {
+          console.warn('Failed to remap general competencies for PDF', e);
+      }
 
       return {
-        StudentName: this.studentData.name,
+        StudentName: studentNameString,
         StudentID: this.studentData.studentID,
-        School: this.studentData.school,
-        Program: this.studentData.program,
+        School: schoolLang,
+        Program: programLang,
         AcademyYear: String(new Date().getFullYear()),
         CompanyLogo: '',
         StudentPhoto: this.studentData.picture,
-        GeneralCompetencies: toPdfItems(this.generalCompetencies),
+        GeneralCompetencies: toPdfItems(generalMapped),
         SpecificCompetencies: specificMapped,
-        Outstanding: this.Outstanding,
-        Opportunities: this.Opportunities,
-        __chartImages: chartImages
+        Outstanding: outForPdf,
+        Opportunities: oppForPdf,
+        // include raw suggestion objects so generator can pull answer.value.outstanding/opportunity if needed
+        Suggestion: rawSuggestions,
+        suggestion: rawSuggestions,
+        __chartImages: chartImages,
+        __language: this.selectedLanguage
       };
     },
     async handleDownload() {
@@ -818,6 +993,12 @@ export default {
       try {
         if (doc.content && doc.content.elements) {
           const dataMap = await this.buildDocumentData();
+          // Debug: show data passed into PDF generator
+          console.log('download PDF dataMap', {
+            StudentName: dataMap.StudentName,
+            Outstanding: dataMap.Outstanding,
+            Opportunities: dataMap.Opportunities
+          });
           await downloadClientPDF(
             doc.content,
             dataMap,
@@ -831,9 +1012,23 @@ export default {
       }
     },
   },
+  watch: {
+    selectedLanguage() {
+      // Re-map evaluation lists and charts using the newly selected language to update the UI
+      this.loadEvaluationData();
+    }
+  },
   computed: {
     ...mapGetters('member/students', { storedStudents: 'students' }),
     ...mapGetters('competencies/evaluation', { storedEvaluations: 'evaluations' }),
+    selectedLanguage: {
+      get() {
+        return this.$store.getters['setting/lang'] || 'en';
+      },
+      set(val) {
+        this.$store.commit('setting/lang', val);
+      }
+    },
     avatarSrc() {
       try {
         const pic = this.studentData && this.studentData.picture;

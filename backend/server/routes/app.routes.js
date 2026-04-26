@@ -4,6 +4,8 @@ const MemberRoutes = require("../Project/Member/Member.routes");
 const CompetenciesRoutes = require("../Project/Competencies/Competencies.routes");
 const EmailRoutes = require("../Project/Email/Email.routes")
 const DocumentRoutes = require("../Project/Documents/documents.routes");
+const AIRoutes = require("./ai.routes");
+// GeminiRoutes removed - AI-related endpoints disabled
 
 
 // const sync = require("../sync/mis");
@@ -19,6 +21,8 @@ module.exports = function (app) {
   app.use(path + '/competencies', CompetenciesRoutes) // complete
   app.use(path + '/academic', AcademicRoutes); // complete
   app.use(path + '/member', MemberRoutes); // complete
+  // AI route
+  app.use(path + '/ai', AIRoutes);
   app.use(path + '/setting', settingsRoutes); // complete
   // app.use(path + '/address', addressRoutes); // complete
 

@@ -134,15 +134,35 @@ export default {
             }
         },
         async handleSave() {
-            if (!this.$refs.konvaEditor) return;
+            if (!this.$refs.konvaEditor) {
+                console.warn('handleSave: KonvaEditor ref not available');
+                window.alert && window.alert('Editor not ready. Please try again.');
+                return;
+            }
 
             const content = this.$refs.konvaEditor.saveToJSON();
+            if (!content) {
+                console.warn('handleSave: saveToJSON returned empty content');
+                window.alert && window.alert('Nothing to save (empty document).');
+                return;
+            }
+
+            // Validate serializability to catch circular refs early
+            try {
+                JSON.stringify(content);
+            } catch (serErr) {
+                console.error('handleSave: content not serializable', serErr);
+                window.alert && window.alert('Cannot save document: content contains unserializable data. Check console for details.');
+                return;
+            }
+
             const payload = {
                 title: this.documentName,
                 status: this.status,
                 content: content,
-                // thumbnail can be added later via toDataURL
             };
+
+            console.log('handleSave: saving document payload', payload);
 
             try {
                 let res;
@@ -151,15 +171,19 @@ export default {
                     res = await this.$api.documents('put', payload);
                 } else {
                     res = await this.$api.documents('post', payload);
-                    if (res.data && res.data.data) {
+                    if (res && res.data && res.data.data) {
                         this.docId = res.data.data._id;
-                        // update URL without reload if needed
                     }
                 }
-                alert('Document saved successfully!');
+
+                console.log('handleSave: save response', res && res.data ? res.data : res);
+                window.alert && window.alert('Document saved successfully!');
             } catch (err) {
-                console.error('Failed to save document', err);
-                alert('Failed to save document');
+                console.error('handleSave: Failed to save document', err);
+                const msg = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg || err.response.data.error)
+                    ? (err.response.data.message || err.response.data.msg || err.response.data.error)
+                    : (err && err.message ? err.message : 'Unknown error');
+                window.alert && window.alert('Failed to save document: ' + msg);
             }
         },
         handleToolbarImage(dataUrl) {
@@ -195,8 +219,22 @@ export default {
             }
         },
         insertVariable(variableStr) {
-            if (this.$refs.konvaEditor) {
-                this.$refs.konvaEditor.insertVariable(variableStr);
+            console.log('CreateDocument.insertVariable called with:', variableStr);
+            try {
+                if (this.$refs.konvaEditor && typeof this.$refs.konvaEditor.insertVariable === 'function') {
+                    this.$refs.konvaEditor.insertVariable(variableStr);
+                } else {
+                    console.warn('KonvaEditor ref not ready or insertVariable missing', this.$refs.konvaEditor);
+                    // Provide user feedback if running in browser
+                    if (typeof window !== 'undefined' && window.alert) {
+                        window.alert('Editor not ready. Try closing and reopening the Data sidebar, or reload the page.');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to insert variable into KonvaEditor:', err);
+                if (typeof window !== 'undefined' && window.alert) {
+                    window.alert('Failed to insert variable: ' + (err && err.message ? err.message : String(err)));
+                }
             }
         },
         toggleSidebar(sidebarName) {

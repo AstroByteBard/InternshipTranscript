@@ -245,13 +245,58 @@ export default {
         },
         applySavedAttrs(node, attrs, zIndex) {
             if (!node || !attrs) return
+            // Support both legacy childrenAttrs and new children arrays
+            const savedChildren = attrs.children || attrs.childrenAttrs || null;
+
+            // Build safe attrs for setAttrs (remove nested children blobs and large images)
             const safeAttrs = { ...attrs }
             delete safeAttrs.image
-            node.setAttrs(safeAttrs)
+            delete safeAttrs.children
+            delete safeAttrs.childrenAttrs
+
+            try {
+                node.setAttrs(safeAttrs)
+            } catch (err) {
+                // ignore if setAttrs fails for some attrs
+            }
+
             if (typeof zIndex === 'number') {
                 const bg = this.layer ? this.layer.findOne('.background-rect') : null
                 const minZ = bg ? bg.zIndex() + 1 : 1
                 node.zIndex(Math.max(minZ, zIndex))
+            }
+
+            // If saved children data exists, attempt to apply them to immediate children
+            if (Array.isArray(savedChildren) && typeof node.getChildren === 'function') {
+                try {
+                    const childrenCollection = node.getChildren();
+                    const childrenArray = (childrenCollection && typeof childrenCollection.toArray === 'function')
+                        ? childrenCollection.toArray()
+                        : (childrenCollection ? Array.from(childrenCollection) : []);
+
+                    savedChildren.forEach((savedChild, idx) => {
+                        const childNode = childrenArray[idx];
+                        if (childNode && savedChild && savedChild.attrs) {
+                            // remove potential image blobs before applying
+                            const childAttrs = { ...savedChild.attrs };
+                            delete childAttrs.image;
+                            // apply attrs to child node
+                            try {
+                                childNode.setAttrs(childAttrs)
+                            } catch (err) {
+                                // fallback to recursive application
+                                this.applySavedAttrs(childNode, childAttrs)
+                            }
+
+                            // If the saved child has nested children, apply recursively
+                            if (Array.isArray(savedChild.children) && typeof childNode.getChildren === 'function') {
+                                this.applySavedAttrs(childNode, { children: savedChild.children })
+                            }
+                        }
+                    });
+                } catch (err) {
+                    // ignore
+                }
             }
         },
         assignCreationOrder(node) {
@@ -783,23 +828,23 @@ export default {
                 const rowFontStyle = opts.fontStyle || 'normal';
 
                 competencies.forEach((comp) => {
-                    group.add(new Konva.Text({ 
-                        text: comp, 
-                        fontSize: rowFontSize, 
-                        fontFamily: rowFontFamily, 
-                        fill: rowFill, 
+                    group.add(new Konva.Text({
+                        text: comp,
+                        fontSize: rowFontSize,
+                        fontFamily: rowFontFamily,
+                        fill: rowFill,
                         fontStyle: rowFontStyle,
                         y: currentY,
                         width: 320
                     }));
-                    group.add(new Konva.Text({ 
-                        text: 'X.X', 
-                        fontSize: rowFontSize, 
-                        fontFamily: rowFontFamily, 
-                        fill: rowFill, 
+                    group.add(new Konva.Text({
+                        text: 'X.X',
+                        fontSize: rowFontSize,
+                        fontFamily: rowFontFamily,
+                        fill: rowFill,
                         fontStyle: rowFontStyle,
-                        x: 350, 
-                        y: currentY 
+                        x: 350,
+                        y: currentY
                     }));
                     currentY += Math.max(30, rowFontSize * 3); // Increased spacing as requested
                 });
@@ -826,14 +871,14 @@ export default {
             });
         },
         addSuggestionTable(opts = {}) {
-            return new Promise((resolve) => {
+            return new Promise(async (resolve) => {
                 const maxW = this.stage.width();
                 const defaultW = 650;
                 const hasX = typeof opts.x !== 'undefined' || typeof opts.left !== 'undefined'
                 const hasY = typeof opts.y !== 'undefined' || typeof opts.top !== 'undefined'
                 const x = hasX ? Number(typeof opts.x !== 'undefined' ? opts.x : opts.left) : Math.max(10, Math.floor((maxW - defaultW) / 2));
                 const y = hasY ? Number(typeof opts.y !== 'undefined' ? opts.y : opts.top) : 100;
-                
+
                 // Explicitly split into two columns: Outstanding and Opportunity
                 const labels = ['Outstanding', 'Opportunity'];
                 const columnGap = 30;
@@ -867,12 +912,16 @@ export default {
                 }
 
                 if (typeof opts.onCreate === 'function') {
-                    groups.forEach((node) => opts.onCreate(node));
+                    opts.onCreate(parentGroup);
                 }
+
+                // Ensure placeholders are generated for each column
+                if (leftGroup) this.updateSuggestionPlaceholderForGroup(leftGroup);
+                if (rightGroup) this.updateSuggestionPlaceholderForGroup(rightGroup);
 
                 this.layer.draw();
                 this.saveHistory();
-                resolve(groups[0] || null);
+                resolve(parentGroup);
             });
         },
         addSuggestionColumn(opts = {}) {
@@ -886,7 +935,13 @@ export default {
             group.setAttr('labels', opts.labels);
             group.setAttr('columnWidth', columnWidth);
 
-            const hitRect = new Konva.Rect({ width: columnWidth, height: 400, fill: 'rgba(0,0,0,0)', listening: true });
+            const hitRect = new Konva.Rect({ 
+                width: columnWidth, 
+                height: 1, 
+                fill: 'rgba(0,0,0,0)', 
+                listening: true,
+                name: 'hit-area'
+            });
             group.add(hitRect);
             let currentY = 0;
             const baseFontSize = (opts.fontSize && !isNaN(Number(opts.fontSize))) ? Number(opts.fontSize) : 14;
@@ -910,7 +965,7 @@ export default {
                 });
                 group.add(labelNode);
                 currentY += (labelFontSize * 1.4);
- 
+
                 const textNode = new Konva.Text({
                     text: '',
                     fontSize: baseFontSize,
@@ -927,12 +982,12 @@ export default {
                 group.add(textNode);
                 currentY += textNode.height() + (baseFontSize * 1.5);
             });
- 
+
             hitRect.height(currentY + 10);
             hitRect.width(columnWidth);
             this.layer.add(group);
 
-            this.updateSuggestionPlaceholderForGroup(group);
+            this.relayoutSuggestionColumn(group);
 
             group.on('click tap', (e) => {
                 this.handleNodeSelection(group, e.evt.shiftKey)
@@ -942,11 +997,23 @@ export default {
                 this.saveHistory();
             });
             group.on('transform', () => {
-                this.updateSuggestionPlaceholderForGroup(group);
+                // During dragging: let Konva handle scaling visually
+                // Do NOT reset scale here — it causes a race condition with the Transformer
                 this.layer.batchDraw();
             });
             group.on('transformend', () => {
-                this.updateSuggestionPlaceholderForGroup(group);
+                // After releasing: bake the scale into columnWidth, then reset
+                const scaleX = group.scaleX();
+                const scaleY = group.scaleY();
+                const baseWidth = Number(group.getAttr('columnWidth')) || 100;
+                const newWidth = Math.max(50, baseWidth * scaleX);
+                group.setAttr('columnWidth', newWidth);
+
+                // Reset scale to 1 to avoid text distortion
+                group.scaleX(1);
+                group.scaleY(1);
+
+                this.relayoutSuggestionColumn(group);
                 this.layer.draw();
                 this.saveHistory();
             });
@@ -965,11 +1032,98 @@ export default {
             const placeholderText = this.buildSuggestionPlaceholder(this.suggestionCharCount, lineLength);
             const localWidth = Math.max(1, baseWidth - 20);
 
-            group.find(node => node.getAttr && node.getAttr('placeholderType') === 'suggestion')
+            group.find(node => node.getAttr && (node.getAttr('placeholderType') === 'suggestion' || node.getAttr('placeholderType') === 'suggestion-item'))
                 .forEach((node) => {
-                    node.text(placeholderText);
-                    node.width(localWidth);
+                    const pType = node.getAttr('placeholderType');
+                    if (pType === 'suggestion') {
+                        node.text(placeholderText);
+                        node.width(localWidth);
+                        node.wrap('none');
+                    } else if (pType === 'suggestion-item') {
+                        // For suggestion items, compute single-line X placeholder to fill available width
+                        const nodeWidth = Math.max(10, node.width() || (localWidth - 20));
+                        // prefer the node's actual font size if available (handles user resizing)
+                        const nodeFontSize = (node && typeof node.fontSize === 'function') ? (node.fontSize() || fontSize) : fontSize;
+                        const nodeFontFamily = (node && typeof node.fontFamily === 'function') ? (node.fontFamily() || fontFamily) : fontFamily;
+                        const cw = Math.max(1, this.measureTextWidth('X', nodeFontSize, nodeFontFamily));
+                        const n = Math.max(6, Math.floor(nodeWidth / cw));
+                        node.text('• ' + 'X'.repeat(n - 2));
+                        node.width(nodeWidth);
+                    }
                 });
+        },
+        // Recompute vertical layout and hit area for a suggestion column
+        relayoutSuggestionColumn(group) {
+            if (!group || typeof group.getChildren !== 'function') return;
+            try {
+                // update placeholders to match current column width/scale
+                this.updateSuggestionPlaceholderForGroup(group);
+
+                const childrenCollection = group.getChildren();
+                const children = (childrenCollection && typeof childrenCollection.toArray === 'function')
+                    ? childrenCollection.toArray()
+                    : (childrenCollection ? Array.from(childrenCollection) : []);
+
+                // find hitRect (transparent rect used as hit area)
+                let hitRect = group.findOne('.hit-area');
+                if (!hitRect) {
+                    // Fallback to searching by class if name not found
+                    for (const c of children) {
+                        if (c && c.getClassName && c.getClassName() === 'Rect') {
+                            hitRect = c; break;
+                        }
+                    }
+                }
+
+                const baseWidth = Number(group.getAttr('columnWidth')) || 100;
+                const localWidth = Math.max(1, baseWidth - 20);
+
+                for (let i = 0; i < children.length; i++) {
+                    const c = children[i];
+                    if (!c || c === hitRect) continue;
+                    if (!c.getClassName || c.getClassName() !== 'Text') continue;
+
+                    const pType = c.getAttr && c.getAttr('placeholderType');
+
+                    if (!pType) {
+                        // header/title line
+                        c.y(y);
+                        c.width(baseWidth); // Update width to match column
+                        const rect = c.getClientRect({ skipTransform: true }) || { height: Math.ceil((c.fontSize && c.fontSize()) || 18) };
+                        y += Math.ceil(rect.height) + 2;
+                    } else if (pType === 'suggestion-number') {
+                        // number sits on same Y as following content
+                        c.y(y);
+                    } else if (pType === 'suggestion-item') {
+                        // content placeholder — may wrap to several lines
+                        c.y(y);
+                        c.width(localWidth); // Update width to match column
+                        const rect = c.getClientRect({ skipTransform: true }) || { height: Math.ceil((c.fontSize && c.fontSize()) || 14) };
+                        y += Math.ceil(rect.height) + 2;
+                    } else {
+                        // generic text
+                        c.y(y);
+                        c.width(localWidth); // Update width to match column
+                        const rect = c.getClientRect({ skipTransform: true }) || { height: Math.ceil((c.fontSize && c.fontSize()) || 14) };
+                        y += Math.ceil(rect.height) + 2;
+                    }
+                }
+
+                if (hitRect && typeof hitRect.height === 'function') {
+                    hitRect.height(Math.max(1, y));
+                    const bW = Number(group.getAttr('columnWidth')) || 0;
+                    if (bW > 0) hitRect.width(bW);
+                }
+                
+                // Force Transformer to re-calculate bounds
+                if (this.transformer && typeof this.transformer.forceUpdate === 'function') {
+                    this.transformer.forceUpdate();
+                }
+
+                if (this.layer && typeof this.layer.batchDraw === 'function') this.layer.batchDraw();
+            } catch (err) {
+                console.warn('relayoutSuggestionColumn error', err);
+            }
         },
         drawRoundRect(ctx, x, y, width, height, radius) {
             ctx.beginPath();
@@ -1423,7 +1577,7 @@ export default {
             const parent = node.getParent();
             if (parent && parent instanceof Konva.Group) {
                 const groupName = parent.name() || '';
-                if (groupName.includes('suggestion-table-part') || groupName.includes('competency-table')) {
+                if (groupName.includes('suggestion-table-part')) {
                     if (type === 'bold' || type === 'italic') {
                         parent.setAttrs({ fontStyle: node.fontStyle() });
                     } else if (type === 'underline') {
@@ -1434,6 +1588,15 @@ export default {
                         parent.setAttrs({ align: value });
                     } else if (type === 'fontFamily') {
                         parent.setAttrs({ fontFamily: value });
+                    } else if (type === 'fontSize') {
+                        parent.setAttrs({ fontSize: Number(value) });
+                    }
+                    this.relayoutSuggestionColumn(parent);
+                } else if (groupName.includes('competency-table')) {
+                    // competency-table might need its own relayout if implemented, 
+                    // for now just update attrs
+                    if (type === 'bold' || type === 'italic') {
+                        parent.setAttrs({ fontStyle: node.fontStyle() });
                     } else if (type === 'fontSize') {
                         parent.setAttrs({ fontSize: Number(value) });
                     }
@@ -1531,9 +1694,95 @@ export default {
                 if (node instanceof Konva.Image) {
                     el.src = node.image().src;
                 } else if (node instanceof Konva.Group) {
-                    // For groups, we might want to save children if they aren't standard templates
-                    // But for our app, we usually recreate them from attrs like 'name'
-                    // So we just ensure name is set.
+                    // For groups, we usually recreate them from attrs like 'name'.
+                    // Additionally capture immediate child GROUP attrs so we can
+                    // restore moved/adjusted child positions (e.g., suggestion-table-part).
+                }
+                // Capture immediate child nodes attrs for groups so nested text/font
+                // changes are preserved. Store an array of children { className, attrs }.
+                if (node instanceof Konva.Group) {
+                    try {
+                        const childrenCollection = (typeof node.getChildren === 'function') ? node.getChildren() : null;
+                        const childrenArray = (childrenCollection && typeof childrenCollection.toArray === 'function')
+                            ? childrenCollection.toArray()
+                            : (childrenCollection ? Array.from(childrenCollection) : []);
+                        const childrenSaved = childrenArray.map((c) => {
+                            try {
+                                const cAttrs = c && typeof c.getAttrs === 'function' ? { ...c.getAttrs() } : {};
+                                // avoid serializing image bitmap data
+                                delete cAttrs.image;
+
+                                // also capture immediate children of this child (one level deep)
+                                let nested = [];
+                                try {
+                                    const cChildCollection = (typeof c.getChildren === 'function') ? c.getChildren() : null;
+                                    const cChildArray = (cChildCollection && typeof cChildCollection.toArray === 'function')
+                                        ? cChildCollection.toArray()
+                                        : (cChildCollection ? Array.from(cChildCollection) : []);
+                                    nested = cChildArray.map(cc => {
+                                        try {
+                                            const ccAttrs = cc && typeof cc.getAttrs === 'function' ? { ...cc.getAttrs() } : {};
+                                            delete ccAttrs.image;
+                                            return { className: cc && typeof cc.getClassName === 'function' ? cc.getClassName() : null, attrs: ccAttrs };
+                                        } catch (err) {
+                                            return null;
+                                        }
+                                    }).filter(Boolean);
+                                } catch (err) {
+                                    nested = [];
+                                }
+
+                                const saved = { className: c && typeof c.getClassName === 'function' ? c.getClassName() : null, attrs: cAttrs };
+                                if (nested && nested.length) saved.children = nested;
+                                return saved;
+                            } catch (err) {
+                                return null;
+                            }
+                        }).filter(Boolean);
+                        if (childrenSaved.length) el.attrs.children = childrenSaved;
+                        // If this is a suggestion table, derive current labels from child columns
+                        try {
+                            const name = node.getAttr && node.getAttr('name');
+                            if (name === 'suggestion-table') {
+                                // find immediate child groups (columns)
+                                const cols = childrenArray.filter(c => c && c.getAttr && (c.getAttr('name') === 'suggestion-table-part' || c.getAttr('labels')));
+                                const left = [];
+                                const right = [];
+                                if (cols.length === 1) {
+                                    // single column -> treat as left
+                                    const col = cols[0];
+                                    const header = (col.find && col.find('Text') && col.find('Text')[0]) || null;
+                                    const hText = header && header.text ? String(header.text()) : null;
+                                    if (hText) left.push(hText);
+                                } else if (cols.length >= 2) {
+                                    // extract header text from first two columns
+                                    const colLeft = cols[0];
+                                    const colRight = cols[1];
+                                    const hL = (colLeft.find && colLeft.find('Text') && colLeft.find('Text')[0]) || null;
+                                    const hR = (colRight.find && colRight.find('Text') && colRight.find('Text')[0]) || null;
+                                    const tL = hL && hL.text ? String(hL.text()) : null;
+                                    const tR = hR && hR.text ? String(hR.text()) : null;
+                                    if (tL) left.push(tL);
+                                    if (tR) right.push(tR);
+                                }
+                                // Always persist left/right arrays (may be empty) so reload won't fall back to defaults
+                                el.attrs.labelsLeft = left;
+                                el.attrs.labelsRight = right;
+                                el.attrs.labels = (left || []).concat(right || []);
+                            }
+                            // For individual suggestion column parts, ensure labels attr matches header texts
+                            if (node.getAttr && node.getAttr('name') === 'suggestion-table-part') {
+                                const header = (childrenArray && childrenArray.find(c => c && c.getClassName && c.getClassName() === 'Text' && !c.getAttr('placeholderType'))) || null;
+                                if (header && header.text) {
+                                    el.attrs.labels = [String(header.text())];
+                                }
+                            }
+                        } catch (err) {
+                            // ignore extraction errors
+                        }
+                    } catch (err) {
+                        // ignore serialization errors
+                    }
                 }
 
                 elements.push(el);
@@ -1794,14 +2043,11 @@ export default {
             return ['Outstanding', 'Opportunity'];
         },
         buildSuggestionPlaceholder(count, lineLength) {
-            const total = Math.max(0, Number(count) || 0);
-            const chunk = Math.max(1, Number(lineLength) || 1);
-            const chars = 'X'.repeat(total);
-            const lines = [];
-            for (let i = 0; i < chars.length; i += chunk) {
-                lines.push(chars.slice(i, i + chunk));
-            }
-            return lines.join('\n');
+            const chunk = Math.max(10, Number(lineLength) || 20);
+            // Intentionally make it longer than the line to ensure it fills up to the edge
+            const line = '• ' + 'X'.repeat(chunk + 10);
+            // Show 3 placeholder list items
+            return [line, line, line].join('\n');
         },
         async fetchExampleData() {
             try {
@@ -1815,7 +2061,203 @@ export default {
                 console.warn('Failed to fetch example data from API:', err);
                 // Keep default values if API fails
             }
-        }
+        },
+        async showSuggestionPicker() {
+            return new Promise((resolve) => {
+                try {
+                    // remove existing overlay if present
+                    const existing = document.querySelector('.suggestion-picker-overlay');
+                    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'suggestion-picker-overlay';
+                    overlay.style.position = 'fixed';
+                    overlay.style.left = '0';
+                    overlay.style.top = '0';
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    overlay.style.background = 'rgba(0,0,0,0.45)';
+                    overlay.style.display = 'flex';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.zIndex = '999999';
+
+                    const modal = document.createElement('div');
+                    modal.className = 'suggestion-picker-modal';
+                    modal.style.background = '#ffffff';
+                    modal.style.padding = '16px';
+                    modal.style.borderRadius = '8px';
+                    modal.style.minWidth = '360px';
+                    modal.style.maxWidth = '90%';
+                    modal.style.boxShadow = '0 8px 28px rgba(0,0,0,0.25)';
+
+                    const title = document.createElement('div');
+                    title.style.fontSize = '16px';
+                    title.style.fontWeight = '600';
+                    title.style.marginBottom = '10px';
+                    title.textContent = 'เลือกหัวข้อสำหรับสองคอลัมน์ (ซ้าย / ขวา)';
+                    modal.appendChild(title);
+
+                    const form = document.createElement('div');
+                    form.style.display = 'grid';
+                    form.style.gridTemplateColumns = '1fr 1fr';
+                    form.style.gap = '10px';
+
+                    // If there are suggestion documents in the store, show selectors
+                    const suggestionDocs = (this.getStoreList && typeof this.getStoreList === 'function')
+                        ? this.getStoreList('competencies/proposition/proposition') : [];
+                    if (Array.isArray(suggestionDocs) && suggestionDocs.length) {
+                        const docsRow = document.createElement('div');
+                        docsRow.style.display = 'grid';
+                        docsRow.style.gridTemplateColumns = '1fr 1fr';
+                        docsRow.style.gap = '10px';
+                        docsRow.style.marginBottom = '8px';
+
+                        const makeSelect = (side) => {
+                            const wrap = document.createElement('div');
+                            const lbl = document.createElement('div');
+                            lbl.style.fontSize = '13px';
+                            lbl.style.marginBottom = '6px';
+                            lbl.textContent = side === 'left' ? 'เลือกเอกสารสำหรับคอลัมน์ซ้าย' : 'เลือกเอกสารสำหรับคอลัมน์ขวา';
+                            wrap.appendChild(lbl);
+                            const sel = document.createElement('select');
+                            sel.style.width = '100%';
+                            sel.style.padding = '8px';
+                            sel.style.border = '1px solid #e6e6e6';
+                            const emptyOpt = document.createElement('option');
+                            emptyOpt.value = '';
+                            emptyOpt.textContent = '-- ไม่เลือก (ใช้ค่าเริ่มต้น/กำหนดเอง) --';
+                            sel.appendChild(emptyOpt);
+                            suggestionDocs.forEach((doc, idx) => {
+                                const opt = document.createElement('option');
+                                const title = this.getLocalizedValue && typeof this.getLocalizedValue === 'function'
+                                    ? this.getLocalizedValue(doc && doc.title, 'en')
+                                    : (doc && doc.title) || (`Doc ${idx + 1}`);
+                                opt.value = String(idx);
+                                opt.textContent = title || (`Doc ${idx + 1}`);
+                                sel.appendChild(opt);
+                            });
+                            const customOpt = document.createElement('option');
+                            customOpt.value = 'custom';
+                            customOpt.textContent = '-- กำหนดเอง --';
+                            sel.appendChild(customOpt);
+                            wrap.appendChild(sel);
+                            return { wrap, sel };
+                        };
+
+                        const leftSelObj = makeSelect('left');
+                        const rightSelObj = makeSelect('right');
+                        docsRow.appendChild(leftSelObj.wrap);
+                        docsRow.appendChild(rightSelObj.wrap);
+                        modal.appendChild(docsRow);
+
+                        // wire selection to populate inputs
+                        leftSelObj.sel.addEventListener('change', () => {
+                            const v = leftSelObj.sel.value;
+                            if (!v) return; // leave manual value
+                            if (v === 'custom') { leftInput.focus(); return; }
+                            const doc = suggestionDocs[Number(v)];
+                            if (!doc) return;
+                            const labels = (this.extractSuggestionLabels && typeof this.extractSuggestionLabels === 'function')
+                                ? this.extractSuggestionLabels(doc) : [];
+                            leftInput.value = (Array.isArray(labels) && labels.length) ? labels.join(', ') : (this.getLocalizedValue ? this.getLocalizedValue(doc && doc.title, 'en') : (doc && doc.title) || '');
+                        });
+
+                        rightSelObj.sel.addEventListener('change', () => {
+                            const v = rightSelObj.sel.value;
+                            if (!v) return;
+                            if (v === 'custom') { rightInput.focus(); return; }
+                            const doc = suggestionDocs[Number(v)];
+                            if (!doc) return;
+                            const labels = (this.extractSuggestionLabels && typeof this.extractSuggestionLabels === 'function')
+                                ? this.extractSuggestionLabels(doc) : [];
+                            rightInput.value = (Array.isArray(labels) && labels.length) ? labels.join(', ') : (this.getLocalizedValue ? this.getLocalizedValue(doc && doc.title, 'en') : (doc && doc.title) || '');
+                        });
+                    }
+                    const leftWrap = document.createElement('div');
+                    const leftLabel = document.createElement('div');
+                    leftLabel.style.fontSize = '13px';
+                    leftLabel.style.marginBottom = '6px';
+                    leftLabel.textContent = 'หัวข้อคอลัมน์ซ้าย';
+                    leftWrap.appendChild(leftLabel);
+                    const leftInput = document.createElement('input');
+                    leftInput.type = 'text';
+                    leftInput.value = (this.getSuggestionLabels()[0] || 'Outstanding');
+                    leftInput.style.width = '100%';
+                    leftInput.style.padding = '8px';
+                    leftInput.style.border = '1px solid #e6e6e6';
+                    leftWrap.appendChild(leftInput);
+
+                    const rightWrap = document.createElement('div');
+                    const rightLabel = document.createElement('div');
+                    rightLabel.style.fontSize = '13px';
+                    rightLabel.style.marginBottom = '6px';
+                    rightLabel.textContent = 'หัวข้อคอลัมน์ขวา';
+                    rightWrap.appendChild(rightLabel);
+                    const rightInput = document.createElement('input');
+                    rightInput.type = 'text';
+                    rightInput.value = (this.getSuggestionLabels()[1] || 'Opportunities');
+                    rightInput.style.width = '100%';
+                    rightInput.style.padding = '8px';
+                    rightInput.style.border = '1px solid #e6e6e6';
+                    rightWrap.appendChild(rightInput);
+
+                    form.appendChild(leftWrap);
+                    form.appendChild(rightWrap);
+                    modal.appendChild(form);
+
+                    const btnRow = document.createElement('div');
+                    btnRow.style.display = 'flex';
+                    btnRow.style.justifyContent = 'flex-end';
+                    btnRow.style.gap = '8px';
+                    btnRow.style.marginTop = '12px';
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.textContent = 'ยกเลิก';
+                    cancelBtn.style.padding = '8px 12px';
+                    cancelBtn.style.borderRadius = '6px';
+                    cancelBtn.style.border = '1px solid #e5e7eb';
+                    cancelBtn.style.background = '#f1f5f9';
+                    cancelBtn.onclick = () => { overlay.remove(); resolve(null); };
+
+                    const insertBtn = document.createElement('button');
+                    insertBtn.textContent = 'แทรก';
+                    insertBtn.style.padding = '8px 12px';
+                    insertBtn.style.borderRadius = '6px';
+                    insertBtn.style.border = 'none';
+                    insertBtn.style.background = '#2563eb';
+                    insertBtn.style.color = '#fff';
+                    insertBtn.onclick = () => {
+                        const left = String(leftInput.value || '').split(',').map(s => s.trim()).filter(Boolean);
+                        const right = String(rightInput.value || '').split(',').map(s => s.trim()).filter(Boolean);
+                        overlay.remove();
+                        resolve({ leftLabels: left.length ? left : ['Outstanding'], rightLabels: right.length ? right : ['Opportunities'] });
+                    };
+
+                    btnRow.appendChild(cancelBtn);
+                    btnRow.appendChild(insertBtn);
+                    modal.appendChild(btnRow);
+
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+
+                    const onKey = (ev) => {
+                        if (ev.key === 'Escape') {
+                            overlay.remove();
+                            window.removeEventListener('keydown', onKey);
+                            resolve(null);
+                        } else if (ev.key === 'Enter') {
+                            insertBtn.click();
+                            window.removeEventListener('keydown', onKey);
+                        }
+                    };
+                    window.addEventListener('keydown', onKey);
+                } catch (err) {
+                    console.error('showSuggestionPicker error', err);
+                    resolve({ leftLabels: ['Outstanding'], rightLabels: ['Opportunities'] });
+                }
+            });
+        },
     }
 }
 </script>

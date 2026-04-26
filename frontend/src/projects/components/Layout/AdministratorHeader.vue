@@ -5,57 +5,43 @@
         <h1 class="hero-title animate-slide-up">System Administration</h1>
         <p class="hero-subtitle animate-slide-up-delay-1">Student & Advisor Control Center</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2">
-            <div class="hero-badge mr-3">
-                <CIcon name="cil-calendar" class="mr-2 icon-gold" size="sm"/>
-                Term {{ currentTerm }}
-            </div>
-            <div class="hero-badge">
-                <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm"/>
-                Admin Access
-            </div>
+          <div class="hero-badge mr-3">
+            <CIcon name="cil-calendar" class="mr-2 icon-gold" size="sm" />
+            Term {{ currentTerm }}
+          </div>
+          <div class="hero-badge">
+            <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm" />
+            Admin Access
+          </div>
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in">
-        <input type="file" ref="fileInputStudent" @change="onFileChangeStudent" accept=".xlsx, .xls, .csv" style="display: none;" />
-        <input type="file" ref="fileInputAdvisor" @change="onFileChangeAdvisor" accept=".xlsx, .xls, .csv" style="display: none;" />
+        <input type="file" ref="fileInputStudent" @change="onFileChangeStudent" accept=".xlsx, .xls, .csv"
+          style="display: none;" />
+        <input type="file" ref="fileInputAdvisor" @change="onFileChangeAdvisor" accept=".xlsx, .xls, .csv"
+          style="display: none;" />
 
-        <CButton 
-          color="light" 
-          class="btn-hero-action px-4 py-2 font-weight-bold shadow-sm d-flex align-items-center" 
-          @click="showImportModal = true"
-        >
-          <CIcon name="cil-cloud-upload" class="mr-2 text-primary" size="lg"/>
+        <CButton color="light" class="btn-hero-action px-4 py-2 font-weight-bold shadow-sm d-flex align-items-center"
+          @click="showImportModal = true">
+          <CIcon name="cil-cloud-upload" class="mr-2 text-primary" size="lg" />
           IMPORT
         </CButton>
       </div>
     </div>
 
     <!-- Import Selection Modal -->
-    <CModal
-      title="Import Selection"
-      :show.sync="showImportModal"
-      centered
-      size="lg"
-      class="import-modal"
-    >
+    <CModal title="Import Selection" :show.sync="showImportModal" centered size="lg" class="import-modal">
       <div class="p-4 text-center">
         <h4 class="mb-4 text-dark font-weight-bold">What would you like to import?</h4>
         <div class="d-flex justify-content-center mb-5">
-          <div 
-            class="selection-card mr-4" 
-            :class="{'active': importType === 'Student'}"
-            @click="importType = 'Student'"
-          >
+          <div class="selection-card mr-4" :class="{ 'active': importType === 'Student' }"
+            @click="importType = 'Student'">
             <div class="icon-box bg-soft-red mb-3">
               <CIcon name="cil-people" height="40" class="text-danger" />
             </div>
             <div class="selection-label">Student</div>
           </div>
-          <div 
-            class="selection-card" 
-            :class="{'active': importType === 'Advisor'}"
-            @click="importType = 'Advisor'"
-          >
+          <div class="selection-card" :class="{ 'active': importType === 'Advisor' }" @click="importType = 'Advisor'">
             <div class="icon-box bg-soft-orange mb-3">
               <CIcon name="cil-briefcase" height="40" class="text-warning" />
             </div>
@@ -67,24 +53,16 @@
           <div v-if="importType === 'Student'" class="animate-fade-in">
             <CRow>
               <CCol md="6">
-                <CButton 
-                  color="info" 
-                  variant="outline" 
-                  class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerStudentFile"
-                >
+                <CButton color="info" variant="outline" class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerStudentFile">
                   <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
                   <span class="font-weight-bold">Upload Excel/CSV</span>
                   <small class="d-block mt-1 text-muted">Import multiple students from file</small>
                 </CButton>
               </CCol>
               <CCol md="6">
-                <CButton 
-                  color="danger" 
-                  variant="outline" 
-                  class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerStudentManual"
-                >
+                <CButton color="danger" variant="outline" class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerStudentManual">
                   <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
                   <span class="font-weight-bold">Enter Text</span>
                   <small class="d-block mt-1 text-muted">Add a single student manually</small>
@@ -93,14 +71,18 @@
             </CRow>
           </div>
           <div v-if="importType === 'Advisor'" class="animate-fade-in">
-            <CRow class="justify-content-center">
+            <CRow>
               <CCol md="6">
-                <CButton 
-                  color="warning" 
-                  variant="outline" 
-                  class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerAdvisorManual"
-                >
+                <CButton color="warning" variant="outline" class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerAdvisorFile">
+                  <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
+                  <span class="font-weight-bold">Upload Excel/CSV</span>
+                  <small class="d-block mt-1 text-muted">Import multiple advisors from file</small>
+                </CButton>
+              </CCol>
+              <CCol md="6">
+                <CButton color="warning" variant="outline" class="btn-option p-4 w-100 shadow-sm"
+                  @click="triggerAdvisorManual">
                   <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
                   <span class="font-weight-bold">Enter Text</span>
                   <small class="d-block mt-1 text-muted">Add a single advisor manually</small>
@@ -113,7 +95,7 @@
       <template #footer>
         <CButton color="secondary" @click="showImportModal = false">Close</CButton>
         <CButton color="info" variant="link" class="ml-auto" @click="$emit('refresh'); showImportModal = false">
-           <CIcon name="cil-reload" class="mr-1" size="sm"/> Sync Data
+          <CIcon name="cil-reload" class="mr-1" size="sm" /> Sync Data
         </CButton>
       </template>
     </CModal>
@@ -135,16 +117,17 @@ export default {
     ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
     ...mapGetters('academic/course', { storedCourses: 'course' }),
     ...mapGetters('member/students', { storedStudents: 'students' }),
-    
+    ...mapGetters('setting/province', { storedProvinces: 'province' }),
+
     currentTerm() {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        let semester = 1;
-        if (month > 6 && month < 11) semester = 1;
-        else if (month >= 11 || month < 4) semester = 2;
-        else semester = 3;
-        return `${semester}/${year}`;
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      let semester = 1;
+      if (month > 6 && month < 11) semester = 1;
+      else if (month >= 11 || month < 4) semester = 2;
+      else semester = 3;
+      return `${semester}/${year}`;
     }
   },
   data() {
@@ -162,135 +145,177 @@ export default {
       this.$emit('add-student');
       this.showImportModal = false;
     },
+    triggerAdvisorFile() {
+      this.$refs.fileInputAdvisor.click();
+      this.showImportModal = false;
+    },
     triggerAdvisorManual() {
       this.$emit('add-advisor');
       this.showImportModal = false;
     },
     onFileChangeStudent(e) {
-        const files = e.target.files;
-        if (!files.length) return;
-        const file = files[0];
-        const reader = new FileReader();
+      const files = e.target.files;
+      if (!files.length) return;
+      const file = files[0];
+      const reader = new FileReader();
 
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            if (jsonData.length < 2) return;
-            const headers = jsonData[0].map(h => h.toString().toLowerCase().trim());
-            const rows = jsonData.slice(1);
-            const payload = [];
+        if (jsonData.length < 2) return;
+        const headers = jsonData[0].map(h => h.toString().toLowerCase().trim());
+        const rows = jsonData.slice(1);
+        const payload = [];
 
-            rows.forEach(row => {
-                if (row.length === 0) return;
-                const getValue = (headerName) => {
-                    const index = headers.indexOf(headerName.toLowerCase());
-                    return index !== -1 ? row[index] : null;
-                };
+        rows.forEach(row => {
+          if (row.length === 0) return;
+          const getValue = (headerName) => {
+            const index = headers.indexOf(headerName.toLowerCase());
+            return index !== -1 ? row[index] : null;
+          };
 
-                const studentID = getValue('ID')
-                const nameThai = getValue('Name-Surname (Thai)')
-                const nameEnglish = getValue('Name-Surname')
-                const email = getValue('Email');
-                const programName = getValue('Programe');
-                const schoolName = getValue('School');
-                const courseName = getValue('Course');
-                const company = getValue('Organization name');
-                const semester = getValue('Semester');
-                const year = getValue('Year');
+          const studentID = getValue('ID')
+          const nameThai = getValue('Name-Surname (Thai)')
+          const nameEnglish = getValue('Name-Surname')
+          const email = getValue('Email');
+          const programName = getValue('Programe');
+          const schoolName = getValue('School');
+          const courseName = getValue('Course');
+          const company = getValue('Organization name');
+          const semester = getValue('Semester');
+          const year = getValue('Year');
 
-                if (!studentID) return;
+          if (!studentID) return;
 
-                const foundProgram = this.storedPrograms.find(p => Array.isArray(p.title) && p.title.some(t => t.key === 'en' && t.value === programName));
-                const foundSchool = this.storedSchools.find(s => Array.isArray(s.title) && s.title.some(t => t.key === 'en' && t.value === schoolName));
-                const foundCourse = this.storedCourses.find(c => Array.isArray(c.title) && c.title.some(t => t.key === 'en' && t.value === courseName));
+          const foundProgram = this.storedPrograms.find(p => Array.isArray(p.title) && p.title.some(t => t.key === 'en' && t.value === programName));
+          const foundSchool = this.storedSchools.find(s => Array.isArray(s.title) && s.title.some(t => t.key === 'en' && t.value === schoolName));
+          const foundCourse = this.storedCourses.find(c => Array.isArray(c.title) && c.title.some(t => t.key === 'en' && t.value === courseName));
 
-                payload.push({
-                    studentID,
-                    name: [{ key: 'th', value: nameThai || '' }, { key: 'en', value: nameEnglish || '' }],
-                    email,
-                    info: {
-                        semester: semester ? String(semester) : null,
-                        program: foundProgram ? foundProgram._id : null,
-                        school: foundSchool ? foundSchool._id : null,
-                        course: foundCourse ? foundCourse._id : null,
-                        year: year
-                    },
-                    company: company,
-                });
-            });
+          payload.push({
+            studentID,
+            name: [{ key: 'th', value: nameThai || '' }, { key: 'en', value: nameEnglish || '' }],
+            email,
+            info: {
+              semester: semester ? String(semester) : null,
+              program: foundProgram ? foundProgram._id : null,
+              school: foundSchool ? foundSchool._id : null,
+              course: foundCourse ? foundCourse._id : null,
+              year: year
+            },
+            company: company,
+          });
+        });
 
-            if (payload.length > 0) {
-                this.$store.dispatch("member/students/createStudents", payload).then(() => {
-                    this.$emit('refresh');
-                    alert(`Imported ${payload.length} students successfully.`);
-                });
-            }
-            this.$refs.fileInputStudent.value = '';
-        };
-        reader.readAsArrayBuffer(file);
+        if (payload.length > 0) {
+          this.$store.dispatch("member/students/createStudents", payload).then(() => {
+            this.$emit('refresh');
+            alert(`Imported ${payload.length} students successfully.`);
+          });
+        }
+        this.$refs.fileInputStudent.value = '';
+      };
+      reader.readAsArrayBuffer(file);
     },
     onFileChangeAdvisor(e) {
-        const files = e.target.files;
-        if (!files.length) return;
-        const file = files[0];
-        const reader = new FileReader();
+      const files = e.target.files;
+      if (!files.length) return;
+      const file = files[0];
+      const reader = new FileReader();
 
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            if (jsonData.length < 2) return;
-            const headers = jsonData[1].map(h => h ? h.toString().toLowerCase().trim() : '');
-            const rows = jsonData.slice(1);
-            const payload = [];
+        if (jsonData.length < 1) {
+          alert('The file appears to be empty.');
+          return;
+        }
 
-            rows.forEach(row => {
-                if (row.length === 0) return;
-                const getValue = (headerName) => {
-                    const index = headers.indexOf(headerName.toLowerCase());
-                    return index !== -1 ? row[index] : null;
-                };
+        // Find the header row by looking for keywords in the first 10 rows
+        let headerIndex = -1;
+        let headers = [];
+        for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
+          const row = jsonData[i];
+          if (!Array.isArray(row)) continue;
+          const potentialHeaders = row.map(h => h ? h.toString().toLowerCase().trim() : '');
+          if (potentialHeaders.some(h => h.includes('email') || h.includes('อีเมล') || h.includes('evaluator'))) {
+            headerIndex = i;
+            headers = potentialHeaders;
+            break;
+          }
+        }
 
-                const organizationName = getValue('ชื่อสถานประกอบการ\r\norganisation name');
-                const organizationAddress = getValue('ที่อยู่สถานประกอบการ\r\norganisation adress');
-                const province = getValue('จังหวัด\r\nprovince');
-                const email = getValue("อีเมลผู้ประเมิน\r\nevaluator's email");
-                const studentID = getValue('รหัสประจำตัว\r\nstudent id');
+        if (headerIndex === -1) {
+          alert('Could not find the header row. Please make sure your file has a column named "Email" or "อีเมลผู้ประเมิน".');
+          return;
+        }
 
-                if (!email) return;
+        const rows = jsonData.slice(headerIndex + 1);
+        const payload = [];
 
-                let studentRefId = null;
-                if (studentID) {
-                    const foundStudent = this.storedStudents.find(s => s.studentID === String(studentID));
-                    if (foundStudent) studentRefId = foundStudent._id;
-                }
+        rows.forEach(row => {
+          if (!row || row.length === 0) return;
 
-                payload.push({
-                    organizationName: organizationName || null,
-                    organizationAddress: organizationAddress || null,
-                    email: email,
-                    province: province || null,
-                    student: studentRefId,
-                    year: new Date().getFullYear().toString()
-                });
+          const getValue = (searchTerms) => {
+            const terms = Array.isArray(searchTerms) ? searchTerms : [searchTerms];
+            const index = headers.findIndex(h => {
+              if (!h) return false;
+              const cleanH = String(h).toLowerCase().trim();
+              return terms.some(term => cleanH.includes(term.toLowerCase().trim()));
             });
+            return (index !== -1 && row[index] !== undefined) ? row[index] : null;
+          };
 
-            if (payload.length > 0) {
-                this.$store.dispatch("member/advisors/createAdvisors", payload).then(() => {
-                    this.$emit('refresh');
-                    alert(`Imported ${payload.length} advisors successfully.`);
-                }).catch(() => alert('Failed to import advisors.'));
-            }
-            this.$refs.fileInputAdvisor.value = '';
-        };
-        reader.readAsArrayBuffer(file);
+          // Supporting multiple formats in both Thai and English
+          const organizationName = getValue(['Organisation Name', 'สถานประกอบการ', 'company', 'organization']);
+          const organizationAddress = getValue(['Organisation Adress', 'Organisation Address', 'address', 'ที่อยู่']);
+          const province = getValue(['Province', 'จังหวัด']);
+          const email = getValue(['อีเมลผู้ประเมิน', 'Evaluators Email', 'Evaluator\'s Email', 'email', 'อีเมล']);
+          const studentID = getValue(['รหัสประจำตัว', 'Student ID', 'ID', 'student']);
+
+          if (!email) return;
+
+          let provinceId = null;
+          if (province) {
+            const cleanProv = String(province).trim().toLowerCase();
+            const foundProv = this.storedProvinces.find(p => {
+              if (!p.title || !Array.isArray(p.title)) return false;
+              return p.title.some(t => t.value && t.value.toLowerCase().trim() === cleanProv);
+            });
+            if (foundProv) provinceId = foundProv._id;
+          }
+
+          payload.push({
+            organizationName: organizationName ? String(organizationName).trim() : null,
+            organizationAddress: organizationAddress ? String(organizationAddress).trim() : null,
+            email: String(email).trim(),
+            province: provinceId,
+            student: studentID ? String(studentID).trim() : null, // Send raw ID string, backend will resolve
+            year: new Date().getFullYear().toString()
+          });
+        });
+
+        if (payload.length > 0) {
+          this.$store.dispatch("member/advisors/createAdvisors", payload).then(() => {
+            this.$emit('refresh');
+            alert(`Imported ${payload.length} advisors successfully.`);
+          }).catch((err) => {
+            console.error('Import error:', err);
+            alert('Failed to import advisors. Please check if the data format is correct.');
+          });
+        } else {
+          alert('No valid advisor data found in the file.');
+        }
+        this.$refs.fileInputAdvisor.value = '';
+      };
+      reader.readAsArrayBuffer(file);
     }
   }
 }
@@ -327,7 +352,8 @@ export default {
   font-size: 16px;
   opacity: 0.95;
   font-weight: 500;
-  color: #FEC260; /* MFU Gold accent */
+  color: #FEC260;
+  /* MFU Gold accent */
 }
 
 .hero-badge {
@@ -424,8 +450,13 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -433,6 +464,7 @@ export default {
     opacity: 0;
     transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -444,6 +476,7 @@ export default {
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -484,8 +517,13 @@ export default {
   margin: 0 auto;
 }
 
-.bg-soft-red { background-color: #fee2e2; }
-.bg-soft-orange { background-color: #ffedd5; }
+.bg-soft-red {
+  background-color: #fee2e2;
+}
+
+.bg-soft-orange {
+  background-color: #ffedd5;
+}
 
 .selection-label {
   font-weight: 700;
@@ -509,19 +547,19 @@ export default {
   background-color: rgba(0, 0, 0, 0.02);
 }
 
-.import-modal >>> .modal-content {
+.import-modal>>>.modal-content {
   border-radius: 24px;
   border: none;
   overflow: hidden;
 }
 
-.import-modal >>> .modal-header {
+.import-modal>>>.modal-header {
   background: #f9fafb;
   border-bottom: 1px solid #f3f4f6;
   padding: 20px 24px;
 }
 
-.import-modal >>> .modal-title {
+.import-modal>>>.modal-title {
   font-weight: 800;
   color: #111827;
 }

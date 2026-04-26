@@ -63,9 +63,11 @@ export default {
             switch (this.lang) {
                 case "th":
                     this.$store.commit("setting/lang", "en");
+                    if (this.$i18n) this.$i18n.locale = "en";
                     break;
                 case "en":
                     this.$store.commit("setting/lang", "th");
+                    if (this.$i18n) this.$i18n.locale = "th";
                     break;
             }
         }

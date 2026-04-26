@@ -1,5 +1,4 @@
 // const LLMMistralPage = () => import('@/projects/views/administration/LLMMistralPage')
-const SentimentUI = () => import('@/projects/views/administration/SentimentUI.vue')
 const TheContainer_Project = () => import('@/containers/TheContainer_Project.vue')
 const TheContainer_Student = () => import('@/containers/TheContainer_Student.vue')
 import Vue from 'vue'
@@ -8,6 +7,8 @@ import Router from 'vue-router'
 // project 
 const Dashboard = () => import('@/projects/views/administration/Dashboard')
 const StudentDashboard = () => import('@/projects/views/student/StudentDashboard')
+// AI test page
+const AIFeedbackTest = () => import('@/projects/views/administration/AI/AIFeedbackTest')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
@@ -69,6 +70,12 @@ export default new Router({
                     name: 'Dashboard',
                     component: Dashboard
                 },
+                {
+                    path: 'ai-feedback',
+                    name: 'AIFeedbackTest',
+                    component: AIFeedbackTest
+                },
+                // gemini-test route removed
 
 
                 {
@@ -155,11 +162,7 @@ export default new Router({
                     name: 'AdministratorAdviser',
                     component: AdministratorAdviser
                 },
-                {
-                    path: 'sentiment-ui',
-                    name: 'SentimentUI',
-                    component: SentimentUI
-                }
+                // sentiment-ui route removed
 
 
             ]

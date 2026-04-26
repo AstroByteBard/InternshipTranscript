@@ -7,6 +7,7 @@ const group = require("./service/group")
 const verification = require("./service/verification");
 const province = require("./service/province")
 const mockAuth = require("./service/mockAuth");
+const realAuth = require("./service/realAuth");
 // const auth_message = require("./service/auth_message");
 // const Role = require("../Accounts/service/role");
 // const Authen_Type = require("../Accounts/service/authen_type");
@@ -86,6 +87,19 @@ router.post("/auth/mock-login", async (req, res) => {
             success: false,
             message: err.message
         });
+    }
+});
+
+// Real login using database lookup
+router.post('/auth/login', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+        const result = await realAuth.loginByEmail(String(email).trim());
+        return res.status(200).json({ success: true, data: result });
+    } catch (err) {
+        console.error('Real login error:', err.message || err);
+        return res.status(400).json({ success: false, message: err.message || 'Login failed' });
     }
 });
 

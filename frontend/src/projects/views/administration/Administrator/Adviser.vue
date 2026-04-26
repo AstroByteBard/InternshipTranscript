@@ -107,11 +107,32 @@ export default {
                 let studentName = '-';
                 let studentID = '-';
 
+                // Try to resolve student info
                 if (adv.student) {
-                    studentID = adv.student.studentID || '-';
-                    const nameThai = adv.student.name ? getVal(adv.student.name, 'th') : '';
-                    const nameEnglish = adv.student.name ? getVal(adv.student.name, 'en') : '';
-                    studentName = nameThai || nameEnglish || '-';
+                    if (typeof adv.student === 'object' && adv.student !== null) {
+                        // Case 1: Populated as object
+                        studentID = adv.student.studentID || '-';
+                        const nameThai = adv.student.name ? getVal(adv.student.name, 'th') : '';
+                        const nameEnglish = adv.student.name ? getVal(adv.student.name, 'en') : '';
+                        studentName = nameThai || nameEnglish || '-';
+                    } else if (typeof adv.student === 'string') {
+                        // Case 2: Just an ID string, try to find in storedStudents
+                        const found = this.storedStudents.find(s => s._id === adv.student);
+                        if (found) {
+                            studentID = found.studentID || '-';
+                            const nameThai = found.name ? getVal(found.name, 'th') : '';
+                            const nameEnglish = found.name ? getVal(found.name, 'en') : '';
+                            studentName = nameThai || nameEnglish || '-';
+                        } else {
+                            // Case 3: Fallback if not found in store
+                            studentID = adv.student; 
+                        }
+                    }
+                }
+
+                // If studentID looks like a MongoDB ObjectId (24 chars hex), and we still haven't found a better one
+                if (studentID.length === 24 && /^[0-9a-fA-F]+$/.test(studentID) && studentName === '-') {
+                    studentID = 'Linking...';
                 }
 
                 return {

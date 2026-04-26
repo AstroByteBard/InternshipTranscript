@@ -95,7 +95,7 @@ export default {
         },
         deleteAdvisor(item) {
             if (confirm(`Are you sure you want to delete advisor ${item.email}?`)) {
-                this.$store.dispatch("member/advisors/deleteAdvisors", item._id).then(() => {
+                this.$store.dispatch("member/advisors/deleteAdvisors", { _id: item._id }).then(() => {
                     this.$emit('refresh');
                     alert(`Advisor deleted successfully!`);
                 }).catch(err => {

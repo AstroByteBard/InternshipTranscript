@@ -166,7 +166,7 @@ export default {
         exportAssessment() {
             if (!this.suggestionItems.length) return
 
-            const lang = 'th'
+            const lang = this.$store.getters['setting/lang'] || 'th';
             const data = []
 
             this.suggestionItems.forEach(item => {

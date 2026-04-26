@@ -25,8 +25,33 @@ exports.onQuerys = async function (request, response) {
 
 exports.onCreate = async function (request, response) {
     try {
+        const advisorsData = Array.isArray(request.body) ? request.body : [request.body];
+        const StudentModel = require('../models/students.model');
+        const mongoose = require('mongoose');
 
-        const doc = await objSchema.onCreate(request.body);
+        // Resolve student IDs for each advisor if they are sent as strings or numbers
+        for (let item of advisorsData) {
+            if (item.student && !mongoose.Types.ObjectId.isValid(item.student)) {
+                const searchID = String(item.student).trim();
+                console.log(`[Import] Attempting to link student ID: "${searchID}"`);
+                
+                // Flexible search: Trim and case-insensitive
+                const student = await StudentModel.findOne({ 
+                    studentID: { $regex: new RegExp(`^${searchID}$`, 'i') } 
+                });
+
+                if (student) {
+                    console.log(`[Import] SUCCESS: Found student "${student.studentID}" for advisor`);
+                    item.student = student._id;
+                } else {
+                    const totalStudents = await StudentModel.countDocuments();
+                    console.log(`[Import] FAILED: Student "${searchID}" not found. (Total students in DB: ${totalStudents})`);
+                    item.student = null; 
+                }
+            }
+        }
+
+        const doc = await objSchema.onCreate(advisorsData);
         return ResMessage.sendResponse(response, 0, 20000, doc);
     } catch (err) {
         console.error("Error creating advisor:", err);

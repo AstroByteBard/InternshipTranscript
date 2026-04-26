@@ -109,6 +109,13 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 }
             }
         }
+        // Debug output to help troubleshoot duplicated headers
+        try {
+            if (typeof window !== 'undefined' && window.__PDF_DEBUG__) {
+                console.log('PDF Export: suggestion-table attrs:', attrs);
+                console.log('PDF Export: computed columns:', columns);
+            }
+        } catch (e) { }
         return el;
     });
 
@@ -129,13 +136,54 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         ctx.closePath();
     };
 
-    // Helper to allow Thai text to wrap in Konva by inserting zero-width spaces
-    // Uses Intl.Segmenter for "Grammar-aware" word breaking if available
+    // Helper to measure text width accurately using a hidden canvas
+    const measureTextWidth = (text, fontSize, fontFamily) => {
+        if (typeof document === 'undefined') return text.length * (fontSize * 0.5); // Fallback for non-browser
+        const canvas = measureTextWidth._canvas || (measureTextWidth._canvas = document.createElement('canvas'));
+        const ctx = canvas.getContext('2d');
+        ctx.font = `${fontSize}px ${fontFamily}`;
+        return ctx.measureText(text).width;
+    };
+
+    // Manual wrapping for Thai text (and others)
+    const wrapTextManual = (text, maxWidth, fontSize, fontFamily) => {
+        if (!text || typeof text !== 'string') return text;
+        if (typeof Intl === 'undefined' || !Intl.Segmenter) return text;
+
+        const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+        const segments = segmenter.segment(text);
+        
+        let lines = [];
+        let currentLine = '';
+        
+        for (const segment of segments) {
+            const word = segment.segment;
+            // Handle existing newlines in source text
+            if (word === '\n') {
+                lines.push(currentLine);
+                currentLine = '';
+                continue;
+            }
+            
+            const testLine = currentLine + word;
+            const testWidth = measureTextWidth(testLine, fontSize, fontFamily);
+            
+            if (testWidth > maxWidth && currentLine !== '') {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        if (currentLine !== '') lines.push(currentLine);
+        return lines.join('\n');
+    };
+
+    // Helper to allow Thai text to wrap in Konva (legacy fallback if needed)
     const addThaiWordBreaks = (text) => {
         if (!text || typeof text !== 'string') return text;
-        
+
         try {
-            // Check if Intl.Segmenter is available (modern browsers/Node)
             if (typeof Intl !== 'undefined' && Intl.Segmenter) {
                 const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
                 const segments = segmenter.segment(text);
@@ -145,12 +193,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 }
                 return result;
             }
-        } catch (e) {
-            // Fall back to character-level wrapping if Segmenter fails
-        }
+        } catch (e) { }
 
-        // Fallback: Insert zero-width space (\u200B) after every Thai character
-        return text.replace(/([\u0E00-\u0E7F]|[.,\-_/\\()\[\]{}])/g, "$1\u200B");
+        // If segmenter is not available, return original text to avoid ugly mid-character breaks
+        return text;
     };
 
     const applyZIndex = (node, attrs) => {
@@ -191,35 +237,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         return 0;
     };
 
-    const defaultGeneralCompetencies = [
-        { name: 'Creativity', score: 4.2 },
-        { name: 'Analytical thinking and problem solving', score: 4.1 },
-        { name: 'Digital literacy', score: 4.0 },
-        { name: 'Curiosity and life-long learning', score: 4.1 },
-        { name: 'Resilience, flexibility and agility', score: 4.0 },
-        { name: 'Voluntary and empathy', score: 4.3 },
-        { name: 'Leadership and social influence', score: 4.0 },
-        { name: 'Collaboration', score: 4.2 },
-        { name: 'Cultural and civic literacy', score: 4.1 },
-        { name: 'Entrepreneurial mindset', score: 4.0 },
-        { name: 'Foreign language', score: 4.1 },
-        { name: 'Communication', score: 4.0 }
-    ];
 
-    const completeCompetencies = (items, defaults) => {
-        const list = Array.isArray(items) ? items : [];
-        if (!defaults || !defaults.length) return list;
-        const byName = new Map();
-        list.forEach((it) => {
-            if (!it) return;
-            const key = String(it.name || '').trim();
-            if (key) byName.set(key, it);
-        });
-        return defaults.map((def) => {
-            const key = String(def.name || '').trim();
-            return byName.get(key) || def;
-        });
-    };
 
     const addRadarGraph = (attrs, graphData, items, title) => {
         const x = attrs.x || 0;
@@ -306,11 +324,15 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         });
 
         // Legend
+        const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
+        const lblYou = lang === 'th' ? 'คุณ' : 'You';
+        const lblAvg = lang === 'th' ? 'ค่าเฉลี่ย' : 'Average';
+
         const legendY = 50;
         group.add(new Konva.Circle({ x: centerX - 40, y: legendY, radius: 4, fill: '#7c3aed' }));
-        group.add(new Konva.Text({ x: centerX - 30, y: legendY - 5, text: 'You', fontSize: 11, fontFamily: 'Inter, Arial', fill: '#64748b' }));
+        group.add(new Konva.Text({ x: centerX - 30, y: legendY - 5, text: lblYou, fontSize: 11, fontFamily: 'Inter, Arial', fill: '#64748b' }));
         group.add(new Konva.Circle({ x: centerX + 20, y: legendY, radius: 4, fill: '#fb7185' }));
-        group.add(new Konva.Text({ x: centerX + 30, y: legendY - 5, text: 'Average', fontSize: 11, fontFamily: 'Inter, Arial', fill: '#64748b' }));
+        group.add(new Konva.Text({ x: centerX + 30, y: legendY - 5, text: lblAvg, fontSize: 11, fontFamily: 'Inter, Arial', fill: '#64748b' }));
 
         layer.add(group);
         applyZIndex(group, attrs);
@@ -385,8 +407,18 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             });
         }
 
+        const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
+        let displayTitle = title || 'Competencies';
+        let scoreLabel = 'Score';
+        
+        if (lang === 'th') {
+            if (displayTitle === 'General Competencies') displayTitle = 'ทักษะทั่วไป';
+            else if (displayTitle === 'Specific Competencies') displayTitle = 'ทักษะเฉพาะทาง';
+            scoreLabel = 'คะแนน';
+        }
+
         group.add(new Konva.Text({
-            text: title || 'Competencies',
+            text: displayTitle,
             fontSize: titleFontSize,
             fontFamily: contentFontFamily,
             fontStyle: '600',
@@ -395,7 +427,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         }));
 
         group.add(new Konva.Text({
-            text: 'Score',
+            text: scoreLabel,
             fontSize: titleFontSize,
             fontFamily: contentFontFamily,
             fontStyle: '600',
@@ -438,7 +470,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
             const rowH = Math.max(nameNode.height(), scoreNode.height());
             // Match Editor spacing: use a larger multiplier for vertical separation
-            currentY += Math.max(rowH + 8, contentFontSize * 2.8); 
+            currentY += Math.max(rowH + 8, contentFontSize * 2.8);
         });
 
         layer.add(group);
@@ -534,11 +566,13 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             return groups;
         };
 
-        // If the template provided saved children for suggestion-table, use their
-        // widths/positions and text styles (fontSize/lineHeight) when rendering.
+        // Detect if children are meant to be columns (nested Groups) or flat elements (Rect, Text, etc.)
+        const hasNestedGroups = Array.isArray(placeholderChildren) && placeholderChildren.some(c => c && c.className === 'Group');
         const columns = [];
-        if (Array.isArray(placeholderChildren) && placeholderChildren.length) {
+
+        if (hasNestedGroups) {
             placeholderChildren.forEach((child) => {
+                if (!child || child.className !== 'Group') return; // Only Groups act as column definitions here
                 const cAttrs = child.attrs || {};
                 const cChildren = Array.isArray(child.children) ? child.children : (Array.isArray(cAttrs.children) ? cAttrs.children : []);
                 let colX = Number(cAttrs.x || 0);
@@ -569,54 +603,46 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     colW = Math.max(20, (bbox.maxX - bbox.minX) || (attrs.width ? (attrs.width / 2) : 300));
                 }
 
-                // If label extraction failed or picked up a generic placeholder, use fallback
                 if (!labelText || /^[X\s]+$/.test(labelText)) {
                     labelText = (columns.length === 0) ? 'Outstanding' : 'Opportunity';
                 }
 
                 columns.push({ x: colX, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
             });
-            columns.sort((a, b) => a.x - b.x);
+        } else if (Array.isArray(placeholderChildren) && placeholderChildren.length) {
+            // Flat elements: treat the entire group as ONE column
+            let colW = Number(attrs.width || 0);
+            let labelText = null;
+            let labelFontSize = 20;
+            let contentFontSize = 14;
+            let contentLineHeight = 1.4;
+            let contentPlaceholderWidth = null;
 
-            // Re-verify label names after sorting to ensure left is Outstanding, right is Opportunity
-            if (columns.length >= 2) {
-                if (!columns[0].labelText || columns[0].labelText.toLowerCase().includes('oppor')) columns[0].labelText = 'Outstanding';
-                if (!columns[1].labelText || columns[1].labelText.toLowerCase().includes('outstand')) columns[1].labelText = 'Opportunity';
-            }
-
-            // Validate column positions and widths; fall back to computed two-column
-            // layout when template placeholders don't include reliable x/width values.
-            try {
-                const totalW = (typeof attrs.width === 'number' && attrs.width > 0) ? attrs.width : 650;
-                const gap = Number(attrs.columnGap || 20);
-                const xs = columns.map(c => Math.round(Number(c.x || 0)));
-                const uniqueXs = new Set(xs);
-                const invalid = columns.length === 0 || columns.some(c => !Number.isFinite(c.x) || !Number.isFinite(c.width) || c.width <= 8) || uniqueXs.size !== columns.length;
-                if (invalid) {
-                    if (columns.length >= 2) {
-                        const w1 = Math.floor((totalW - gap) / 2);
-                        const w2 = totalW - gap - w1;
-                        columns[0] = Object.assign({}, columns[0] || {}, { x: 0, width: w1, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
-                        columns[1] = Object.assign({}, columns[1] || {}, { x: w1 + gap, width: w2, labelFontSize: (columns[1] && columns[1].labelFontSize) || 18, contentFontSize: (columns[1] && columns[1].contentFontSize) || 12, contentLineHeight: (columns[1] && columns[1].contentLineHeight) || 1.2 });
-                    } else if (columns.length === 1) {
-                        columns[0] = Object.assign({}, columns[0], { x: 0, width: totalW, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
-                    } else {
-                        const w = totalW;
-                        columns.push({ x: 0, width: w, labelText: 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.2 });
-                    }
-                } else {
-                    // Relax font size normalization to respect template styles
-                    columns.forEach(c => {
-                        c.labelFontSize = Math.max(10, Math.min(48, c.labelFontSize || 18));
-                        c.contentFontSize = Math.max(8, Math.min(32, c.contentFontSize || 12));
-                        c.contentLineHeight = c.contentLineHeight || 1.2;
-                        c.x = Math.round(c.x || 0);
-                        c.width = Math.round(c.width || 0);
-                    });
+            placeholderChildren.forEach(ch => {
+                const a = ch.attrs || {};
+                if (!labelText && a.text && (a.fontSize && a.fontSize >= 14)) {
+                    labelText = a.text;
+                    labelFontSize = a.fontSize || labelFontSize;
                 }
-            } catch (e) {
-                // fall back silently
+                if (a.placeholderType === 'suggestion' || a.placeholderType === 'suggestion-item' || /^X{4,}$/.test(String(a.text || ''))) {
+                    contentFontSize = a.fontSize || contentFontSize;
+                    contentLineHeight = a.lineHeight || contentLineHeight;
+                    contentPlaceholderWidth = a.width || contentPlaceholderWidth;
+                }
+                if (!colW && typeof a.width === 'number') colW = Math.max(colW, a.width || 0);
+            });
+
+            if (!colW || colW < 20) {
+                const bbox = computeBBox(placeholderChildren);
+                colW = Math.max(20, (bbox.maxX - bbox.minX) || 300);
             }
+
+            if (!labelText) {
+                const vn = String(attrs.variableName || attrs.name || '').toLowerCase();
+                labelText = vn.includes('oppor') ? 'Opportunity' : 'Outstanding';
+            }
+
+            columns.push({ x: 0, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
         } else {
             // fallback: try attrs to infer two columns if saved
             const leftLabels = Array.isArray(attrs.labelsLeft) ? attrs.labelsLeft : (Array.isArray(attrs.labels) ? attrs.labels.slice(0, 1) : ['Outstanding']);
@@ -631,6 +657,48 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             }
         }
 
+        columns.sort((a, b) => a.x - b.x);
+
+        // Re-verify label names after sorting to ensure left is Outstanding, right is Opportunity
+        if (columns.length >= 2) {
+            if (!columns[0].labelText || columns[0].labelText.toLowerCase().includes('oppor')) columns[0].labelText = 'Outstanding';
+            if (!columns[1].labelText || columns[1].labelText.toLowerCase().includes('outstand')) columns[1].labelText = 'Opportunity';
+        }
+
+        // Validate column positions and widths; fall back to computed two-column
+        // layout when template placeholders don't include reliable x/width values.
+        try {
+            const totalW = (typeof attrs.width === 'number' && attrs.width > 0) ? attrs.width : 650;
+            const gap = Number(attrs.columnGap || 20);
+            const xs = columns.map(c => Math.round(Number(c.x || 0)));
+            const uniqueXs = new Set(xs);
+            const invalid = columns.length === 0 || columns.some(c => !Number.isFinite(c.x) || !Number.isFinite(c.width) || c.width <= 8) || uniqueXs.size !== columns.length;
+            if (invalid) {
+                if (columns.length >= 2) {
+                    const w1 = Math.floor((totalW - gap) / 2);
+                    const w2 = totalW - gap - w1;
+                    columns[0] = Object.assign({}, columns[0] || {}, { x: 0, width: w1, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
+                    columns[1] = Object.assign({}, columns[1] || {}, { x: w1 + gap, width: w2, labelFontSize: (columns[1] && columns[1].labelFontSize) || 18, contentFontSize: (columns[1] && columns[1].contentFontSize) || 12, contentLineHeight: (columns[1] && columns[1].contentLineHeight) || 1.2 });
+                } else if (columns.length === 1) {
+                    columns[0] = Object.assign({}, columns[0], { x: 0, width: totalW, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
+                } else {
+                    const w = totalW;
+                    columns.push({ x: 0, width: w, labelText: 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.2 });
+                }
+            } else {
+                // Relax font size normalization to respect template styles
+                columns.forEach(c => {
+                    c.labelFontSize = Math.max(10, Math.min(48, c.labelFontSize || 18));
+                    c.contentFontSize = Math.max(8, Math.min(32, c.contentFontSize || 12));
+                    c.contentLineHeight = c.contentLineHeight || 1.2;
+                    c.x = Math.round(c.x || 0);
+                    c.width = Math.round(c.width || 0);
+                });
+            }
+        } catch (e) {
+            // fall back silently
+        }
+
         // Determine if this entire table is forced to one type via attributes
         const isForcedOpportunity = attrs.placeholderType?.toLowerCase().includes('oppor') || attrs.variableName?.toLowerCase().includes('oppor');
         const isForcedOutstanding = attrs.placeholderType?.toLowerCase().includes('outstand') || attrs.variableName?.toLowerCase().includes('outstand');
@@ -641,6 +709,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         // Render into columns when template provides column layout
         if (columns.length >= 2) {
             const renderColumn = (colDef, groups, isOpp = false) => {
+                if (!groups || !groups.length) return 0;
                 const colGroup = new Konva.Group({ x: colDef.x || 0, y: 0 });
                 group.add(colGroup);
                 let y = 0;
@@ -705,21 +774,26 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const col = columns[0];
             const isOpp = isForcedOpportunity || (outstandingGroups.length === 0 && opportunityGroups.length > 0);
             const data = isOpp ? opportunityGroups : outstandingGroups;
-            
+            if (!data || !data.length) return group;
+
             const colGroup = new Konva.Group({ x: col.x || 0, y: 0 });
             group.add(colGroup);
             let y = 0;
 
-            const labelText = isOpp ? 'Opportunity' : 'Outstanding';
-            const labelNode = new Konva.Text({ 
-                text: labelText, 
-                fontSize: col.labelFontSize || 16, 
-                fontFamily: attrs.fontFamily || 'Inter, Arial', 
-                fontStyle: '600', 
-                fill: attrs.fill || '#1e293b', 
-                x: 0, 
-                y, 
-                width: col.width 
+            const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
+            let labelText = isOpp ? 'Opportunity' : 'Outstanding';
+            if (lang === 'th') {
+                labelText = isOpp ? 'จุดที่ควรพัฒนา' : 'จุดเด่น';
+            }
+            const labelNode = new Konva.Text({
+                text: labelText,
+                fontSize: col.labelFontSize || 16,
+                fontFamily: attrs.fontFamily || 'Inter, Arial',
+                fontStyle: '600',
+                fill: attrs.fill || '#1e293b',
+                x: 0,
+                y,
+                width: col.width
             });
             colGroup.add(labelNode);
             y += (labelNode.height() || (col.labelFontSize || 16)) + 8;
@@ -733,34 +807,35 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             });
 
             const leftMargin = 6;
-            const textX = 24;
+            const textX = 20;
             const groupX = attrs.x || 0;
             const sX = attrs.scaleX || 1;
-            const maxColWidth = ((740 - groupX) / sX) - (col.x || 0) - textX - 10;
-            const targetWidth = col.contentPlaceholderWidth || (col.width ? (col.width - textX - 8) : 250);
-            const contentWidth = Math.max(20, Math.min(targetWidth, maxColWidth));
+            const rightBoundary = isOpp ? 770 : 370; 
+            const maxColWidth = ((rightBoundary - groupX) / sX) - (col.x || 0) - textX - 5;
+
+            const contentWidth = Math.max(100, maxColWidth);
 
             itemsFlat.forEach((it, idx) => {
                 const fontSize = col.contentFontSize || 12;
                 const bullet = new Konva.Circle({ x: leftMargin, y: y + (fontSize * 0.6), radius: 2.5, fill: attrs.fill || '#1e293b' });
                 colGroup.add(bullet);
 
-                const txtFull = addThaiWordBreaks(ptToString(it.text));
-                const txtNode = new Konva.Text({ 
-                    text: txtFull, 
-                    fontSize: col.contentFontSize || 14, 
-                    fontFamily: attrs.fontFamily || 'Inter, Arial', 
-                    fontStyle: attrs.fontStyle || 'normal', 
-                    fill: attrs.fill || '#1e293b', 
-                    x: textX, 
-                    y, 
-                    width: contentWidth, 
-                    align: 'left', 
+                const txtFull = wrapTextManual(ptToString(it.text), contentWidth, col.contentFontSize || 13, attrs.fontFamily || 'Inter, Arial');
+                const txtNode = new Konva.Text({
+                    text: txtFull,
+                    fontSize: col.contentFontSize || 13,
+                    fontFamily: attrs.fontFamily || 'Inter, Arial',
+                    fontStyle: attrs.fontStyle || 'normal',
+                    fill: attrs.fill || '#1e293b',
+                    x: textX,
+                    y,
+                    width: contentWidth,
+                    align: 'left',
                     lineHeight: col.contentLineHeight || 1.4,
-                    wrap: 'word'
+                    wrap: 'none' // Use none because we wrapped manually with \n
                 });
                 colGroup.add(txtNode);
-                const h = txtNode.height() || ((col.contentFontSize || 14) * (col.contentLineHeight || 1.4));
+                const h = txtNode.height() || (fontSize * (col.contentLineHeight || 1.4));
                 y += h + 8;
             });
 
@@ -825,8 +900,11 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             addSection('Opportunities', opportunityGroups);
         }
 
+
         layer.add(group);
         applyZIndex(group, attrs);
+
+        return group;
 
         return group;
     };
@@ -986,9 +1064,30 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         });
     } catch (e) { competencyBottom = null; }
 
+
+
     // Load nodes
     templateJSON.elements.forEach((el) => {
         const attrs = Object.assign({}, el.attrs || {});
+
+        // Skip drawing static Text/Image placeholders for dynamic tables to avoid duplication.
+        // We only skip if it's NOT a Group, because Groups are handled by dedicated builders below.
+        const nameLower = String(attrs.name || '').toLowerCase();
+        const varLower = String(attrs.variableName || attrs.placeholder || '').toLowerCase();
+        const typeLower = String(attrs.placeholderType || '').toLowerCase();
+        const textClean = String(attrs.text || '').trim().toLowerCase();
+
+        const isDynamicPart = nameLower.includes('suggestion') ||
+            typeLower.includes('suggestion') ||
+            varLower.includes('outstand') || varLower.includes('oppor') ||
+            textClean === 'outstanding' || textClean === 'opportunity' || textClean === 'opportunities' ||
+            nameLower.includes('competency-table') ||
+            (/specific|general/i.test(varLower) && /compet/i.test(varLower));
+
+        if (isDynamicPart && el.className !== 'Group') {
+            return;
+        }
+
         if (el.className === 'Text') {
             const originalText = attrs.text || '';
             const keyToLookFor = attrs.variableName || attrs.placeholder || originalText;
@@ -1001,6 +1100,13 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 if (v !== '' && v !== undefined) finalValue = v;
             } else {
                 finalValue = replaceTextVariables(originalText);
+            }
+
+            const lang = dataMap.__language || 'en';
+            if (lang === 'th') {
+                if (finalValue === 'General Competencies') finalValue = 'ทักษะทั่วไป';
+                else if (finalValue === 'Specific Competencies') finalValue = 'ทักษะเฉพาะทาง';
+                else if (finalValue.startsWith('Academic Year ')) finalValue = finalValue.replace('Academic Year ', 'ปีการศึกษา ');
             }
 
             const sX = (attrs.scaleX || 1);
@@ -1033,7 +1139,14 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     }]
                 };
 
-                const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
+                let title = isGeneral ? 'General Competencies' : 'Specific Competencies';
+                
+                const lang = dataMap.__language || 'en';
+                if (lang === 'th') {
+                    title = isGeneral ? 'ทักษะทั่วไป' : 'ทักษะเฉพาะทาง';
+                    pData.datasets[0].label = 'คุณ';
+                    pData.datasets[1].label = 'ค่าเฉลี่ย';
+                }
 
                 if (isRadar) {
                     addRadarGraph(attrs, pData, fallbackItems, title);
@@ -1062,7 +1175,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         } else if (el.className === 'Group') {
             const vn = String(attrs.variableName || '').toLowerCase();
             const isCompTable = attrs.name === 'competency-table' || vn.includes('generalcompet') || vn.includes('specificcompet') || (vn.includes('competenc') && !vn.includes('graph'));
-            
+
             if (isCompTable) {
                 const key = attrs.variableName || (vn.includes('general') ? '{GeneralCompetencies}' : '{SpecificCompetencies}');
                 const isGeneral = String(key).indexOf('General') >= 0;
@@ -1071,9 +1184,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     : (dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
                 // Use actual provided general competency items when available.
                 // Fallback to defaults only when the provided list is empty.
-                const safeItems = isGeneral
-                    ? ((Array.isArray(items) && items.length) ? items : defaultGeneralCompetencies)
-                    : ((Array.isArray(items) && items.length) ? items : [{ name: 'N/A', score: 'X.X' }]);
+                const safeItems = Array.isArray(items) ? items : [];
                 const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
                 // record bottom Y of competency area if possible (attrs.height expected)
                 try {

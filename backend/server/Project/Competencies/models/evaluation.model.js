@@ -29,7 +29,16 @@ var evaluationSchema = new Schema({
                 th: { type: String, default: '' },
                 en: { type: String, default: '' }
             },
-            value: { type: String, default: '' }
+            value: {
+                outstanding: [{
+                    th: { type: String, default: '' },
+                    en: { type: String, default: '' }
+                }],
+                opportunity: [{
+                    th: { type: String, default: '' },
+                    en: { type: String, default: '' }
+                }]
+            }
         }
     }],
 }, { versionKey: false, timestamps: true });

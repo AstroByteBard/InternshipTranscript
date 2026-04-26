@@ -212,7 +212,7 @@ export default {
         failedCount() { return 0; },
 
         schoolOptions() {
-            const lang = this.$i18n.locale || 'en';
+            const lang = this.$store.getters['setting/lang'] || 'en';
             return [
                 { value: null, label: 'All Schools' },
                 ...(this.storedSchools || []).map(item => ({ 
@@ -222,7 +222,7 @@ export default {
             ]
         },
         programOptions() {
-            const lang = this.$i18n.locale || 'en';
+            const lang = this.$store.getters['setting/lang'] || 'en';
             let progs = this.storedPrograms || [];
             if (this.filterSchool) progs = progs.filter(p => p.school === this.filterSchool);
             return [

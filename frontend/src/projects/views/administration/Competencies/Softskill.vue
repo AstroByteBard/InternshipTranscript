@@ -135,7 +135,7 @@ export default {
         exportAssessment() {
             if (!this.softskillItems.length) return
 
-            const lang = 'th' // Default for assessment form
+            const lang = this.$store.getters['setting/lang'] || 'th'; // Assessment form lang
             const data = []
 
             this.softskillItems.forEach(item => {

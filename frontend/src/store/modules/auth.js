@@ -120,7 +120,53 @@ const actions = {
      * Login as Student (mock)
      */
     async loginAsStudent({ dispatch }) {
-        return dispatch('mockLogin', '6631503038@lamduan.mfu.ac.th');
+        // Use real DB-backed login if available, fall back to mock
+        try {
+            return await dispatch('loginReal', '6631503038@lamduan.mfu.ac.th');
+        } catch (e) {
+            return dispatch('mockLogin', '6631503038@lamduan.mfu.ac.th');
+        }
+    },
+
+    /**
+     * Real login using backend DB
+     */
+    async loginReal({ commit }, email) {
+        try {
+            commit('setLoading', true);
+            commit('setError', null);
+
+            // Clear persisted auth to avoid stale user data
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+
+            const response = await axios.post(
+                'http://localhost:8081/api/v1/setting/auth/login',
+                { email }
+            );
+
+            if (response.data.success && response.data.data) {
+                const { user, token } = response.data.data;
+
+                commit('setUser', user);
+                commit('setToken', token);
+                commit('setAuthenticated', true);
+
+                // Store in localStorage for persistence
+                localStorage.setItem('auth_token', token);
+                localStorage.setItem('auth_user', JSON.stringify(user));
+
+                return { user, token };
+            } else {
+                throw new Error(response.data.message || 'Login failed');
+            }
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || err.message;
+            commit('setError', errorMessage);
+            throw err;
+        } finally {
+            commit('setLoading', false);
+        }
     },
 
     /**
