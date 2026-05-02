@@ -18,15 +18,7 @@
         <main class="c-main">
           <CContainer fluid class="px-4 content-body animate-fade-in">
 
-          <StudentAssessmentHeader
-              v-if="studentDoc"
-              :studentName="displayName"
-              :studentID="studentID"
-              :schoolName="schoolInfo"
-              :programName="programInfo"
-              :academicYear="yearInfo"
-              :semester="semesterInfo"
-          />
+
             <!-- Case 1: Assessment Already Completed (Locked State) -->
             <transition name="fade">
               <div v-if="isAlreadySubmitted && !isPreview" class="locked-hero-container py-5 mt-4">
@@ -270,18 +262,14 @@
 
 <script>
 import { mapActions, mapState } from 'vuex'
-import CompetenciesHeader from '@/projects/components/Layout/CompetenciesHeader.vue'
 import RatingSelector from '@/projects/components/Util/RatingSelector.vue'
 import FormNavbar from '@/projects/components/Layout/FormNavbar.vue'
-import StudentAssessmentHeader from '@/projects/components/Layout/StudentAssessmentHeader.vue'
 
 export default {
   name: 'FillForm',
   components: {
-    CompetenciesHeader,
     RatingSelector,
-    FormNavbar,
-    StudentAssessmentHeader
+    FormNavbar
   },
   data() {
     return {

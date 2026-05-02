@@ -19,6 +19,6 @@ var objsSchema = new Schema({
     },
     company: { type: String, default: null },
     evaluation: { type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Evaluation', default: null },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Students', objsSchema, 'Students');

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <DocumentsHeader @create-click="$router.push('/documents/create')" />
+
 
         <WidgetsDocuments 
             :total="documentsData.length" 
@@ -22,7 +22,6 @@
 </template>
 
 <script>
-import DocumentsHeader from '../../../components/Layout/DocumentsHeader.vue'
 import WidgetsDocuments from '../../../components/widgets/WidgetsDocuments.vue'
 import DocsFilterCard from '../../../components/documents/list/DocsFilterCard.vue'
 import DocumentsTable from '../../../components/documents/list/DocumentsTable.vue'
@@ -30,7 +29,6 @@ import DocumentsTable from '../../../components/documents/list/DocumentsTable.vu
 export default {
     name: 'DocumentsIndex',
     components: {
-        DocumentsHeader,
         WidgetsDocuments,
         DocsFilterCard,
         DocumentsTable

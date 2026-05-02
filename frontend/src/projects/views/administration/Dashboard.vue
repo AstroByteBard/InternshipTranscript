@@ -1,6 +1,76 @@
 <template>
   <div>
-    <HeroHeader @download-report="downloadReport" />
+    <!-- Page Header -->
+    <CCard class="border-0 shadow-sm custom-card mb-4 overflow-hidden header-card-accent">
+      <CCardBody class="p-4 d-flex justify-content-between align-items-center bg-white">
+        <div class="flex-grow-1">
+          <h2 class="font-weight-bold text-dark mb-1">Dashboard</h2>
+          <div class="d-flex align-items-center">
+            <span class="text-muted small font-weight-bold">
+              {{ $i18n.locale === 'th' ? 'สรุปภาพรวมผลการประเมินและสถิติการฝึกงานของนักศึกษา' : 'Overview of student internship evaluation and statistics' }}
+            </span>
+          </div>
+        </div>
+        <div class="ml-auto">
+          <CButton color="primary" class="px-4 modern-header-btn" @click="showDownloadModal = true">
+            <CIcon name="cil-cloud-download" class="mr-2"/>
+            {{ $i18n.locale === 'th' ? 'ดาวน์โหลดรายงานแบบประเมิน' : 'Download Evaluation Report' }}
+          </CButton>
+        </div>
+
+    <!-- Download Language Selection Modal -->
+    <CModal
+      :show.sync="showDownloadModal"
+      :centered="true"
+      class="modern-modal"
+    >
+      <template #header>
+        <h5 class="modal-title font-weight-bold">ดาวน์โหลดรายงาน / Download Report</h5>
+        <CButtonClose @click="showDownloadModal = false" />
+      </template>
+      <div class="p-3">
+        <p class="text-muted small mb-4 text-center">กรุณาเลือกรูปแบบไฟล์ที่คุณต้องการดาวน์โหลด (Select your preferred format)</p>
+        
+        <CButton 
+          block 
+          color="primary" 
+          variant="outline" 
+          class="mb-3 py-3 modern-modal-btn d-flex align-items-center justify-content-between"
+          @click="handleDownload('th')"
+        >
+          <div><CIcon name="cil-file" class="mr-3 text-info"/>เอกสารรายงาน (ภาษาไทย)</div>
+          <CIcon name="cil-chevron-right" size="sm"/>
+        </CButton>
+
+        <CButton 
+          block 
+          color="primary" 
+          variant="outline" 
+          class="mb-3 py-3 modern-modal-btn d-flex align-items-center justify-content-between"
+          @click="handleDownload('en')"
+        >
+          <div><CIcon name="cil-file" class="mr-3 text-primary"/>Evaluation Report (English)</div>
+          <CIcon name="cil-chevron-right" size="sm"/>
+        </CButton>
+
+        <CButton 
+          block 
+          color="dark" 
+          variant="outline" 
+          class="mb-2 py-3 modern-modal-btn d-flex align-items-center justify-content-between"
+          @click="handleDownload('json')"
+        >
+          <div><CIcon name="cil-code" class="mr-3 text-secondary"/>ข้อมูลดิบ (JSON Data)</div>
+          <CIcon name="cil-chevron-right" size="sm"/>
+        </CButton>
+      </div>
+      <template #footer>
+        <CButton color="secondary" @click="showDownloadModal = false">ยกเลิก</CButton>
+      </template>
+    </CModal>
+      </CCardBody>
+    </CCard>
+
     <WidgetsDropdown 
       :schoolName="selectedSchoolName" 
       :total="totalStudentsCount"
@@ -8,23 +78,155 @@
       :notEvaluated="notEvaluatedCount"
       @filter-status="handleStatusFilter" 
     />
-    <DashboardFilter 
-      :school.sync="selectedSchool"
-      :program.sync="selectedProgram"
-      :year.sync="selectedYear"
-      :evaluated.sync="selectedEvaluated"
-      :schoolOptions="schoolOptions"
-      :programOptions="programOptions"
-      :yearOptions="yearOptions"
-      :evaluatedOptions="evaluatedOptions"
-    />
-    
-    <CRow>
+
+    <!-- Filter Card -->
+    <CCard class="border-0 shadow-sm custom-card mb-4 overflow-hidden">
+      <CCardBody class="p-4">
+        <CRow>
+          <CCol md="4" class="mb-3 mb-md-0">
+            <div class="filter-group">
+              <label class="filter-label">School / Faculty</label>
+              <CSelect 
+                :value.sync="selectedSchool" 
+                :options="schoolOptions"
+                class="modern-select"
+              />
+            </div>
+          </CCol>
+          <CCol md="4" class="mb-3 mb-md-0">
+            <div class="filter-group">
+              <label class="filter-label">Program / Major</label>
+              <CSelect 
+                :value.sync="selectedProgram" 
+                :options="programOptions"
+                class="modern-select"
+              />
+            </div>
+          </CCol>
+          <CCol md="4">
+            <div class="filter-group">
+              <label class="filter-label">Academic Year</label>
+              <CSelect 
+                :value.sync="selectedYear" 
+                :options="yearOptions"
+                class="modern-select"
+              />
+            </div>
+          </CCol>
+        </CRow>
+      </CCardBody>
+    </CCard>
+
+
+    <CRow class="mt-2">
       <CCol md="8">
-        <CChartBar :labels="barChartData.labels" :datasets="barChartData.datasets" />
+        <div class="bg-white p-4 custom-card shadow-sm">
+          <h5 class="font-weight-bold text-dark mb-4">{{ chartTitle }}</h5>
+          <div style="height: 650px;">
+            <CChartBar 
+              :labels="barChartData.labels" 
+              :datasets="barChartData.datasets"
+              :options="barChartOptions"
+            />
+          </div>
+        </div>
       </CCol>
       <CCol md="4">
-        <CChartPie :labels="['Evaluated', 'Not Evaluated']" :datasets="pieChartData" />
+        <div class="bg-white p-4 custom-card shadow-sm">
+          <h5 class="font-weight-bold text-dark mb-4">{{ $t('dashboard.evaluationStatus') }}</h5>
+          <div style="height: 480px;">
+            <CChartDoughnut 
+              :labels="doughnutData.labels"
+              :datasets="doughnutData.datasets"
+            />
+          </div>
+
+          <!-- Info Cards Below Doughnut -->
+          <div class="mt-3">
+            <div class="d-flex justify-content-between mb-2 p-3 custom-card" style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.1);">
+              <div class="d-flex align-items-center">
+                <div class="mr-2" style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></div>
+                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">{{ $t('dashboard.evaluated') }}</span>
+              </div>
+              <span class="font-weight-bold" style="color: #16a34a; font-size: 1.1rem;">{{ doughnutEvaluatedCount.toLocaleString() }}</span>
+            </div>
+
+            <div class="d-flex justify-content-between p-3 custom-card" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);">
+              <div class="d-flex align-items-center">
+                <div class="mr-2" style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></div>
+                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">{{ $t('dashboard.notEvaluated') }}</span>
+              </div>
+              <span class="font-weight-bold" style="color: #dc2626; font-size: 1.1rem;">{{ doughnutNotEvaluatedCount.toLocaleString() }}</span>
+            </div>
+          </div>
+        </div>
+      </CCol>
+    </CRow>
+    <CRow class="mt-4">
+      <CCol md="12">
+        <div class="bg-white p-4 custom-card shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="font-weight-bold text-dark mb-0">{{ $t('dashboard.studentList') }}</h5>
+            <CButtonGroup class="modern-timeline-group">
+              <CButton 
+                color="primary" 
+                variant="outline" 
+                size="sm"
+                class="modern-timeline-btn"
+                :active="selectedTimeline === 'all'"
+                @click="selectedTimeline = 'all'"
+              >
+                {{ $i18n.locale === 'th' ? 'ทั้งหมด' : 'All' }}
+              </CButton>
+              <CButton 
+                color="primary" 
+                variant="outline" 
+                size="sm"
+                class="modern-timeline-btn"
+                :active="selectedTimeline === 'today'"
+                @click="selectedTimeline = 'today'"
+              >
+                {{ $i18n.locale === 'th' ? 'วันนี้' : 'Today' }}
+              </CButton>
+              <CButton 
+                color="primary" 
+                variant="outline" 
+                size="sm"
+                class="modern-timeline-btn"
+                :active="selectedTimeline === '7days'"
+                @click="selectedTimeline = '7days'"
+              >
+                {{ $i18n.locale === 'th' ? '7 วันที่ผ่านมา' : '7 Days' }}
+              </CButton>
+              <CButton 
+                color="primary" 
+                variant="outline" 
+                size="sm"
+                class="modern-timeline-btn"
+                :active="selectedTimeline === '30days'"
+                @click="selectedTimeline = '30days'"
+              >
+                {{ $i18n.locale === 'th' ? '30 วันที่ผ่านมา' : '30 Days' }}
+              </CButton>
+            </CButtonGroup>
+          </div>
+          <CDataTable
+            :items="tableData"
+            :fields="tableFields"
+            :items-per-page="7"
+            hover
+            pagination
+            class="mb-0"
+          >
+            <template #status="{item}">
+              <td>
+                <CBadge :color="item.evaluation ? 'success' : 'danger'" class="p-2" style="border-radius: 8px; min-width: 100px;">
+                  {{ item.evaluation ? $t('dashboard.evaluated') : $t('dashboard.notEvaluated') }}
+                </CBadge>
+              </td>
+            </template>
+          </CDataTable>
+        </div>
       </CCol>
     </CRow>
   </div>
@@ -32,23 +234,20 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import HeroHeader from '../../components/Layout/HeroHeader.vue'
-import DashboardFilter from '../../components/Filter/DashboardFilter.vue'
+
+
 import WidgetsDropdown from '../../components/widgets/WidgetsDashboard.vue'
-import CChartBar from '../../components/charts/CChartBar'
-import CChartPie from '../../components/charts/CChartPie'
-import CChartLine from '../../components/charts/CChartLine'
+import CChartBar from '../../components/charts/CChartBar.vue'
+import CChartDoughnut from '../../components/charts/CChartDoughnut.vue'
 import * as XLSX from "xlsx"
 
 export default {
   name: 'Dashboard',
   components: {
-    HeroHeader,
-    DashboardFilter,
+
     WidgetsDropdown,
     CChartBar,
-    CChartPie,
-    CChartLine
+    CChartDoughnut
   },
   data() {
     return {
@@ -56,6 +255,8 @@ export default {
       selectedProgram: '',
       selectedYear: '',
       selectedEvaluated: '',
+      selectedTimeline: 'all',
+      showDownloadModal: false,
     }
   },
   computed: {
@@ -86,6 +287,18 @@ export default {
         } else if (this.selectedEvaluated === 'not_evaluated') {
           if (student.evaluation) return false;
         }
+
+        // Timeline Filter
+        if (this.selectedTimeline && this.selectedTimeline !== 'all') {
+          const now = new Date();
+          const studentDate = new Date(student.updatedAt);
+          const diffInTime = now.getTime() - studentDate.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (this.selectedTimeline === 'today' && diffInDays > 1) return false;
+          if (this.selectedTimeline === '7days' && diffInDays > 7) return false;
+          if (this.selectedTimeline === '30days' && diffInDays > 30) return false;
+        }
         
         return true;
       });
@@ -105,69 +318,34 @@ export default {
 
     selectedSchoolName() {
       const found = this.schoolOptions.find(s => s.value === this.selectedSchool);
-      return found ? found.label : 'All Schools';
+      return found ? found.label : this.$t('dashboard.allSchools');
+    },
+    chartTitle() {
+      const isThai = this.$i18n.locale === 'th';
+      if (this.selectedSchool) {
+        const schoolObj = (this.storedSchools || []).find(s => s._id === this.selectedSchool);
+        const lang = this.$i18n.locale || 'en';
+        const schoolName = schoolObj ? (schoolObj.title.find(t => t.key === lang)?.value || schoolObj.title.find(t => t.key === 'en')?.value) : '';
+        const prefix = isThai ? 'สถิติการประเมินนักศึกษาของ' : 'Student Evaluation Statistics for';
+        return schoolName ? `${prefix} ${schoolName}` : this.$t('dashboard.chartTitle');
+      }
+      return isThai ? 'สถิติการประเมินนักศึกษาแยกตามคณะ' : 'Student Evaluation Statistics by School';
     },
 
     schoolOptions() {
-      if (!this.storedSchools) return [{ value: '', label: 'All Schools' }];
+      if (!this.storedSchools) return [{ value: '', label: this.$t('dashboard.allSchools') }];
       return [
-        { value: '', label: 'All Schools' },
+        { value: '', label: this.$t('dashboard.allSchools') },
         ...this.storedSchools.map(s => ({
           value: s._id,
-          label: s.title.find(t => t.key === 'en')?.value || s.title.find(t => t.key === 'th')?.value || s._id
+          label: s.title.find(t => t.key === this.$i18n.locale)?.value || s.title.find(t => t.key === 'en')?.value || s.title.find(t => t.key === 'th')?.value || s._id
         }))
       ];
     },
 
-    barChartData() {
-      // Group all students by school to show distribution
-      const labels = [];
-      const data = [];
-      
-      const schools = this.storedSchools || [];
-      schools.forEach(school => {
-        const label = school.title.find(t => t.key === 'en')?.value || school.title.find(t => t.key === 'th')?.value || school._id;
-        labels.push(label);
-        
-        // Count students in this school that pass the current filters (except the school filter itself)
-        const count = this.storedStudents.filter(student => {
-          const info = student.info || {};
-          // Only apply Program, Year, and Evaluated filters for the bar chart distribution
-          if (this.selectedProgram && (info.program?._id || info.program) !== this.selectedProgram) return false;
-          if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
-          if (this.selectedEvaluated === 'evaluated') {
-            if (!student.evaluation) return false;
-          } else if (this.selectedEvaluated === 'not_evaluated') {
-            if (student.evaluation) return false;
-          }
-          
-          return (info.school?._id || info.school) === school._id;
-        }).length;
-        
-        data.push(count);
-      });
 
-      return {
-        labels,
-        datasets: [
-          {
-            label: 'Students',
-            backgroundColor: '#c83f36',
-            data: data
-          }
-        ]
-      };
-    },
 
-    pieChartData() {
-      return [
-        {
-          backgroundColor: ['#2eb85c', '#f9b115'],
-          data: [this.evaluatedCount, this.notEvaluatedCount],
-          borderWidth: 0
-        }
-      ];
-    },
+
 
     programOptions() {
       const lang = this.$i18n.locale || 'en';
@@ -178,7 +356,7 @@ export default {
       }
 
       return [
-        { value: '', label: 'All Programs' },
+        { value: '', label: this.$t('dashboard.allPrograms') },
         ...source.map(item => {
           const titleObj = item.title.find(t => t.key === lang) || item.title.find(t => t.key === 'en');
           return {
@@ -189,35 +367,296 @@ export default {
       ];
     },
     yearOptions() {
-      if (!this.storedStudents || !this.storedStudents.length) return [{ value: '', label: 'All Years' }];
+      if (!this.storedStudents || !this.storedStudents.length) return [];
       const years = new Set(this.storedStudents.map(s => s.info?.year).filter(y => y));
+      return Array.from(years).sort((a, b) => b - a).map(y => ({ value: y, label: String(y) }));
+    },
+
+    doughnutStudents() {
+      return this.storedStudents.filter(student => {
+        const info = student.info || {};
+        if (this.selectedSchool && (info.school?._id || info.school) !== this.selectedSchool) return false;
+        if (this.selectedProgram && (info.program?._id || info.program) !== this.selectedProgram) return false;
+        if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
+        return true;
+      });
+    },
+
+    doughnutEvaluatedCount() {
+      return this.doughnutStudents.filter(s => s.evaluation).length;
+    },
+
+    doughnutNotEvaluatedCount() {
+      return this.doughnutStudents.length - this.doughnutEvaluatedCount;
+    },
+
+    doughnutData() {
+      return {
+        labels: [this.$t('dashboard.evaluated'), this.$t('dashboard.notEvaluated')],
+        datasets: [
+          {
+            backgroundColor: ['rgba(34, 197, 94, 0.15)', 'rgba(239, 68, 68, 0.15)'],
+            borderColor: ['#22c55e', '#ef4444'],
+            borderWidth: 2,
+            data: [this.doughnutEvaluatedCount, this.doughnutNotEvaluatedCount],
+            hoverBackgroundColor: ['rgba(34, 197, 94, 0.25)', 'rgba(239, 68, 68, 0.25)']
+          }
+        ]
+      };
+    },
+
+    tableData() {
+      const lang = this.$i18n.locale || 'en';
+      return this.filteredStudents.map(student => {
+        const info = student.info || {};
+        
+        // Find School Title
+        const schoolObj = (this.storedSchools || []).find(s => s._id === (info.school?._id || info.school));
+        const schoolTitle = schoolObj ? (schoolObj.title.find(t => t.key === lang)?.value || schoolObj.title.find(t => t.key === 'en')?.value) : '-';
+        
+        // Find Program Title
+        const programObj = (this.storedPrograms || []).find(p => p._id === (info.program?._id || info.program));
+        const programTitle = programObj ? (programObj.title.find(t => t.key === lang)?.value || programObj.title.find(t => t.key === 'en')?.value) : '-';
+
+        // Find Name
+        const nameObj = student.name?.find(n => n.key === lang) || student.name?.find(n => n.key === 'th') || student.name?.[0] || {};
+        const fullname = nameObj.value || `${student.firstname || ''} ${student.lastname || ''}`.trim() || '-';
+
+        return {
+          ...student,
+          code: info.code || student.studentID || '-',
+          fullname: fullname,
+          schoolName: schoolTitle,
+          programName: programTitle,
+          status: student.evaluation ? 'Evaluated' : 'Not Evaluated'
+        };
+      });
+    },
+
+    tableFields() {
       return [
-        { value: '', label: 'All Years' },
-        ...Array.from(years).sort().reverse().map(y => ({ value: y, label: String(y) }))
+        { key: 'code', label: this.$t('dashboard.studentId'), _style: 'width:15%' },
+        { key: 'fullname', label: this.$t('dashboard.fullname'), _style: 'width:25%' },
+        { key: 'schoolName', label: this.$t('dashboard.school'), _style: 'width:20%' },
+        { key: 'programName', label: this.$t('dashboard.program'), _style: 'width:20%' },
+        { key: 'status', label: this.$t('dashboard.status'), _style: 'width:20%' },
       ];
     },
-    evaluatedOptions() {
-      return [
-        { value: '', label: 'All Status' },
-        { value: 'evaluated', label: 'Evaluated' },
-        { value: 'not_evaluated', label: 'Not Evaluated' }
-      ];
+
+    barChartData() {
+      const labels = [];
+      const evaluatedData = [];
+      const notEvaluatedData = [];
+      const lang = this.$i18n.locale || 'en';
+      
+      let itemsToMap = [];
+      if (this.selectedSchool) {
+        // Mode: Show Programs within selected School
+        itemsToMap = (this.storedPrograms || []).filter(p => p.school === this.selectedSchool);
+      } else {
+        // Mode: Show all Schools
+        itemsToMap = this.storedSchools || [];
+      }
+
+      itemsToMap.forEach(item => {
+        const label = item.title.find(t => t.key === lang)?.value || item.title.find(t => t.key === 'en')?.value || item._id;
+        
+        const itemStudents = this.storedStudents.filter(student => {
+          const info = student.info || {};
+          // Must match Year if selected
+          if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
+          // If viewing programs, match program id. If viewing schools, match school id.
+          if (this.selectedSchool) {
+            return (info.program?._id || info.program) === item._id;
+          } else {
+            return (info.school?._id || info.school) === item._id;
+          }
+        });
+
+        labels.push(label);
+        const evalCount = itemStudents.filter(s => s.evaluation).length;
+        const notEvalCount = itemStudents.length - evalCount;
+        evaluatedData.push(evalCount);
+        notEvaluatedData.push(notEvalCount);
+      });
+
+      return {
+        labels,
+        datasets: [
+          {
+            label: this.$t('dashboard.evaluated'),
+            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+            borderColor: '#22c55e',
+            borderWidth: 2,
+            hoverBackgroundColor: 'rgba(34, 197, 94, 0.25)',
+            data: evaluatedData,
+            barThickness: 32,
+          },
+          {
+            label: this.$t('dashboard.notEvaluated'),
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            borderColor: '#ef4444',
+            borderWidth: 2,
+            hoverBackgroundColor: 'rgba(239, 68, 68, 0.25)',
+            data: notEvaluatedData,
+            barThickness: 32,
+          }
+        ]
+      };
+    },
+
+    barChartOptions() {
+      const self = this;
+      return {
+        maintainAspectRatio: false,
+        legend: { 
+          display: true, 
+          position: 'top',
+          align: 'end',
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            fontColor: '#4b5563',
+            fontSize: 12,
+            fontStyle: '600'
+          }
+        },
+        animation: {
+          duration: 1000,
+          onComplete: function() {
+            const chartInstance = this.chart;
+            const ctx = chartInstance.ctx;
+            ctx.font = 'bold 12px "Inter", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#1e293b';
+
+            const datasets = this.data.datasets;
+            // Use the meta of the last dataset to get the total horizontal position
+            const meta = chartInstance.controller.getDatasetMeta(datasets.length - 1);
+
+            meta.data.forEach(function(bar, index) {
+              let total = 0;
+              datasets.forEach(dataset => {
+                total += dataset.data[index];
+              });
+              if (total > 0) {
+                ctx.fillText(total.toLocaleString(), bar._model.x + 8, bar._model.y);
+              }
+            });
+          }
+        },
+        scales: {
+          xAxes: [{
+            stacked: true,
+            gridLines: { color: '#f1f5f9', drawBorder: false, zeroLineColor: '#f1f5f9' },
+            ticks: {
+              beginAtZero: true,
+              fontColor: '#94a3b8',
+              fontSize: 11,
+              padding: 10,
+              suggestedMax: Math.max(...(self.barChartData.datasets[0]?.data || [0])) * 1.5,
+              callback: (value) => value % 1 === 0 ? value : null
+            }
+          }],
+          yAxes: [{
+            stacked: true,
+            gridLines: { display: false, drawBorder: false },
+            ticks: { 
+              fontColor: '#1e293b', 
+              fontSize: 12, 
+              fontStyle: '600',
+              padding: 10
+            }
+          }]
+        },
+        tooltips: {
+          enabled: true,
+          backgroundColor: '#ffffff',
+          titleFontColor: '#1e293b',
+          titleFontSize: 15,
+          titleFontStyle: 'bold',
+          titleSpacing: 6,
+          bodyFontColor: '#4b5563',
+          bodyFontSize: 13,
+          bodySpacing: 6,
+          xPadding: 20,
+          yPadding: 20,
+          cornerRadius: 16,
+          displayColors: true,
+          borderColor: '#f1f5f9',
+          borderWidth: 2,
+          intersect: false,
+          mode: 'index',
+          caretSize: 8,
+          shadowOffsetX: 0,
+          shadowOffsetY: 10,
+          shadowBlur: 20,
+          shadowColor: 'rgba(0, 0, 0, 0.1)',
+          callbacks: {
+            title: function(tooltipItems, data) {
+              return tooltipItems[0].yLabel;
+            },
+            label: function(tooltipItem, data) {
+              const dataset = data.datasets[tooltipItem.datasetIndex];
+              const value = dataset.data[tooltipItem.index];
+              
+              const school = self.storedSchools[tooltipItem.index];
+              const schoolStudents = self.storedStudents.filter(s => {
+                const info = s.info || {};
+                return (info.school?._id || info.school) === school._id;
+              });
+              const total = schoolStudents.length;
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              
+              return ` ${dataset.label}: ${value.toLocaleString()} (${percentage}%)`;
+            }
+          }
+        }
+      };
     }
   },
   mounted() {
     this.onInit()
   },
   methods: {
-    onInit() {
-      this.$store.dispatch("academic/programs/programs")
-      this.$store.dispatch("academic/schools/schools")
-      this.$store.dispatch("member/students/students")
-      this.$store.dispatch("member/advisors/advisors")
-      this.$store.dispatch("competencies/general/general")
-      this.$store.dispatch("competencies/specific/specific")
+    async onInit() {
+      await Promise.all([
+        this.$store.dispatch("academic/programs/programs"),
+        this.$store.dispatch("academic/schools/schools"),
+        this.$store.dispatch("member/students/students"),
+        this.$store.dispatch("member/advisors/advisors"),
+        this.$store.dispatch("competencies/general/general"),
+        this.$store.dispatch("competencies/specific/specific")
+      ]);
+
+      // Set default year to the latest one available
+      if (this.yearOptions.length > 0) {
+        this.selectedYear = this.yearOptions[0].value;
+      }
     },
-    downloadReport() {
-      const lang = this.$i18n.locale || 'en';
+    handleDownload(type) {
+      if (type === 'json') {
+        this.exportToJSON();
+      } else {
+        this.downloadReport(type);
+      }
+      this.showDownloadModal = false;
+    },
+
+    exportToJSON() {
+      const dataStr = JSON.stringify(this.tableData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `student_evaluation_data_${new Date().toISOString()}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    },
+
+    downloadReport(lang) {
       const students = this.filteredStudents;
       if (!students.length) return;
 
@@ -353,7 +792,122 @@ export default {
       } else {
         this.selectedEvaluated = status;
       }
+    },
+    viewDetails(item) {
+      this.$router.push({
+        path: `/administration/administrator/students/${item._id}`
+      });
     }
   }
 }
 </script>
+
+
+<style scoped>
+.custom-card {
+  border-radius: 20px !important;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.modern-select {
+  height: 48px !important;
+  font-size: 14px !important;
+  font-weight: 600;
+  color: #1e293b !important;
+  transition: all 0.2s;
+  box-shadow: none !important;
+  outline: none !important;
+  margin-bottom: 0 !important; /* Remove the default form-group margin */
+}
+
+.modern-select:focus {
+  background-color: #ffffff !important;
+  border-color: #321fdb !important;
+  box-shadow: 0 0 0 4px rgba(50, 31, 219, 0.1) !important;
+}
+
+.filter-group {
+  /* Hover effect removed */
+}
+
+.header-card-accent {
+  border-left: 6px solid #321fdb !important;
+}
+
+.dot-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.modern-modal-btn {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+}
+
+.modern-modal-btn:hover {
+  background-color: #321fdb !important;
+  color: white !important;
+}
+
+.modern-header-btn {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: all 0.2s !important;
+}
+
+.modern-header-btn:hover {
+  background-color: #321fdb !important;
+  color: white !important;
+  transform: translateY(-1px);
+}
+
+.modern-action-btn {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  transition: all 0.2s;
+}
+
+.modern-action-btn:hover {
+  background-color: #321fdb !important;
+  color: white !important;
+  border-color: #321fdb !important;
+  transform: scale(1.1);
+}
+
+.modern-timeline-group {
+  display: flex !important;
+  min-width: 380px;
+}
+
+.modern-timeline-btn {
+  flex: 1 !important;
+  white-space: nowrap !important;
+  border-radius: 8px !important;
+}
+
+.modern-modal-btn {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+}
+
+.modern-modal-btn:hover {
+  background-color: #321fdb !important;
+  color: white !important;
+}
+</style>

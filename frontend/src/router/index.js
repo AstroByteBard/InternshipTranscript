@@ -21,14 +21,11 @@ const CreateDocument = () => import('@/projects/views/administration/documents/C
 const CreateCertificate = () => import('@/projects/views/administration/documents/CreateCertificate')
 
 // competencies
-const CompetenciesSoftskill = () => import('@/projects/views/administration/Competencies/Softskill')
-const CompetenciesHardskill = () => import('@/projects/views/administration/Competencies/Hardskill')
-const CompetenciesSuggestions = () => import('@/projects/views/administration/Competencies/Suggestions')
+const Competencies = () => import('@/projects/views/administration/Competencies/Competencies')
 const FillForm = () => import('@/projects/views/administration/FillForm')
 
 //correspondence
-const CorrespondenceStudent = () => import('@/projects/views/administration/Correspondence/Student')
-const CorrespondenceAdviser = () => import('@/projects/views/administration/Correspondence/Adviser')
+const Correspondence = () => import('@/projects/views/administration/Correspondence/Correspondence')
 
 Vue.use(Router)
 
@@ -72,37 +69,14 @@ export default new Router({
 
                 {
                     path: 'correspondence',
-                    redirect: 'correspondence/student'
-                },
-                {
-                    path: 'Correspondence/student',
-                    name: 'CorrespondenceStudent',
-                    component: CorrespondenceStudent
-                },
-                {
-                    path: 'Correspondence/adviser',
-                    name: 'CorrespondenceAdviser',
-                    component: CorrespondenceAdviser
+                    name: 'Correspondence',
+                    component: Correspondence
                 },
 
                 {
                     path: 'Competencies',
-                    redirect: 'Competencies/softskill'
-                },
-                {
-                    path: 'Competencies/softskill',
-                    name: 'CompetenciesSoftskill',
-                    component: CompetenciesSoftskill
-                },
-                {
-                    path: 'Competencies/hardskill',
-                    name: 'CompetenciesHardskill',
-                    component: CompetenciesHardskill
-                },
-                {
-                    path: 'Competencies/suggestions',
-                    name: 'CompetenciesSuggestions',
-                    component: CompetenciesSuggestions
+                    name: 'Competencies',
+                    component: Competencies
                 },
 
                 {

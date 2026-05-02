@@ -1,9 +1,6 @@
 <template>
     <div class="administrator-view">
-        <AdministratorHeader 
-            @add-student="$refs.modalStudent.openAdd()"
-            @refresh="onInit" 
-        />
+
 
         <WidgetsAdministrator 
             :studentCount="storedStudents ? storedStudents.length : 0"
@@ -39,13 +36,13 @@ import { mapGetters } from 'vuex'
 import ModalEditStudent from '@/projects/components/Modal/ModalEditStudent.vue'
 import TableAdministratorStudent from '@/projects/components/Table/TableAdministratorStudent.vue'
 import FilterStudent from '@/projects/components/Filter/Adminstrator/FilterStudent.vue'
-import AdministratorHeader from '@/projects/components/Layout/AdministratorHeader.vue'
+
 import WidgetsAdministrator from '@/projects/components/widgets/WidgetsAdministrator.vue'
 
 export default {
     name: 'Student',
     components: {
-        AdministratorHeader,
+
         WidgetsAdministrator,
         FilterStudent,
         TableAdministratorStudent,

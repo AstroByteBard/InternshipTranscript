@@ -70,40 +70,16 @@ export default {
             _children: ['Main']
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Correspondence',
-            route: '/correspondence',
-            icon: 'cil-envelope-closed',
-            items: [
-              {
-                name: 'Student',
-                to: '/correspondence/student',
-              },
-              {
-                name: 'Adviser',
-                to: '/correspondence/adviser',
-              },
-            ]
+            to: '/correspondence',
+            icon: 'cil-envelope-closed'
           },
           {
-            _name: 'CSidebarNavDropdown',
+            _name: 'CSidebarNavItem',
             name: 'Competencies',
-            route: '/Competencies',
-            icon: 'cil-lightbulb',
-            items: [
-              {
-                name: 'Soft Skill',
-                to: '/Competencies/softskill',
-              },
-              {
-                name: 'Hard Skill',
-                to: '/Competencies/hardskill',
-              },
-              {
-                name: "Suggestions",
-                to: "/Competencies/suggestions"
-              }
-            ]
+            to: '/Competencies',
+            icon: 'cil-lightbulb'
           },
           {
             _name: 'CSidebarNavDropdown',

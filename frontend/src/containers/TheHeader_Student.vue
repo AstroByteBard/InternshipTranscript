@@ -58,16 +58,16 @@ export default {
             return currentYear;
         }
     },
+    created() {
+        if (this.lang) {
+            this.$i18n.locale = this.lang;
+        }
+    },
     methods: {
         onSwitchLang() {
-            switch (this.lang) {
-                case "th":
-                    this.$store.commit("setting/lang", "en");
-                    break;
-                case "en":
-                    this.$store.commit("setting/lang", "th");
-                    break;
-            }
+            const newLang = this.lang === 'th' ? 'en' : 'th';
+            this.$store.commit("setting/lang", newLang);
+            this.$i18n.locale = newLang;
         }
     }
 }

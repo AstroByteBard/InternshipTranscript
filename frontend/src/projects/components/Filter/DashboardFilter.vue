@@ -5,11 +5,11 @@
         <CCardBody class="p-0">
           <CRow class="align-items-center m-0">
             <!-- School Filter -->
-            <CCol md="3" class="filter-col px-4 py-3">
+            <CCol md="4" class="filter-col px-4 py-3">
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-bank" class="filter-icon school-icon" />
-                  <span class="filter-label">School</span>
+                  <span class="filter-label">{{ $t('dashboard.school') }}</span>
                 </div>
                 <slot name="school">
                   <CSelect 
@@ -24,11 +24,11 @@
             </CCol>
 
             <!-- Program Filter -->
-            <CCol md="3" class="filter-col px-4 py-3">
+            <CCol md="4" class="filter-col px-4 py-3">
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-list-rich" class="filter-icon program-icon" />
-                  <span class="filter-label">Program</span>
+                  <span class="filter-label">{{ $t('dashboard.program') }}</span>
                 </div>
                 <slot name="program">
                   <CSelect 
@@ -43,11 +43,11 @@
             </CCol>
 
             <!-- Academic Year Filter -->
-            <CCol md="3" class="filter-col px-4 py-3">
+            <CCol md="4" class="filter-col px-4 py-3">
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-calendar" class="filter-icon year-icon" />
-                  <span class="filter-label">Academic Year</span>
+                  <span class="filter-label">{{ $t('academicYear') }}</span>
                 </div>
                 <slot name="year">
                   <CSelect 
@@ -56,25 +56,6 @@
                     :options="yearOptions" 
                     :value="year"
                     @update:value="$emit('update:year', $event)"
-                  />
-                </slot>
-              </div>
-            </CCol>
-
-            <!-- Evaluation Filter -->
-            <CCol md="3" class="filter-col px-4 py-3">
-              <div class="filter-item">
-                <div class="filter-header">
-                  <CIcon name="cil-chart-pie" class="filter-icon evaluated-icon" />
-                  <span class="filter-label">Status</span>
-                </div>
-                <slot name="evaluated">
-                  <CSelect 
-                    custom 
-                    class="mb-0 modern-select" 
-                    :options="evaluatedOptions" 
-                    :value="evaluated"
-                    @update:value="$emit('update:evaluated', $event)"
                   />
                 </slot>
               </div>
@@ -93,11 +74,9 @@ export default {
     school: { type: String, default: '' },
     program: { type: String, default: '' },
     year: { type: String, default: '' },
-    evaluated: { type: String, default: '' },
     schoolOptions: { type: Array, default: () => [] },
     programOptions: { type: Array, default: () => [] },
     yearOptions: { type: Array, default: () => [] },
-    evaluatedOptions: { type: Array, default: () => [] }
   }
 }
 </script>
