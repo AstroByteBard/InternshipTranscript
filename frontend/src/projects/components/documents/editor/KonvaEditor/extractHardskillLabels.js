@@ -1,0 +1,12 @@
+export default function extractHardskillLabels(doc, sortByLength) {
+    if (!doc || doc.active !== true || !Array.isArray(doc.config)) return [];
+    const labels = doc.config
+        .map(item => {
+            const label = this.getLocalizedValue(item && item.label, 'en');
+            if (label) return label;
+            return this.getLocalizedValue(item && item.question, 'en');
+        })
+        .filter(Boolean);
+    if (!sortByLength) return labels;
+    return labels.slice().sort((a, b) => b.length - a.length);
+}

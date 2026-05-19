@@ -1,0 +1,115 @@
+export default {
+    computeSelectionStyle() {
+        const nodes = (this.transformer && typeof this.transformer.nodes === 'function') ? this.transformer.nodes() : [];
+        if (!nodes || !nodes.length) return null;
+        const attrs = ['fontSize', 'fontFamily', 'fill', 'fontStyle', 'textDecoration', 'align', 'lineHeight'];
+        const result = {};
+        attrs.forEach((a) => result[a] = undefined);
+
+        nodes.forEach((node, idx) => {
+            attrs.forEach((a) => {
+                let val;
+                try {
+                    if (node.getAttr && typeof node.getAttr === 'function') {
+                        const av = node.getAttr(a);
+                        if (typeof av !== 'undefined' && av !== null) {
+                            val = av;
+                        } else {
+                            if (a === 'fontSize' && node.fontSize) {
+                                val = node.fontSize();
+                            } else if (a === 'fontFamily' && node.fontFamily) {
+                                val = node.fontFamily();
+                            } else if (a === 'fill' && node.fill) {
+                                val = node.fill();
+                            } else if (a === 'fontStyle' && node.fontStyle) {
+                                val = node.fontStyle();
+                            } else if (a === 'textDecoration' && node.textDecoration) {
+                                val = node.textDecoration();
+                            } else if (a === 'align' && node.align) {
+                                val = node.align();
+                            } else if (a === 'lineHeight' && node.lineHeight) {
+                                val = node.lineHeight();
+                            }
+                        }
+                    } else if (a === 'fontSize' && node.fontSize) {
+                        val = node.fontSize();
+                    } else if (a === 'fontFamily' && node.fontFamily) {
+                        val = node.fontFamily();
+                    } else if (a === 'fill' && node.fill) {
+                        val = node.fill();
+                    } else if (a === 'fontStyle' && node.fontStyle) {
+                        val = node.fontStyle();
+                    } else if (a === 'textDecoration' && node.textDecoration) {
+                        val = node.textDecoration();
+                    } else if (a === 'align' && node.align) {
+                        val = node.align();
+                    } else if (a === 'lineHeight' && node.lineHeight) {
+                        val = node.lineHeight();
+                    }
+                } catch (err) {
+                    val = undefined
+                }
+
+                if (idx === 0) {
+                    result[a] = typeof val !== 'undefined' ? val : null;
+                } else {
+                    if (result[a] !== null && typeof val !== 'undefined' && String(result[a]) === String(val)) {
+                        // keep
+                    } else {
+                        result[a] = null;
+                    }
+                }
+            })
+        })
+
+        return { count: nodes.length, style: result };
+    },
+
+    emitSelectionChange() {
+        const info = this.computeSelectionStyle();
+        this.$emit('selection-changed', info);
+    },
+
+    multiEditSelectedNodes() {
+        const nodes = (this.transformer && typeof this.transformer.nodes === 'function') ? this.transformer.nodes() : [];
+        if (!nodes || !nodes.length) return;
+        if (nodes.length === 1) {
+            const n = nodes[0];
+            if (n && typeof n.getClassName === 'function' && n.getClassName() === 'Text') {
+                try { this.startEditingText(n) } catch (err) { /* ignore */ }
+                return;
+            }
+        }
+        // For multiple selection: ask for replacement text
+        const input = window.prompt('Edit text for selected items (will replace existing content)', '');
+        if (input === null) return;
+        nodes.forEach((n) => {
+            try {
+                if (n && typeof n.getClassName === 'function' && n.getClassName() === 'Text') {
+                    n.text(input)
+                }
+            } catch (err) { /* ignore */ }
+        })
+        this.layer.batchDraw();
+        this.saveHistory();
+        try { this.emitSelectionChange() } catch (err) { /* ignore */ }
+    },
+
+    handleNodeSelection(node, shiftKey) {
+        if (!this.transformer) return
+        const nodes = this.transformer.nodes().slice()
+        if (shiftKey) {
+            const index = nodes.indexOf(node)
+            if (index >= 0) {
+                nodes.splice(index, 1)
+            } else {
+                nodes.push(node)
+            }
+            this.transformer.nodes(nodes)
+        } else {
+            this.transformer.nodes([node])
+        }
+        this.layer.batchDraw()
+        try { this.emitSelectionChange() } catch (err) { /* ignore */ }
+    }
+}

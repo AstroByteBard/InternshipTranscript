@@ -17,40 +17,23 @@
 
                 <CCard class="toolbar-card mb-3 border-0 shadow-sm" v-show="!isPreview">
                     <CCardBody class="p-3">
-                        <EditorToolbar :konvaEditor="$refs.konvaEditor" @image-uploaded="handleToolbarImage"
-                            @insert-styled-text="handleStyledText" @bring-forward="callEditorMethod('bringForward')"
+                        <EditorToolbar ref="editorToolbar" :konvaEditor="$refs.konvaEditor" :scale="scale"
+                            @image-uploaded="handleToolbarImage" @insert-styled-text="handleStyledText"
+                            @bring-forward="callEditorMethod('bringForward')"
                             @bring-to-front="callEditorMethod('bringToFront')"
                             @send-backward="callEditorMethod('sendBackward')"
                             @send-to-back="callEditorMethod('sendToBack')" @toggle-data-sidebar="toggleSidebar('data')"
                             @toggle-graph-sidebar="toggleSidebar('graph')" @format-text="handleFormatText"
-                            @action="handleEditorAction" />
+                            @action="handleEditorAction" @multi-edit="callEditorMethod('multiEditSelectedNodes')"
+                            @zoom-in="changeZoom(0.1)" @zoom-out="changeZoom(-0.1)" @zoom-reset="resetToFit" />
                     </CCardBody>
                 </CCard>
 
                 <div class="editor-zoom-wrapper" :style="{ height: wrapperHeight + 'px' }">
                     <div class="document-editor-full" :class="{ 'preview-mode': isPreview }"
                         :style="{ transform: `scale(${scale})` }">
-                        <KonvaEditor ref="konvaEditor" :isPreview="isPreview" />
+                        <KonvaEditor ref="konvaEditor" :isPreview="isPreview" @selection-changed="onSelectionChanged" />
                     </div>
-                </div>
-
-                <!-- Manual Zoom Controls -->
-                <div class="zoom-controls-overlay shadow-sm">
-                    <CButton variant="ghost" class="zoom-btn" @click="changeZoom(-0.1)" title="Zoom Out">
-                        <CIcon name="cil-minus" size="sm" />
-                    </CButton>
-                    <div class="zoom-slider-container">
-                        <input type="range" class="zoom-slider" min="0.25" max="2" step="0.05" v-model.number="scale"
-                            @input="isManualZoom = true" />
-                    </div>
-                    <CButton variant="ghost" class="zoom-btn" @click="changeZoom(0.1)" title="Zoom In">
-                        <CIcon name="cil-plus" size="sm" />
-                    </CButton>
-                    <div class="zoom-percentage">{{ Math.round(scale * 100) }}%</div>
-                    <div class="divider mx-2"></div>
-                    <CButton variant="ghost" class="fit-btn" @click="resetToFit" title="Fit to Width">
-                        <CIcon name="cil-fullscreen" size="sm" class="mr-1" /> Fit
-                    </CButton>
                 </div>
             </CCol>
 
@@ -197,8 +180,86 @@ export default {
             }
         },
         handleFormatText(payload) {
-            if (this.$refs.konvaEditor) {
-                this.$refs.konvaEditor.formatSelectedNodes(payload);
+            if (!this.$refs.konvaEditor) return;
+            try {
+                const editor = this.$refs.konvaEditor;
+                // If a group selection corresponds to competency or suggestion, apply group style
+                const nodes = (editor.transformer && typeof editor.transformer.nodes === 'function') ? editor.transformer.nodes() : [];
+                if (nodes && nodes.length === 1) {
+                    const node = nodes[0];
+                    const name = node && node.name ? node.name() : '';
+                    const style = {};
+                    if (payload.type === 'fontFamily') style.fontFamily = payload.value;
+                    else if (payload.type === 'fontSize') style.fontSize = payload.value;
+                    else if (payload.type === 'color') style.fill = payload.value;
+                    else if (payload.type === 'align') style.align = payload.value;
+                    else if (payload.type === 'textDecoration') style.textDecoration = payload.value;
+                    else if (payload.type === 'bold' || payload.type === 'italic') {
+                        const cur = (node.getAttr && node.getAttr('fontStyle')) || (node.fontStyle ? node.fontStyle() : 'normal') || 'normal';
+                        const want = payload.type;
+                        // toggle presence
+                        let parts = cur.split(/\s+/).filter(Boolean);
+                        if (parts.includes(want)) {
+                            parts = parts.filter(p => p !== want);
+                        } else {
+                            parts.push(want);
+                        }
+                        style.fontStyle = parts.length ? parts.join(' ') : 'normal';
+                    } else if (payload.type === 'underline') {
+                        const cur = (node.getAttr && node.getAttr('textDecoration')) || (node.textDecoration ? node.textDecoration() : '') || '';
+                        style.textDecoration = cur === 'underline' ? '' : 'underline';
+                    }
+
+                    if (name && name.includes('competency-table')) {
+                        editor.updateCompetencyGroupStyle(node, style);
+                        return;
+                    }
+                    if (name && name.includes('suggestion-table-part')) {
+                        editor.updateSuggestionGroupStyle(node, style);
+                        return;
+                    }
+                }
+
+                // Fallback: apply to selected nodes/text
+                editor.formatSelectedNodes(payload);
+            } catch (err) {
+                console.error('handleFormatText error', err);
+            }
+        },
+        onSelectionChanged(info) {
+            // info: { count, style }
+            try {
+                const tb = this.$refs.editorToolbar;
+                if (!tb) return;
+                if (!info || !info.style) {
+                    tb.boldActive = false;
+                    tb.italicActive = false;
+                    tb.underlineActive = false;
+                    return;
+                }
+                const s = info.style || {};
+                if (typeof s.fontSize !== 'undefined' && s.fontSize !== null) tb.fontSize = Number(s.fontSize) || tb.fontSize;
+                if (typeof s.fontFamily !== 'undefined' && s.fontFamily) tb.selectedFont = s.fontFamily;
+                if (typeof s.fill !== 'undefined' && s.fill) {
+                    const f = String(s.fill || '');
+                    if (f.startsWith('rgb')) {
+                        // convert rgb(a) to hex
+                        const m = f.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                        if (m) {
+                            const r = parseInt(m[1], 10), g = parseInt(m[2], 10), b = parseInt(m[3], 10);
+                            tb.hexColor = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                        } else {
+                            tb.hexColor = f;
+                        }
+                    } else {
+                        tb.hexColor = f;
+                    }
+                }
+                tb.boldActive = !!(s.fontStyle && String(s.fontStyle).includes('bold'));
+                tb.italicActive = !!(s.fontStyle && String(s.fontStyle).includes('italic'));
+                tb.underlineActive = !!(s.textDecoration && String(s.textDecoration).includes('underline'));
+            } catch (err) {
+                console.warn('onSelectionChanged error', err);
             }
         },
         handleEditorAction(action) {

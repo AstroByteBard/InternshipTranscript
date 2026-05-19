@@ -24,32 +24,35 @@ const ServerModule = {
                 });
         },
         createProposition({ dispatch }, data) {
-            Service.proposition('post', data, {})
+            return Service.proposition('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
                     return dispatch('proposition')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         updateProposition({ dispatch }, data) {
-            Service.proposition('put', data, {})
+            return Service.proposition('put', data, {})
                 .then((response) => {
                     alert('Updated successfully')
                     return dispatch('proposition')
                 }).catch((err) => {
                     alert('Update failed: ' + err.message)
                     console.log(err)
+                    throw err
                 });
         },
         deleteProposition({ dispatch }, data) {
             const payload = (data && typeof data === 'object') ? data : { _id: data }
-            Service.proposition('delete', payload, {})
+            return Service.proposition('delete', payload, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
                     return dispatch('proposition')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
     },

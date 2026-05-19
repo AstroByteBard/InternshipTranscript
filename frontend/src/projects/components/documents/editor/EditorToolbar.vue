@@ -9,6 +9,18 @@
             <CIcon name="cil-action-redo" size="sm" />
         </CButton>
 
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" title="Zoom Out"
+            @click="$emit('zoom-out')">
+            <CIcon name="cil-zoom-out" size="sm" />
+        </CButton>
+        <span class="zoom-percentage-text px-1 font-weight-bold" style="font-size: 11px; min-width: 36px; text-align: center; display: inline-block; color: #4b5563; user-select: none; cursor: pointer;" title="Double click to Fit" @dblclick="$emit('zoom-reset')">
+            {{ Math.round(scale * 100) }}%
+        </span>
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" title="Zoom In"
+            @click="$emit('zoom-in')">
+            <CIcon name="cil-zoom-in" size="sm" />
+        </CButton>
+
         <div class="toolbar-divider"></div>
 
         <!-- Font Family Picker -->
@@ -23,9 +35,20 @@
         <!-- Font Size Stepper -->
         <div class="font-size-stepper mr-1">
             <button class="size-btn" @click="changeFontSize(-1)" title="Decrease font size">−</button>
-            <span class="size-value">{{ fontSize }}</span>
+            <input type="number" class="size-input text-center font-weight-bold" 
+                :value="fontSize" 
+                @input="handleFontSizeInput" 
+                @change="handleFontSizeChange"
+                @blur="handleFontSizeChange"
+                @keydown.enter="handleFontSizeEnter"
+                style="width: 32px; border: none; padding: 0; font-size: 12px; height: 26px; outline: none; margin: 0; background: transparent; text-align: center; font-weight: 600; color: #374151;" />
             <button class="size-btn" @click="changeFontSize(1)" title="Increase font size">+</button>
         </div>
+
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" title="Edit selected"
+            @click="$emit('multi-edit')">
+            <CIcon name="cil-pencil" size="sm" />
+        </CButton>
 
         <div class="toolbar-divider"></div>
 
@@ -49,16 +72,16 @@
 
 
 
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" :class="{ 'active': isActive('bold') }"
-            @click="handleFormat('bold')">
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
+            :class="{ 'active': (boldActive || isActive('bold')) }" @click="handleFormat('bold')">
             <strong>B</strong>
         </CButton>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" style="font-style: italic;"
-            :class="{ 'active': isActive('italic') }" @click="handleFormat('italic')">
+            :class="{ 'active': (italicActive || isActive('italic')) }" @click="handleFormat('italic')">
             <em>I</em>
         </CButton>
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" :class="{ 'active': isActive('underline') }"
-            @click="handleFormat('underline')">
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
+            :class="{ 'active': (underlineActive || isActive('underline')) }" @click="handleFormat('underline')">
             <u>U</u>
         </CButton>
 
@@ -157,13 +180,18 @@ export default {
     name: 'EditorToolbar',
     props: {
         editor: { type: Object, required: false },
-        konvaEditor: { type: Object, required: false }
+        konvaEditor: { type: Object, required: false },
+        scale: { type: Number, default: 1 }
     },
     data() {
         return {
             hexColor: "#000000",
             fontSize: 16,
+            tempFontSize: null,
             selectedFont: 'Arial, sans-serif',
+            boldActive: false,
+            italicActive: false,
+            underlineActive: false,
             fontList: [
                 { label: 'Arial', value: 'Arial, sans-serif' },
                 { label: 'Sarabun', value: 'Sarabun, sans-serif' },
@@ -250,6 +278,27 @@ export default {
             const max = 120;
             this.fontSize = Math.min(max, Math.max(min, this.fontSize + delta));
             this.$emit('format-text', { type: 'fontSize', value: this.fontSize });
+        },
+        handleFontSizeInput(e) {
+            this.tempFontSize = e.target.value;
+        },
+        handleFontSizeChange(e) {
+            this.commitFontSize(e.target.value);
+        },
+        handleFontSizeEnter(e) {
+            this.commitFontSize(e.target.value);
+            e.target.blur();
+        },
+        commitFontSize(inputValue) {
+            if (inputValue === '' || inputValue === null || isNaN(inputValue)) {
+                return;
+            }
+            const min = 6;
+            const max = 120;
+            const parsed = Number(inputValue);
+            this.fontSize = Math.min(max, Math.max(min, parsed));
+            this.$emit('format-text', { type: 'fontSize', value: this.fontSize });
+            this.tempFontSize = null;
         },
         triggerFileInput() {
             this.$refs.imageUpload.click()
@@ -383,5 +432,15 @@ export default {
     font-weight: 600;
     color: #374151;
     user-select: none;
+}
+
+/* Hide number input spinners */
+.size-input::-webkit-outer-spin-button,
+.size-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.size-input {
+    -moz-appearance: textfield;
 }
 </style>

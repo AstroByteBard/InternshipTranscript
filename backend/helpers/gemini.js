@@ -2,7 +2,7 @@ const fs = require('fs');
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
 
-const MODEL = 'gemini-2.5-flash-lite';
+const MODEL = 'gemini-3.1-flash-lite';
 const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent`;
 
 // Read API key from env (support multiple common names)

@@ -152,10 +152,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
         const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
         const segments = segmenter.segment(text);
-        
+
         let lines = [];
         let currentLine = '';
-        
+
         for (const segment of segments) {
             const word = segment.segment;
             // Handle existing newlines in source text
@@ -164,10 +164,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 currentLine = '';
                 continue;
             }
-            
+
             const testLine = currentLine + word;
             const testWidth = measureTextWidth(testLine, fontSize, fontFamily);
-            
+
             if (testWidth > maxWidth && currentLine !== '') {
                 lines.push(currentLine);
                 currentLine = word;
@@ -410,7 +410,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
         let displayTitle = title || 'Competencies';
         let scoreLabel = 'Score';
-        
+
         if (lang === 'th') {
             if (displayTitle === 'General Competencies') displayTitle = 'ทักษะทั่วไป';
             else if (displayTitle === 'Specific Competencies') displayTitle = 'ทักษะเฉพาะทาง';
@@ -489,13 +489,43 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
         let currentY = 0;
 
+        const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
+
         const ptToString = (pt) => {
             if (pt === null || pt === undefined) return '';
-            if (typeof pt === 'string') return pt;
+            if (typeof pt === 'string') {
+                const trimmed = pt.trim();
+                if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (parsed && typeof parsed === 'object') {
+                            if (parsed[lang]) return String(parsed[lang]);
+                            if (parsed.th || parsed.en) return String(parsed.th || parsed.en);
+                        }
+                    } catch (e) { }
+                }
+                return pt;
+            }
             if (typeof pt === 'number') return String(pt);
             if (typeof pt === 'object') {
-                if (pt.text) return String(pt.text);
-                if (pt.value && typeof pt.value === 'string') return pt.value;
+                if (pt[lang]) return String(pt[lang]);
+                if (pt.th || pt.en) return String(pt.th || pt.en);
+                if (pt.text) return ptToString(pt.text);
+                if (pt.value) {
+                    if (typeof pt.value === 'string') {
+                        const valTrimmed = pt.value.trim();
+                        if (valTrimmed.startsWith('{') && valTrimmed.endsWith('}')) {
+                            try {
+                                const parsed = JSON.parse(valTrimmed);
+                                if (parsed && typeof parsed === 'object') {
+                                    if (parsed[lang]) return String(parsed[lang]);
+                                    if (parsed.th || parsed.en) return String(parsed.th || parsed.en);
+                                }
+                            } catch (e) { }
+                        }
+                    }
+                    return ptToString(pt.value);
+                }
                 if (Array.isArray(pt)) return pt.map(p => ptToString(p)).join(', ');
                 if (pt.answer && pt.answer.value) return ptToString(pt.answer.value);
                 return JSON.stringify(pt);
@@ -576,6 +606,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 const cAttrs = child.attrs || {};
                 const cChildren = Array.isArray(child.children) ? child.children : (Array.isArray(cAttrs.children) ? cAttrs.children : []);
                 let colX = Number(cAttrs.x || 0);
+                let colY = Number(cAttrs.y || 0);
                 let colW = (typeof cAttrs.width === 'number' && cAttrs.width > 0) ? Number(cAttrs.width) : 0;
                 let labelText = null;
                 let labelFontSize = (typeof cAttrs.labelFontSize === 'number') ? cAttrs.labelFontSize : 20;
@@ -607,7 +638,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     labelText = (columns.length === 0) ? 'Outstanding' : 'Opportunity';
                 }
 
-                columns.push({ x: colX, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
+                columns.push({ x: colX, y: colY, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
             });
         } else if (Array.isArray(placeholderChildren) && placeholderChildren.length) {
             // Flat elements: treat the entire group as ONE column
@@ -642,7 +673,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 labelText = vn.includes('oppor') ? 'Opportunity' : 'Outstanding';
             }
 
-            columns.push({ x: 0, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
+            columns.push({ x: 0, y: 0, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
         } else {
             // fallback: try attrs to infer two columns if saved
             const leftLabels = Array.isArray(attrs.labelsLeft) ? attrs.labelsLeft : (Array.isArray(attrs.labels) ? attrs.labels.slice(0, 1) : ['Outstanding']);
@@ -650,10 +681,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const defaultW = typeof attrs.width === 'number' ? attrs.width : 650;
             if (rightLabels && rightLabels.length) {
                 const w = Math.floor((defaultW - (attrs.columnGap || 20)) / 2);
-                columns.push({ x: 0, width: w, labelText: leftLabels && leftLabels[0] ? leftLabels[0] : 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
-                columns.push({ x: w + (attrs.columnGap || 20), width: defaultW - w - (attrs.columnGap || 20), labelText: rightLabels && rightLabels[0] ? rightLabels[0] : 'Opportunity', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
+                columns.push({ x: 0, y: 0, width: w, labelText: leftLabels && leftLabels[0] ? leftLabels[0] : 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
+                columns.push({ x: w + (attrs.columnGap || 20), y: 0, width: defaultW - w - (attrs.columnGap || 20), labelText: rightLabels && rightLabels[0] ? rightLabels[0] : 'Opportunity', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
             } else {
-                columns.push({ x: 0, width: defaultW, labelText: 'Outstanding', labelFontSize: 20, contentFontSize: 12, contentLineHeight: 1.4 });
+                columns.push({ x: 0, y: 0, width: defaultW, labelText: 'Outstanding', labelFontSize: 20, contentFontSize: 12, contentLineHeight: 1.4 });
             }
         }
 
@@ -710,7 +741,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         if (columns.length >= 2) {
             const renderColumn = (colDef, groups, isOpp = false) => {
                 if (!groups || !groups.length) return 0;
-                const colGroup = new Konva.Group({ x: colDef.x || 0, y: 0 });
+                const colGroup = new Konva.Group({ x: colDef.x || 0, y: colDef.y || 0 });
                 group.add(colGroup);
                 let y = 0;
 
@@ -776,7 +807,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const data = isOpp ? opportunityGroups : outstandingGroups;
             if (!data || !data.length) return group;
 
-            const colGroup = new Konva.Group({ x: col.x || 0, y: 0 });
+            const colGroup = new Konva.Group({ x: col.x || 0, y: col.y || 0 });
             group.add(colGroup);
             let y = 0;
 
@@ -810,7 +841,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const textX = 20;
             const groupX = attrs.x || 0;
             const sX = attrs.scaleX || 1;
-            const rightBoundary = isOpp ? 770 : 370; 
+            const rightBoundary = isOpp ? 770 : 370;
             const maxColWidth = ((rightBoundary - groupX) / sX) - (col.x || 0) - textX - 5;
 
             const contentWidth = Math.max(100, maxColWidth);
@@ -1140,7 +1171,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 };
 
                 let title = isGeneral ? 'General Competencies' : 'Specific Competencies';
-                
+
                 const lang = dataMap.__language || 'en';
                 if (lang === 'th') {
                     title = isGeneral ? 'ทักษะทั่วไป' : 'ทักษะเฉพาะทาง';
@@ -1216,59 +1247,18 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     };
                 }
 
-                // computeBBox helper is defined above and reused here
-                const bbox = savedChildren && savedChildren.length ? computeBBox(savedChildren) : null;
+                // Use exact saved position — trust attrs.x/attrs.y as designed in the editor.
+                // Do NOT apply any automatic bbox offset or competency-bottom nudging.
                 const localAttrs = Object.assign({}, attrs);
-                if (bbox) {
-                    // position group so its origin aligns with saved children min
-                    localAttrs.x = (attrs.x || 0) + (bbox.minX || 0);
-                    localAttrs.y = (attrs.y || 0) + (bbox.minY || 0);
-                    if (!localAttrs.width) {
-                        const w = (bbox.maxX - bbox.minX) || attrs.width;
-                        if (w && w > 0) localAttrs.width = w;
-                    }
+
+                // Derive width from saved children bbox only when attrs.width is missing
+                if (!localAttrs.width && savedChildren && savedChildren.length) {
+                    const bbox = computeBBox(savedChildren);
+                    const w = (bbox.maxX - bbox.minX);
+                    if (w > 0) localAttrs.width = w;
                 }
 
-                // Ensure suggestions sit below competency area when available
-                if (competencyBottom && (!localAttrs.y || localAttrs.y < (competencyBottom + 12))) {
-                    localAttrs.y = competencyBottom + 12; // 12px padding
-                }
-
-                const sugGroup = addSuggestionTable(localAttrs, suggestionsObj, savedChildren);
-
-                // Collision avoidance: nudge the suggestion group below any competency area
-                try {
-                    let compMax = competencyBottom || 0;
-                    const childrenArr = (typeof layer.getChildren === 'function') ? layer.getChildren().toArray() : (layer.children || []);
-                    for (const node of childrenArr) {
-                        try {
-                            const nName = (node.getAttr && node.getAttr('name')) || node.name || '';
-                            const vName = (node.getAttr && (node.getAttr('variableName') || node.getAttr('placeholder'))) || '';
-                            const cls = (typeof node.getClassName === 'function') ? node.getClassName() : (node.className || '');
-                            let isCompNode = false;
-                            if (String(nName).toLowerCase() === 'competency-table') isCompNode = true;
-                            if (vName && /specific|general|competenc/i.test(String(vName))) isCompNode = true;
-                            if (cls === 'Text') {
-                                const textVal = typeof node.text === 'function' ? node.text() : (node.getAttr && node.getAttr('text') || '');
-                                if (textVal && /specific\s*compet|general\s*compet/i.test(String(textVal))) isCompNode = true;
-                            }
-                            if (isCompNode) {
-                                const r = (typeof node.getClientRect === 'function') ? node.getClientRect() : null;
-                                if (r) compMax = Math.max(compMax, r.y + r.height);
-                            }
-                        } catch (e) { /* ignore per-node errors */ }
-                    }
-
-                    if (compMax && sugGroup) {
-                        const gRect = (typeof sugGroup.getClientRect === 'function') ? sugGroup.getClientRect() : null;
-                        const padding = 12;
-                        if (gRect && gRect.y < (compMax + padding)) {
-                            const delta = compMax + padding - gRect.y;
-                            const currentY = (typeof sugGroup.y === 'function') ? sugGroup.y() : ((sugGroup.attrs && sugGroup.attrs.y) || 0);
-                            sugGroup.y(currentY + delta);
-                        }
-                    }
-                } catch (e) { /* best-effort repositioning */ }
+                addSuggestionTable(localAttrs, suggestionsObj, savedChildren);
             }
         }
     });

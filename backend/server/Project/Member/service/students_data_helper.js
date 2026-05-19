@@ -2,12 +2,21 @@ const mongo = require('mongodb');
 const StudentModel = require('../models/students.model');
 const HardskillModel = require('../../Competencies/models/hardskill.model');
 const SoftskillModel = require('../../Competencies/models/softskill.model');
+const SchoolModel = require('../../Academic/models/school.model');
+const ProgramModel = require('../../Academic/models/program.model');
 
 // Helper functions for masking sensitive data
-const maskStudentName = (name) => {
-    if (!name || name.length < 4) return 'Name';
-    const xCount = Math.max(1, name.length - 4);
-    return 'Name ' + 'X'.repeat(xCount);
+const maskStudentName = (name, lang = 'en') => {
+    if (!name) return 'Name';
+    if (lang === 'th') {
+        const prefix = 'Name';
+        const xCount = Math.max(0, name.length - prefix.length);
+        return prefix + 'X'.repeat(xCount);
+    } else {
+        const prefix = 'Name ';
+        const xCount = Math.max(0, name.length - prefix.length);
+        return prefix + 'X'.repeat(xCount);
+    }
 };
 
 const maskStudentID = (id) => {
@@ -38,21 +47,29 @@ exports.getLongestStudentNameData = async function () {
             .lean();
 
         let longest = {
-            longestStudentName: 'Name',
+            longestName: 'Name',
             length: 0,
-            studentID: 'Student ID'
+            studentID: 'Student ID',
+            lang: 'en'
         };
 
         for (const student of students) {
             if (student.name && Array.isArray(student.name)) {
                 const englishName = student.name.find(n => n.key === 'en');
-                if (englishName && englishName.value) {
-                    const nameLength = englishName.value.length;
+                // consider both English and Thai name entries and pick the longest
+                const candidates = [];
+                if (englishName && englishName.value) candidates.push({ val: englishName.value, lang: 'en' });
+                const thaiName = student.name.find(n => n.key === 'th');
+                if (thaiName && thaiName.value) candidates.push({ val: thaiName.value, lang: 'th' });
+
+                for (const c of candidates) {
+                    const nameLength = c.val.length;
                     if (nameLength > longest.length) {
                         longest = {
-                            longestName: maskStudentName(englishName.value),
+                            longestName: maskStudentName(c.val, c.lang),
                             length: nameLength,
-                            studentID: maskStudentID(student.studentID || '')
+                            studentID: maskStudentID(student.studentID || ''),
+                            lang: c.lang
                         };
                     }
                 }
@@ -71,13 +88,8 @@ exports.getLongestStudentNameData = async function () {
  */
 exports.getLongestSchoolName = async function () {
     try {
-        const schools = await StudentModel.find()
-            .populate({
-                path: 'info.school',
-                select: 'title',
-                model: 'Academic_School'
-            })
-            .select('info.school')
+        const schools = await SchoolModel.find()
+            .select('title')
             .lean();
 
         let longest = {
@@ -85,19 +97,16 @@ exports.getLongestSchoolName = async function () {
             length: 0
         };
 
-        for (const student of schools) {
-            if (student.info && student.info.school) {
-                const schoolData = student.info.school;
-                if (schoolData.title && Array.isArray(schoolData.title)) {
-                    const englishTitle = schoolData.title.find(t => t.key === 'en');
-                    if (englishTitle && englishTitle.value) {
-                        const titleLength = englishTitle.value.length;
-                        if (titleLength > longest.length) {
-                            longest = {
-                                longestSchoolName: maskSchoolName(englishTitle.value),
-                                length: titleLength
-                            };
-                        }
+        for (const school of schools) {
+            if (school.title && Array.isArray(school.title)) {
+                const englishTitle = school.title.find(t => t.key === 'en');
+                if (englishTitle && englishTitle.value) {
+                    const titleLength = englishTitle.value.length;
+                    if (titleLength > longest.length) {
+                        longest = {
+                            longestSchoolName: maskSchoolName(englishTitle.value),
+                            length: titleLength
+                        };
                     }
                 }
             }
@@ -115,13 +124,8 @@ exports.getLongestSchoolName = async function () {
  */
 exports.getLongestProgramName = async function () {
     try {
-        const students = await StudentModel.find()
-            .populate({
-                path: 'info.program',
-                select: 'title',
-                model: 'Academic_Program'
-            })
-            .select('info.program')
+        const programs = await ProgramModel.find()
+            .select('title')
             .lean();
 
         let longest = {
@@ -129,19 +133,16 @@ exports.getLongestProgramName = async function () {
             length: 0
         };
 
-        for (const student of students) {
-            if (student.info && student.info.program) {
-                const programData = student.info.program;
-                if (programData.title && Array.isArray(programData.title)) {
-                    const englishTitle = programData.title.find(t => t.key === 'en');
-                    if (englishTitle && englishTitle.value) {
-                        const titleLength = englishTitle.value.length;
-                        if (titleLength > longest.length) {
-                            longest = {
-                                longestProgramName: maskProgramName(englishTitle.value),
-                                length: titleLength
-                            };
-                        }
+        for (const program of programs) {
+            if (program.title && Array.isArray(program.title)) {
+                const englishTitle = program.title.find(t => t.key === 'en');
+                if (englishTitle && englishTitle.value) {
+                    const titleLength = englishTitle.value.length;
+                    if (titleLength > longest.length) {
+                        longest = {
+                            longestProgramName: maskProgramName(englishTitle.value),
+                            length: titleLength
+                        };
                     }
                 }
             }
@@ -248,6 +249,8 @@ exports.getAllExampleData = async function () {
         return {
             studentName: studentData.longestName,
             studentID: studentData.studentID,
+            studentNameLength: studentData.length,
+            studentNameLang: studentData.lang,
             school: schoolData.longestSchoolName,
             program: programData.longestProgramName,
             competencies: competenciesData,
