@@ -1,270 +1,293 @@
+import Konva from 'konva'
+
 export default function addGraphPlaceholder(graphType, opts = {}) {
     return new Promise((resolve) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1000;
-        canvas.height = 700;
-        let ctx = canvas.getContext('2d');
+        const baseFontSize = Number(opts.fontSize) || 14
+        const fontFamily = opts.fontFamily || 'Inter, Arial'
+        const fill = opts.fill || '#1e293b'
+        const fontStyle = opts.fontStyle || 'normal'
+        const textDecoration = opts.textDecoration || ''
+
+        const makeText = (text, extra = {}) => new Konva.Text({
+            text: text ?? '',
+            fontFamily,
+            fill,
+            fontSize: baseFontSize,
+            fontStyle,
+            textDecoration,
+            listening: true,
+            draggable: false,
+            ...extra
+        })
+
+        const makeEditableText = (text, extra = {}, selectionTarget = null) => {
+            const node = makeText(text, extra)
+            const resolveSelectionTarget = (evt) => {
+                if (!selectionTarget) return node
+                const additive = !!(evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey))
+                // Normal click selects the text itself; additive click selects the parent group.
+                return additive ? selectionTarget : node
+            }
+            node.on('click tap', (e) => {
+                e.cancelBubble = true
+                this.handleNodeSelection(resolveSelectionTarget(e.evt), e.evt)
+            })
+            node.on('dblclick dbltap', (e) => {
+                e.cancelBubble = true
+                // Keep text node selected for editing UX.
+                this.handleNodeSelection(node, e.evt)
+                // Always start editing the text node on double-click
+                // even if selection was routed to a parent `selectionTarget`.
+                try { this.startEditingText(node) } catch (err) { /* ignore */ }
+            })
+            node.on('mousedown touchstart', (e) => {
+                e.cancelBubble = true
+                this.handleNodeSelection(resolveSelectionTarget(e.evt), e.evt)
+            })
+            this.assignCreationOrder(node)
+            return node
+        }
 
         const isRadar = String(graphType).includes('Radar');
         const isGeneral = String(graphType).includes('General');
         const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
 
+        const group = new Konva.Group({
+            x: Number(opts.x ?? 0),
+            y: Number(opts.y ?? 0),
+            width: Number(opts.width ?? 600),
+            height: Number(opts.height ?? 450),
+            draggable: true,
+            name: 'graph-placeholder',
+            graphType,
+            fontFamily,
+            fontSize: baseFontSize,
+            fill,
+            fontStyle,
+            textDecoration
+        })
+
+        // Background card rect
+        const bg = new Konva.Rect({
+            x: 0,
+            y: 0,
+            width: group.width(),
+            height: group.height(),
+            fill: '#ffffff',
+            name: 'graph-bg',
+            listening: true
+        })
+        group.add(bg)
+
+        // Select parent group on click of bg or lines
+        group.on('click tap', (e) => {
+            if (e.target.getClassName() !== 'Text') {
+                this.handleNodeSelection(group, e.evt)
+            }
+        })
+        group.on('mousedown touchstart', (e) => {
+            if (e.target.getClassName() !== 'Text') {
+                this.handleNodeSelection(group, e.evt)
+            }
+        })
+
         if (isRadar) {
-            // ensure background when radar is drawn
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const width = group.width()
+            const height = group.height()
+            const layoutScale = Math.max(0.55, Math.min(1.25, Math.min(width / 600, height / 450)))
 
-            ctx.fillStyle = '#1e293b';
-            ctx.font = 'bold 32px Inter, Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(title, 50, 60);
-
-            // Subtitle: show active softskill model name for General radar (if available)
-            let legendY = 110;
-            let showDocName = false;
+            let legendY = Math.round(50 * layoutScale)
+            let showDocName = false
             if (isGeneral && this.generalCompetencyDocName) {
-                const nameNorm = String(this.generalCompetencyDocName).trim().toLowerCase();
+                const nameNorm = String(this.generalCompetencyDocName).trim().toLowerCase()
                 if (nameNorm && nameNorm !== 'soft skills' && nameNorm !== 'soft skill') {
-                    showDocName = true;
+                    showDocName = true
                 }
             }
+
+            group.add(makeEditableText(title, { x: Math.round(50 * layoutScale), y: Math.round(5 * layoutScale), fontSize: Math.max(20, Math.round(baseFontSize * 1.5 * layoutScale)), fontStyle: 'bold' }, group))
             if (showDocName) {
-                ctx.font = '18px Inter, Arial';
-                ctx.fillStyle = '#475569';
-                ctx.fillText(this.generalCompetencyDocName, 50, 100);
-                legendY = 150;
+                group.add(makeEditableText(this.generalCompetencyDocName, { x: Math.round(50 * layoutScale), y: Math.round(35 * layoutScale), fontSize: Math.max(12, Math.round(baseFontSize * 1.1 * layoutScale)) }, group))
+                legendY = Math.round(70 * layoutScale)
             }
 
-            // Legend
-            ctx.fillStyle = '#7c3aed';
-            ctx.beginPath();
-            ctx.arc(380, legendY, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '18px Inter, Arial';
-            ctx.fillText('You', 405, legendY + 6);
-            ctx.fillStyle = '#fb7185';
-            ctx.beginPath();
-            ctx.arc(520, legendY, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#64748b';
-            ctx.fillText('Average', 545, legendY + 6);
+            const centerX = width / 2
+            const centerY = Math.round(height * 0.72)
+            const radius = Math.max(40, Math.min(width, height) * 0.34 * layoutScale)
 
-            const centerX = canvas.width / 2;
-            let centerY = canvas.height / 2 + 50;
-            const radius = 180;
+            const legendYouX = Math.round(centerX - radius * 0.55)
+            const legendAvgX = Math.round(centerX + radius * 0.15)
+            const legendFontSize = Math.max(10, Math.round(baseFontSize * 0.95 * layoutScale))
 
-            // Ensure there's extra space below the legend (You/Average)
-            const legendTextHeight = showDocName ? 28 : 18;
-            const extraGap = 80; 
-            const minCenterY = radius + legendY + legendTextHeight + extraGap;
-            if (centerY < minCenterY) {
-                centerY = minCenterY;
-            }
-            let labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders();
+            // Legend You
+            group.add(new Konva.Circle({ x: legendYouX, y: legendY, radius: 5, fill: '#7c3aed', listening: false }))
+            group.add(makeEditableText('You', { x: legendYouX + 12, y: legendY - 7, fontSize: legendFontSize }, group))
+
+            // Legend Average
+            group.add(new Konva.Circle({ x: legendAvgX, y: legendY, radius: 5, fill: '#fb7185', listening: false }))
+            group.add(makeEditableText('Average', { x: legendAvgX + 12, y: legendY - 7, fontSize: legendFontSize }, group))
+
+            // Get labels
+            let labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders()
             if (!Array.isArray(labels) || !labels.length) {
                 labels = isGeneral
                     ? ['Creativity', 'Problem Solving', 'Digital Literacy', 'Learning', 'Agility', 'Communication']
-                    : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing'];
+                    : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing']
             }
-            const sides = Math.max(3, labels.length);
+            const sides = Math.max(3, labels.length)
 
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1.5;
+            // Draw radar concentric pentagons/hexagons (levels)
             for (let r = 1; r <= 5; r++) {
-                const currentR = (radius / 5) * r;
-                ctx.beginPath();
+                const currentR = (radius / 5) * r
+                const points = []
                 for (let i = 0; i < sides; i++) {
-                    const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
-                    const x = centerX + currentR * Math.cos(angle);
-                    const y = centerY + currentR * Math.sin(angle);
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
+                    const angle = (Math.PI * 2 * i) / sides - Math.PI / 2
+                    points.push(centerX + currentR * Math.cos(angle), centerY + currentR * Math.sin(angle))
                 }
-                ctx.closePath();
-                ctx.stroke();
+                group.add(new Konva.Line({ points, closed: true, stroke: '#e2e8f0', strokeWidth: 1, listening: false }))
             }
 
-            // Draw radial spokes and labels with wrapping and smarter alignment
-            ctx.font = 'bold 14px Inter, Arial';
-            const lineHeight = 18;
-            const maxLabelWidth = 140; 
-            const outerOffsetX = 65; 
-            const outerOffsetY = 45;
+            // Draw radial spokes from center to outer vertices
             for (let i = 0; i < sides; i++) {
-                const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY + radius * Math.sin(angle);
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.lineTo(x, y);
-                ctx.stroke();
+                const angle = (Math.PI * 2 * i) / sides - Math.PI / 2
+                const x = centerX + radius * Math.cos(angle)
+                const y = centerY + radius * Math.sin(angle)
+                group.add(new Konva.Line({ points: [centerX, centerY, x, y], stroke: '#e2e8f0', strokeWidth: 1, listening: false }))
+            }
 
-                const labelX = centerX + (radius + outerOffsetX) * Math.cos(angle);
-                const labelY = centerY + (radius + outerOffsetY) * Math.sin(angle);
+            // Draw radial ticks (values 20, 40, 60, 80, 100) along the vertical spoke
+            for (let r = 1; r <= 5; r++) {
+                const val = r * 20
+                const tickY = centerY - (radius / 5) * r
+                group.add(makeEditableText(String(val), {
+                    x: centerX - Math.max(18, Math.round(25 * layoutScale)),
+                    y: tickY - 6,
+                    fontSize: Math.max(9, Math.round(baseFontSize * 0.75 * layoutScale)),
+                    fill: '#64748b',
+                    width: 20,
+                    align: 'right'
+                }, group))
+            }
+
+            // Draw average & you polygons
+            const samplePattern = [0.75, 0.65, 0.85, 0.72, 0.68, 0.82]
+            const avgValues = labels.map((_, i) => samplePattern[i % samplePattern.length])
+            const youValues = labels.map((_, i) => Math.min(1, (samplePattern[(i + 1) % samplePattern.length] || 0.75) + 0.12))
+
+            const buildPolygonPoints = (vals) => {
+                const points = []
+                for (let i = 0; i < sides; i++) {
+                    const v = vals[i] || 0
+                    const angle = (Math.PI * 2 * i) / sides - Math.PI / 2
+                    points.push(centerX + (radius * v) * Math.cos(angle), centerY + (radius * v) * Math.sin(angle))
+                }
+                return points
+            }
+
+            const avgPoints = buildPolygonPoints(avgValues)
+            group.add(new Konva.Line({ points: avgPoints, closed: true, fill: 'rgba(251, 113, 133, 0.3)', stroke: '#fb7185', strokeWidth: 2, listening: false }))
+
+            const youPoints = buildPolygonPoints(youValues)
+            group.add(new Konva.Line({ points: youPoints, closed: true, fill: 'rgba(124, 58, 237, 0.35)', stroke: '#7c3aed', strokeWidth: 2.5, listening: false }))
+
+            // Draw labels around the radar chart
+            const maxLabelWidth = Math.max(70, Math.round(120 * layoutScale))
+            const outerOffsetX = Math.max(12, Math.round(25 * layoutScale))
+            const outerOffsetY = Math.max(10, Math.round(20 * layoutScale))
+            for (let i = 0; i < sides; i++) {
+                const angle = (Math.PI * 2 * i) / sides - Math.PI / 2
+                const labelX = centerX + (radius + outerOffsetX) * Math.cos(angle)
+                const labelY = centerY + (radius + outerOffsetY) * Math.sin(angle)
 
                 const cos = Math.cos(angle);
+                let align = 'center'
                 if (Math.abs(cos) < 0.25) {
-                    ctx.textAlign = 'center';
+                    align = 'center'
                 } else if (cos > 0) {
-                    ctx.textAlign = 'left';
+                    align = 'left'
                 } else {
-                    ctx.textAlign = 'right';
+                    align = 'right'
                 }
 
-                const raw = String(labels[i] || '');
-                const words = raw.split(/\s+/).filter(Boolean);
-                const lines = [];
-                if (words.length === 0) {
-                    lines.push('');
-                } else {
-                    let cur = words[0] || '';
-                    for (let w = 1; w < words.length; w++) {
-                        const test = cur + ' ' + words[w];
-                        if (ctx.measureText(test).width <= maxLabelWidth) {
-                            cur = test;
-                        } else {
-                            lines.push(cur);
-                            cur = words[w];
-                        }
-                    }
-                    if (cur) lines.push(cur);
-                    if (lines.length === 1 && ctx.measureText(lines[0]).width > maxLabelWidth) {
-                        const token = lines[0];
-                        lines.length = 0;
-                        const approxChars = Math.max(6, Math.floor(maxLabelWidth / 8));
-                        for (let p = 0; p < token.length; p += approxChars) {
-                            lines.push(token.slice(p, p + approxChars));
-                        }
-                    }
-                }
-
-                const totalH = lines.length * lineHeight;
-                let drawY = labelY - (totalH / 2) + (lineHeight / 2);
-                ctx.fillStyle = '#1e293b';
-                ctx.font = 'bold 14px Inter, Arial';
-                for (const ln of lines) {
-                    ctx.fillText(ln, labelX, drawY);
-                    drawY += lineHeight;
-                }
+                const raw = String(labels[i] || '')
+                const textX = align === 'center' ? labelX - maxLabelWidth / 2 : (align === 'left' ? labelX : labelX - maxLabelWidth)
+                group.add(makeEditableText(raw, {
+                    x: textX,
+                    y: labelY - Math.round(8 * layoutScale),
+                    width: maxLabelWidth,
+                    align: align,
+                    fontSize: Math.max(10, Math.round(baseFontSize * 0.85 * layoutScale)),
+                    fontStyle: 'bold',
+                    wrap: 'word'
+                }, group))
             }
 
-            const samplePattern = [0.75, 0.65, 0.85, 0.72, 0.68, 0.82];
-            const avgValues = labels.map((_, i) => samplePattern[i % samplePattern.length]);
-            const youValues = labels.map((_, i) => Math.min(1, (samplePattern[(i + 1) % samplePattern.length] || 0.75) + 0.12));
-
-            ctx.fillStyle = 'rgba(251, 113, 133, 0.35)';
-            ctx.strokeStyle = '#fb7185';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            avgValues.forEach((v, i) => {
-                const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
-                const x = centerX + (radius * v) * Math.cos(angle);
-                const y = centerY + (radius * v) * Math.sin(angle);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = 'rgba(124, 58, 237, 0.45)';
-            ctx.strokeStyle = '#7c3aed';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            youValues.forEach((v, i) => {
-                const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
-                const x = centerX + (radius * v) * Math.cos(angle);
-                const y = centerY + (radius * v) * Math.sin(angle);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
 
         } else {
-            const labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders();
-            const competencies = Array.isArray(labels) && labels.length
-                ? labels.map(l => ({ name: String(l || ''), desc: '' }))
-                : [
-                    { name: 'Competency A', desc: '' },
-                    { name: 'Competency B', desc: '' },
-                    { name: 'Competency C', desc: '' }
-                ];
+            const width = group.width()
 
-            const topOffset = 140;
-            const bottomPadding = 40;
-            const rowHeight = 90; 
-            const requiredHeight = topOffset + bottomPadding + (competencies.length * rowHeight);
-
-            if (requiredHeight > canvas.height) {
-                canvas.height = requiredHeight;
-                ctx = canvas.getContext('2d');
+            let labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders()
+            if (!Array.isArray(labels) || !labels.length) {
+                labels = isGeneral
+                    ? ['Creativity', 'Problem Solving', 'Digital Literacy', 'Learning', 'Agility', 'Communication']
+                    : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing']
             }
+            const competencies = labels.map(l => ({ name: String(l || ''), desc: '' }))
 
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const topOffset = 70
+            const rowHeight = 55
+            const lastRowBottom = competencies.length
+                ? topOffset + ((competencies.length - 1) * rowHeight) + 22 + 8
+                : topOffset + 22 + 8
+            const requiredHeight = lastRowBottom + 1
 
-            ctx.fillStyle = '#1e293b';
-            ctx.font = 'bold 36px Inter, Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(title, 50, 70);
+            group.height(requiredHeight)
+            bg.height(requiredHeight)
 
-            const percentages = competencies.map(() => 80);
+            group.add(makeEditableText(title, { x: 0, y: 4, fontSize: Math.max(18, Math.round(baseFontSize * 1.5)), fontStyle: 'bold' }))
 
-            let startY = topOffset;
-            const barW = canvas.width - 120;
-            const barH = Math.max(10, Math.min(18, Math.floor(rowHeight * 0.18)));
+            const percentages = competencies.map(() => 80)
+            const percentFontSize = Math.max(11, Math.round(baseFontSize * 1.0))
+            // measure percent text width dynamically to make bar fill reach close to the percent label
+            const samplePercentText = '100%'
+            let percentWidth = 36
+            try {
+                if (typeof this.measureTextWidth === 'function') {
+                    percentWidth = Math.ceil(this.measureTextWidth(samplePercentText, percentFontSize, fontFamily)) + 6
+                }
+            } catch (e) { /* fallback to default */ }
+            const barW = width
+            const barH = 8
 
             competencies.forEach((item, idx) => {
-                ctx.fillStyle = '#1e293b';
-                ctx.font = 'bold 20px Inter, Arial';
-                ctx.fillText(item.name, 60, startY);
+                const startY = topOffset + idx * rowHeight
 
-                ctx.fillStyle = '#475569';
-                ctx.font = '18px Inter, Arial';
-                ctx.textAlign = 'right';
-                ctx.fillText('xx%', canvas.width - 60, startY);
+                // Competency Name
+                group.add(makeEditableText(item.name, { x: 0, y: startY, fontSize: Math.max(12, Math.round(baseFontSize * 1.15)), fontStyle: 'bold' }))
 
-                ctx.textAlign = 'left';
-                ctx.fillStyle = '#64748b';
-                ctx.font = 'normal 14px Inter, Arial';
-                ctx.fillText(item.desc, 60, startY + 22);
+                // Score text xx%
+                const percent = percentages[idx] || 0
+                group.add(makeEditableText(`${percent}%`, { x: width - percentWidth, y: startY, fontSize: percentFontSize, align: 'right', width: percentWidth }))
 
-                const percent = percentages[idx] || 0;
-                const fillW = Math.max(0, Math.floor(barW * (percent / 100)));
-                ctx.fillStyle = '#f1f5f9';
-                this.drawRoundRect(ctx, 60, startY + 40, barW, barH, 6);
-                ctx.fill();
-                ctx.fillStyle = '#dc2626';
-                this.drawRoundRect(ctx, 60, startY + 40, fillW, barH, 6);
-                ctx.fill();
+                // Description (if any)
+                if (item.desc) {
+                    group.add(makeEditableText(item.desc, { x: 0, y: startY + 20, fontSize: Math.max(10, Math.round(baseFontSize * 0.95)) }))
+                }
 
-                startY += rowHeight;
-            });
+                // Background Track Rect
+                group.add(new Konva.Rect({ x: 0, y: startY + 22, width: barW, height: barH, fill: '#f1f5f9', cornerRadius: 4, listening: false }))
 
-            const dataUrl = canvas.toDataURL('image/png');
-            const imageWidth = opts.width || 600;
-            const imageHeight = opts.height || Math.max(1, Math.round((canvas.height / canvas.width) * imageWidth));
-
-            this.addImage(dataUrl, {
-                width: imageWidth,
-                height: imageHeight,
-                ...opts,
-                isGraphPlaceholder: true,
-                graphType: graphType
-            }).then(resolve);
-            return;
+                // Colored Fill Rect
+                const fillW = Math.max(4, Math.floor(barW * (percent / 100)))
+                group.add(new Konva.Rect({ x: 0, y: startY + 22, width: fillW, height: barH, fill: '#dc2626', cornerRadius: 4, listening: false }))
+            })
         }
 
-        const dataUrl = canvas.toDataURL('image/png');
-        this.addImage(dataUrl, {
-            width: 600,
-            height: 450,
-            ...opts,
-            isGraphPlaceholder: true,
-            graphType: graphType
-        }).then(resolve);
-    });
+        this.assignCreationOrder(group)
+        this.layer.add(group)
+        if (typeof opts.onCreate === 'function') opts.onCreate(group)
+        this.layer.draw()
+        this.saveHistory()
+        resolve(group)
+    })
 }

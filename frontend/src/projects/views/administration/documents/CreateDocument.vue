@@ -1,6 +1,7 @@
 <template>
     <div class="create-document-container">
         <DocumentTopNav :isPreview.sync="isPreview" :showSettings.sync="showSettings"
+            :showHistorySidebar="showHistorySidebar" @toggle-history-sidebar="toggleSidebar('history')"
             @cancel="$router.push('/documents')" @save="handleSave" />
 
         <!-- Main Content Area -->
@@ -32,15 +33,17 @@
                 <div class="editor-zoom-wrapper" :style="{ height: wrapperHeight + 'px' }">
                     <div class="document-editor-full" :class="{ 'preview-mode': isPreview }"
                         :style="{ transform: `scale(${scale})` }">
-                        <KonvaEditor ref="konvaEditor" :isPreview="isPreview" @selection-changed="onSelectionChanged" />
+                        <KonvaEditor ref="konvaEditor" :isPreview="isPreview" @selection-changed="onSelectionChanged"
+                            @history-recorded="onHistoryRecorded" />
                     </div>
                 </div>
             </CCol>
 
             <!-- Sidebar Column -->
-            <CCol md="3" v-if="showSettings">
-                <DocumentSidebar :status.sync="status" :currentDate="currentDate" :currentTime="currentTime"
-                    :title.sync="documentName" />
+            <CCol md="3" v-if="showSettings || showHistorySidebar">
+                <DocumentSidebar v-if="showSettings" :status.sync="status" :currentDate="currentDate"
+                    :currentTime="currentTime" :title.sync="documentName" />
+                <HistoryLogSidebar v-else :historyLog="historyLog" @clear="clearHistoryLog" />
             </CCol>
         </CRow>
     </div>
@@ -53,6 +56,7 @@ import EditorToolbar from '../../../components/documents/editor/EditorToolbar.vu
 import DocumentSidebar from '../../../components/documents/editor/DocumentSidebar.vue'
 import DocumentDataSidebar from '../../../components/documents/editor/DocumentDataSidebar.vue'
 import DocumentGraphSidebar from '../../../components/documents/editor/DocumentGraphSidebar.vue'
+import HistoryLogSidebar from '../../../components/documents/editor/HistoryLogSidebar.vue'
 
 export default {
     name: 'CreateDocument',
@@ -62,7 +66,8 @@ export default {
         EditorToolbar,
         DocumentSidebar,
         DocumentDataSidebar,
-        DocumentGraphSidebar
+        DocumentGraphSidebar,
+        HistoryLogSidebar
     },
     data() {
         return {
@@ -79,7 +84,9 @@ export default {
             wrapperHeight: 1123,
             showDataSidebar: false,
             showGraphSidebar: false,
-            showSettings: false
+            showHistorySidebar: false,
+            showSettings: false,
+            historyLog: []
         }
     },
     mounted() {
@@ -106,8 +113,9 @@ export default {
                 const res = await this.$api.documents('get', this.docId);
                 if (res.data && res.data.data) {
                     const doc = res.data.data;
-                    this.documentName = doc.title || doc.name;
+                    this.documentName = doc.title;
                     this.status = doc.status;
+                    this.historyLog = [];
                     if (this.$refs.konvaEditor) {
                         this.$refs.konvaEditor.loadFromJSON(doc.content);
                     }
@@ -302,10 +310,25 @@ export default {
             if (sidebarName === 'data') {
                 this.showDataSidebar = !this.showDataSidebar;
                 if (this.showDataSidebar) this.showGraphSidebar = false;
+                if (this.showDataSidebar) this.showHistorySidebar = false;
             } else if (sidebarName === 'graph') {
                 this.showGraphSidebar = !this.showGraphSidebar;
                 if (this.showGraphSidebar) this.showDataSidebar = false;
+                if (this.showGraphSidebar) this.showHistorySidebar = false;
+            } else if (sidebarName === 'history') {
+                this.showHistorySidebar = !this.showHistorySidebar;
+                if (this.showHistorySidebar) {
+                    this.showDataSidebar = false;
+                    this.showGraphSidebar = false;
+                }
             }
+        },
+        onHistoryRecorded(entry) {
+            if (!entry) return;
+            this.historyLog = [entry, ...this.historyLog].slice(0, 25);
+        },
+        clearHistoryLog() {
+            this.historyLog = [];
         },
         calculateScale() {
             this.$nextTick(() => {
@@ -365,14 +388,21 @@ export default {
     watch: {
         showDataSidebar() { this.calculateScale(); },
         showGraphSidebar() { this.calculateScale(); },
-        showSettings() { this.calculateScale(); },
+        showSettings(value) {
+            this.calculateScale();
+            if (value) this.showHistorySidebar = false;
+        },
+        showHistorySidebar(value) {
+            this.calculateScale();
+            if (value) this.showSettings = false;
+        },
         isPreview() { this.$nextTick(() => this.calculateScale()); }
     },
     computed: {
         computeEditorColSize() {
             let size = 12;
             if (this.showDataSidebar || this.showGraphSidebar) size -= 3;
-            if (this.showSettings) size -= 3;
+            if (this.showSettings || this.showHistorySidebar) size -= 3;
             return size;
         }
     }
@@ -408,7 +438,7 @@ export default {
     justify-content: center;
     /* Center the document */
     align-items: flex-start;
-    overflow: auto;
+    overflow: visible;
     /* Enable scroll if content exceeds space */
     margin-bottom: 24px;
     padding: 40px;
@@ -511,6 +541,14 @@ export default {
 
 .document-title-input::placeholder {
     color: #d1d5db;
+}
+
+/* Keep toolbar visible while scrolling the editor column */
+.toolbar-card {
+    position: sticky;
+    top: 12px;
+    z-index: 60;
+    background: rgba(255, 255, 255, 0.98);
 }
 
 /* TipTap ProseMirror Styling */

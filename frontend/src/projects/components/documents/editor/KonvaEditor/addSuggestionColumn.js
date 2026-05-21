@@ -16,7 +16,8 @@ export default function addSuggestionColumn(opts = {}) {
         height: 1,
         fill: 'rgba(0,0,0,0)',
         listening: true,
-        name: 'hit-area'
+        name: 'hit-area',
+        historyIgnore: true
     });
     group.add(hitRect);
     let currentY = 0;
@@ -59,10 +60,12 @@ export default function addSuggestionColumn(opts = {}) {
             y: currentY,
             width: columnWidth
         });
+        this.assignCreationOrder(labelNode);
         group.add(labelNode);
         setupTextNodeTransform(labelNode);
-        labelNode.on('click tap', (e) => { this.handleNodeSelection(labelNode, e.evt.shiftKey) });
-        labelNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(labelNode, e.evt.shiftKey); this.startEditingText(labelNode); });
+        labelNode.on('click tap', (e) => { this.handleNodeSelection(labelNode, e.evt) });
+        labelNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(labelNode, e.evt); this.startEditingText(labelNode); });
+        labelNode.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(labelNode, e.evt); });
         currentY += (labelFontSize * 1.4);
 
         const textNode = new Konva.Text({
@@ -78,10 +81,12 @@ export default function addSuggestionColumn(opts = {}) {
             lineHeight: 1.4
         });
         textNode.setAttr('placeholderType', 'suggestion');
+        this.assignCreationOrder(textNode);
         group.add(textNode);
         setupTextNodeTransform(textNode);
-        textNode.on('click tap', (e) => { this.handleNodeSelection(textNode, e.evt.shiftKey) });
-        textNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(textNode, e.evt.shiftKey); this.startEditingText(textNode); });
+        textNode.on('click tap', (e) => { this.handleNodeSelection(textNode, e.evt) });
+        textNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(textNode, e.evt); this.startEditingText(textNode); });
+        textNode.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(textNode, e.evt); });
         currentY += textNode.height() + (baseFontSize * 1.5);
     });
 
@@ -94,7 +99,12 @@ export default function addSuggestionColumn(opts = {}) {
     group.on('click tap', (e) => {
         const tgt = e.target;
         if (tgt && tgt !== group && tgt !== hitRect) return;
-        this.handleNodeSelection(group, e.evt.shiftKey)
+        this.handleNodeSelection(group, e.evt)
+    });
+    group.on('mousedown touchstart', (e) => {
+        const tgt = e.target;
+        if (tgt && tgt !== group && tgt !== hitRect) return;
+        this.handleNodeSelection(group, e.evt)
     });
     group.on('dragend', () => {
         this.layer.draw();

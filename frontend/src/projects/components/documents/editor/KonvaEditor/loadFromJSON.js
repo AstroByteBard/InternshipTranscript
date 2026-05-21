@@ -37,7 +37,12 @@ export default async function loadFromJSON(data) {
                 });
             }
         } else if (el.className === 'Group') {
-            if (el.attrs.name === 'competency-table') {
+            if (el.attrs.name === 'graph-placeholder') {
+                await this.addGraphPlaceholder(el.attrs.graphType, {
+                    ...el.attrs,
+                    onCreate: (node) => this.applySavedAttrs(node, el.attrs)
+                });
+            } else if (el.attrs.name === 'competency-table') {
                 await this.addCompetencyTable(el.attrs.variableName || '{GeneralCompetencies}', {
                     ...el.attrs,
                     onCreate: (node) => this.applySavedAttrs(node, el.attrs)
@@ -64,4 +69,8 @@ export default async function loadFromJSON(data) {
     this.transformer.moveToTop()
     this.layer.batchDraw();
     this.isLoading = false;
+    this.history = [];
+    this.historyIndex = -1;
+    this._historySnapshot = this.saveToJSON();
+    this.historyLog = [];
 }

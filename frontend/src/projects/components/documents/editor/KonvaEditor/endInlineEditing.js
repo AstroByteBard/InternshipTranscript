@@ -8,6 +8,9 @@ export default function endInlineEditing(commit = true) {
         clearInterval(this.caretInterval)
         this.caretInterval = null
     }
+    if (commit) {
+        try { this.saveHistory() } catch (e) { /* ignore */ }
+    }
     this.editingNode = null
     this.layer.draw()
 }

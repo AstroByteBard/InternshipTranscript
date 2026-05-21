@@ -7,6 +7,9 @@ export default function computeSelectionStyle() {
 
     nodes.forEach((node, idx) => {
         let targetNode = node;
+        if (typeof node.getAttr === 'function' && node.getAttr('graphType')) {
+            targetNode = node;
+        }
         if (typeof node.getClassName === 'function' && node.getClassName() === 'Group') {
             try {
                 // Find first nested Text node to read its actual font styles

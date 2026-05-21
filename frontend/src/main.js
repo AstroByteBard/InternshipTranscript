@@ -38,7 +38,7 @@ new Vue({
   el: '#app',
   router,
   store,
-  //CIcon component documentation: https://coreui.io/vue/docs/components/icon
+  ///CIcon component documentation: https://coreui.io/vue/docs/components/icon
   icons,
   i18n,
   template: '<App/>',

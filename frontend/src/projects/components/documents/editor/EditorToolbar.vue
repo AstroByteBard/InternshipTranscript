@@ -9,11 +9,12 @@
             <CIcon name="cil-action-redo" size="sm" />
         </CButton>
 
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" title="Zoom Out"
-            @click="$emit('zoom-out')">
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" title="Zoom Out" @click="$emit('zoom-out')">
             <CIcon name="cil-zoom-out" size="sm" />
         </CButton>
-        <span class="zoom-percentage-text px-1 font-weight-bold" style="font-size: 11px; min-width: 36px; text-align: center; display: inline-block; color: #4b5563; user-select: none; cursor: pointer;" title="Double click to Fit" @dblclick="$emit('zoom-reset')">
+        <span class="zoom-percentage-text px-1 font-weight-bold"
+            style="font-size: 11px; min-width: 36px; text-align: center; display: inline-block; color: #4b5563; user-select: none; cursor: pointer;"
+            title="Double click to Fit" @dblclick="$emit('zoom-reset')">
             {{ Math.round(scale * 100) }}%
         </span>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" title="Zoom In"
@@ -35,11 +36,8 @@
         <!-- Font Size Stepper -->
         <div class="font-size-stepper mr-1">
             <button class="size-btn" @click="changeFontSize(-1)" title="Decrease font size">−</button>
-            <input type="number" class="size-input text-center font-weight-bold" 
-                :value="fontSize" 
-                @input="handleFontSizeInput" 
-                @change="handleFontSizeChange"
-                @blur="handleFontSizeChange"
+            <input type="number" class="size-input text-center font-weight-bold" :value="fontSize"
+                @input="handleFontSizeInput" @change="handleFontSizeChange" @blur="handleFontSizeChange"
                 @keydown.enter="handleFontSizeEnter"
                 style="width: 32px; border: none; padding: 0; font-size: 12px; height: 26px; outline: none; margin: 0; background: transparent; text-align: center; font-weight: 600; color: #374151;" />
             <button class="size-btn" @click="changeFontSize(1)" title="Increase font size">+</button>
@@ -161,14 +159,14 @@
 
         <CDropdown color="light" class="toolbar-dropdown mr-1 border-0" toggler-text="+ Add">
             <CDropdownItem @click="$emit('toggle-data-sidebar')">
-                <CIcon name="cil-database" class="mr-2" />Data Variable
+                <CIcon name="cil-code" class="mr-2" />Data Variable
             </CDropdownItem>
             <CDropdownItem @click="$emit('toggle-graph-sidebar')">
                 <CIcon name="cil-chart-pie" class="mr-2" />Graph (Chart)
             </CDropdownItem>
             <CDropdownDivider />
             <CDropdownItem @click="triggerFileInput">
-                <CIcon name="cil-image" class="mr-2" />Image (Upload)
+                <CIcon name="cil-image1" class="mr-2" />Image (Upload)
             </CDropdownItem>
         </CDropdown>
         <input type="file" ref="imageUpload" accept="image/*" class="d-none" @change="handleImageUpload">
@@ -440,7 +438,9 @@ export default {
     -webkit-appearance: none;
     margin: 0;
 }
+
 .size-input {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 </style>

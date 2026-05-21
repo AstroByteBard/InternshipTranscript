@@ -23,6 +23,11 @@
             @click="$emit('update:showSettings', !showSettings)">
             <CIcon name="cil-settings" class="mr-2" size="sm" /> Setting
           </CButton>
+          <CButton size="sm" class="segment-btn"
+            :class="{ 'active': showHistorySidebar, 'text-muted': !showHistorySidebar }"
+            @click="$emit('toggle-history-sidebar')">
+            <CIcon name="cil-history" class="mr-2" size="sm" /> History
+          </CButton>
         </CButtonGroup>
       </div>
 
@@ -41,7 +46,8 @@ export default {
   name: 'DocumentTopNav',
   props: {
     isPreview: { type: Boolean, default: false },
-    showSettings: { type: Boolean, default: true }
+    showSettings: { type: Boolean, default: true },
+    showHistorySidebar: { type: Boolean, default: false }
   }
 }
 </script>

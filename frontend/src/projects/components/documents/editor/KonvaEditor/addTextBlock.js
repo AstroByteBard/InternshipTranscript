@@ -31,7 +31,10 @@ export default function addTextBlock(text = 'Add Text', opts = {}) {
         this.transformer.moveToTop()
 
         konvaText.on('click tap', (e) => {
-            this.handleNodeSelection(konvaText, e.evt.shiftKey)
+            this.handleNodeSelection(konvaText, e.evt)
+        })
+        konvaText.on('mousedown touchstart', (e) => {
+            this.handleNodeSelection(konvaText, e.evt)
         })
         konvaText.on('dragmove', () => {
             const pos = konvaText.position();

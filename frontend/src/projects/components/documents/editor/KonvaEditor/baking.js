@@ -54,13 +54,27 @@ export default {
 
         const childrenCollection = group.getChildren ? group.getChildren() : []
         const children = (childrenCollection && typeof childrenCollection.toArray === 'function') ? childrenCollection.toArray() : (childrenCollection ? Array.from(childrenCollection) : [])
+        const gName = (typeof group.name === 'function') ? group.name() : ''
+        const isGraphPlaceholder = !!(gName && gName.includes('graph-placeholder'))
+        const pivotX = isGraphPlaceholder && typeof group.width === 'function' ? group.width() / 2 : 0
+        const pivotY = isGraphPlaceholder && typeof group.height === 'function' ? group.height() / 2 : 0
 
         children.forEach((child) => {
             if (!child) return
 
-            // multiply child's position by local group scale (keeps absolute positions)
-            try { if (typeof child.x === 'function') child.x(child.x() * sx) } catch (e) { }
-            try { if (typeof child.y === 'function') child.y(child.y() * sy) } catch (e) { }
+            // For graph placeholders, scale around the visual center so content stays centered.
+            try {
+                if (typeof child.x === 'function') {
+                    const nextX = isGraphPlaceholder ? ((child.x() - pivotX) * sx + pivotX) : (child.x() * sx)
+                    child.x(nextX)
+                }
+            } catch (e) { }
+            try {
+                if (typeof child.y === 'function') {
+                    const nextY = isGraphPlaceholder ? ((child.y() - pivotY) * sy + pivotY) : (child.y() * sy)
+                    child.y(nextY)
+                }
+            } catch (e) { }
 
             const ccls = (child.getClassName && child.getClassName()) || ''
 
@@ -77,9 +91,33 @@ export default {
                 } catch (e) { }
                 try { if (typeof child.scaleX === 'function') child.scaleX(1) } catch (e) { }
                 try { if (typeof child.scaleY === 'function') child.scaleY(1) } catch (e) { }
+                if (isGraphPlaceholder && typeof child.width === 'function' && typeof child.width() === 'number') {
+                    try { child.width(Math.max(1, child.width() * sx)) } catch (e) { }
+                }
             } else {
-                // Non-text child: preserve size attributes; only adjust positional coords above.
-                // Do NOT bake width/height here to avoid layout changes — caller may handle shapes separately.
+                // Preserve size for ordinary groups, but graph placeholders need their vector shapes baked too.
+                if (gName && gName.includes('graph-placeholder')) {
+                    if (ccls === 'Rect') {
+                        try { if (typeof child.width === 'function') child.width(Math.max(1, child.width() * sx)) } catch (e) { }
+                        try { if (typeof child.height === 'function') child.height(Math.max(1, child.height() * sy)) } catch (e) { }
+                    } else if (ccls === 'Circle') {
+                        try { if (typeof child.radius === 'function') child.radius(Math.max(1, child.radius() * Math.min(sx, sy))) } catch (e) { }
+                    } else if (ccls === 'Line') {
+                        try {
+                            if (typeof child.points === 'function' && Array.isArray(child.points())) {
+                                const newPoints = child.points().map((val, idx) => {
+                                    const axisScale = idx % 2 === 0 ? sx : sy
+                                    const pivot = idx % 2 === 0 ? pivotX : pivotY
+                                    return isGraphPlaceholder ? ((val - pivot) * axisScale + pivot) : (val * axisScale)
+                                })
+                                child.points(newPoints)
+                            }
+                            if (typeof child.strokeWidth === 'function') {
+                                child.strokeWidth((child.strokeWidth() || 1) * Math.min(sx, sy))
+                            }
+                        } catch (e) { }
+                    }
+                }
             }
         })
 

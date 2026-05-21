@@ -63,6 +63,9 @@ export default function startEditingText(konvaText) {
         }
         textarea.parentNode && textarea.parentNode.removeChild(textarea)
         this.layer.draw()
+        if (apply) {
+            try { this.saveHistory() } catch (e) { /* ignore */ }
+        }
         window.removeEventListener('scroll', onScroll)
     }
 

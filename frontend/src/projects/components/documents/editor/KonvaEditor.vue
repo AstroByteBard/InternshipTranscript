@@ -101,7 +101,10 @@ export default {
             creationSeq: 0,
             history: [],
             historyIndex: -1,
+            _historySnapshot: null,
+            isApplyingHistory: false,
             isLoading: false,
+            historyLog: [],
             generalCompetencyLabels: [],
             generalCompetencyDocName: '',
             specificCompetencyLabels: [],
@@ -236,5 +239,6 @@ export default {
 .konva-editor-root {
     width: 100%;
     height: 100%;
+    position: relative;
 }
 </style>

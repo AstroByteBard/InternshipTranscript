@@ -36,7 +36,10 @@ export default function addImage(dataUrl, opts = {}) {
             this.assignCreationOrder(konvaImage)
 
             konvaImage.on('click tap', (e) => {
-                this.handleNodeSelection(konvaImage, e.evt.shiftKey)
+                this.handleNodeSelection(konvaImage, e.evt)
+            });
+            konvaImage.on('mousedown touchstart', (e) => {
+                this.handleNodeSelection(konvaImage, e.evt)
             });
 
             konvaImage.on('dragmove', () => {
@@ -126,6 +129,11 @@ export default function addImage(dataUrl, opts = {}) {
             if (opts.isGraphPlaceholder && opts.graphType) {
                 konvaImage.setAttr('name', 'graph-placeholder')
                 konvaImage.setAttr('graphType', opts.graphType)
+                if (typeof opts.fontFamily !== 'undefined') konvaImage.setAttr('fontFamily', opts.fontFamily)
+                if (typeof opts.fontSize !== 'undefined') konvaImage.setAttr('fontSize', Number(opts.fontSize))
+                if (typeof opts.fill !== 'undefined') konvaImage.setAttr('fill', opts.fill)
+                if (typeof opts.fontStyle !== 'undefined') konvaImage.setAttr('fontStyle', opts.fontStyle)
+                if (typeof opts.textDecoration !== 'undefined') konvaImage.setAttr('textDecoration', opts.textDecoration)
             }
             if (opts.variableName) {
                 konvaImage.setAttr('variableName', opts.variableName)

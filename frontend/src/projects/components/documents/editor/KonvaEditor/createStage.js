@@ -12,6 +12,12 @@ export default function createStage() {
         height,
     })
 
+    this.history = []
+    this.historyIndex = -1
+    this._historySnapshot = null
+    this.isApplyingHistory = false
+    this.historyLog = []
+
     this.layer = new Konva.Layer()
     this.stage.add(this.layer)
 
@@ -35,6 +41,7 @@ export default function createStage() {
         enabledAnchors: ['top-left', 'top-center', 'top-right', 'middle-right', 'bottom-right', 'bottom-center', 'bottom-left', 'middle-left'],
         rotateEnabled: true,
         ignoreStroke: true,
+        padding: 0,
         keepRatio: true,
         // Sleek Premium Selection Styles (Figma/Canva inspired)
         borderStroke: '#4f46e5',      // Indigo border line
@@ -57,12 +64,18 @@ export default function createStage() {
     this.layer.add(this.transformer)
 
     this.transformer.on('transform', () => {
+        try {
+            const nodes = typeof this.transformer.nodes === 'function' ? (this.transformer.nodes() || []) : []
+            if (nodes.length === 1 && nodes[0] && typeof this.showAlignmentGuides === 'function') {
+                this.showAlignmentGuides(nodes[0])
+            }
+        } catch (e) { }
         if (typeof this.updateSelectionHighlights === 'function') {
             this.updateSelectionHighlights();
         }
         try {
             this.emitSelectionChange();
-        } catch (e) {}
+        } catch (e) { }
     })
 
     // When user finishes a transform via Transformer, bake scale into children's attributes
@@ -96,11 +109,56 @@ export default function createStage() {
                 }
             } catch (e) { /* ignore */ }
             this.layer.batchDraw()
+            this.clearAlignmentGuides()
             this.saveHistory()
             try { this.emitSelectionChange() } catch (err) { /* ignore */ }
         } catch (err) {
             console.warn('transformend handler error', err)
         }
+    })
+
+    // Allow shift+dragging the Transformer frame to move all selected nodes together
+    this.transformer.on('mousedown touchstart', (e) => {
+        try {
+            const evt = e && e.evt ? e.evt : null
+            const isShift = evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey)
+            if (!isShift) return
+            const nodes = (typeof this.transformer.nodes === 'function') ? (this.transformer.nodes() || []) : []
+            if (!nodes || nodes.length <= 1) return // only for multi-select
+
+            const pointer = this.stage.getPointerPosition() || { x: 0, y: 0 }
+            const startPointer = { x: pointer.x, y: pointer.y }
+            const startPositions = nodes.map(n => ({ node: n, x: n.x(), y: n.y() }))
+
+            const moveHandler = () => {
+                try {
+                    const p = this.stage.getPointerPosition() || { x: 0, y: 0 }
+                    const dx = p.x - startPointer.x
+                    const dy = p.y - startPointer.y
+                    startPositions.forEach((s) => {
+                        try { s.node.position({ x: s.x + dx, y: s.y + dy }) } catch (err) { }
+                    })
+                    try { if (this.layer && typeof this.layer.batchDraw === 'function') this.layer.batchDraw() } catch (err) { }
+                } catch (err) { /* ignore */ }
+            }
+
+            const upHandler = () => {
+                try {
+                    this.stage.off('mousemove', moveHandler)
+                    this.stage.off('touchmove', moveHandler)
+                    this.stage.off('mouseup', upHandler)
+                    this.stage.off('touchend', upHandler)
+                    // finalize history after move
+                    try { if (typeof this.saveHistory === 'function') this.saveHistory() } catch (err) { }
+                    try { if (typeof this.emitSelectionChange === 'function') this.emitSelectionChange() } catch (err) { }
+                } catch (err) { /* ignore */ }
+            }
+
+            this.stage.on('mousemove', moveHandler)
+            this.stage.on('touchmove', moveHandler)
+            this.stage.on('mouseup', upHandler)
+            this.stage.on('touchend', upHandler)
+        } catch (err) { /* ignore */ }
     })
 
     // guide layer for alignment lines (on top of main layer)
@@ -110,6 +168,10 @@ export default function createStage() {
     // selection highlight layer (on top of guide layer, transparent to events)
     this.selectionLayer = new Konva.Layer({ listening: false })
     this.stage.add(this.selectionLayer)
+
+    // marquee selection rect (for drag-to-select)
+    this._marqueeRect = new Konva.Rect({ x: 0, y: 0, width: 0, height: 0, visible: false, fill: 'rgba(79,70,229,0.06)', stroke: '#4f46e5', strokeWidth: 1, dash: [4, 4], listening: false })
+    this.selectionLayer.add(this._marqueeRect)
 
     // draw baseline layer
     this.layer.draw()
@@ -147,9 +209,87 @@ export default function createStage() {
         }
 
         if (e.target === this.stage || e.target === bg) {
-            this.transformer.nodes([])
-            this.layer.draw()
-            try { this.emitSelectionChange() } catch (err) { /* ignore */ }
+            // start marquee selection (drag-to-select)
+            const domEvent = e && e.evt ? e.evt : null
+            const startPos = this.stage.getPointerPosition() || { x: 0, y: 0 }
+            this._marqueeRect.visible(true)
+            this._marqueeRect.x(startPos.x)
+            this._marqueeRect.y(startPos.y)
+            this._marqueeRect.width(0)
+            this._marqueeRect.height(0)
+            this.selectionLayer.batchDraw()
+
+            const onMove = () => {
+                const pos = this.stage.getPointerPosition() || { x: 0, y: 0 }
+                const x = Math.min(pos.x, startPos.x)
+                const y = Math.min(pos.y, startPos.y)
+                const w = Math.abs(pos.x - startPos.x)
+                const h = Math.abs(pos.y - startPos.y)
+                this._marqueeRect.x(x)
+                this._marqueeRect.y(y)
+                this._marqueeRect.width(w)
+                this._marqueeRect.height(h)
+                this.selectionLayer.batchDraw()
+            }
+
+            const onUp = (upEvt) => {
+                try {
+                    const pos = this.stage.getPointerPosition() || { x: 0, y: 0 }
+                    const dx = Math.abs(pos.x - startPos.x)
+                    const dy = Math.abs(pos.y - startPos.y)
+                    this._marqueeRect.visible(false)
+                    this.selectionLayer.batchDraw()
+                    this.stage.off('mousemove', onMove)
+                    this.stage.off('touchmove', onMove)
+                    this.stage.off('mouseup', onUp)
+                    this.stage.off('touchend', onUp)
+
+                    // treat as click if tiny movement
+                    if (dx < 6 && dy < 6) {
+                        this.transformer.nodes([])
+                        this.layer.draw()
+                        try { this.emitSelectionChange() } catch (err) { /* ignore */ }
+                        return
+                    }
+
+                    // compute intersection with nodes on this.layer
+                    const r = this._marqueeRect.getClientRect()
+                    const hits = []
+                    const children = this.layer.getChildren().toArray ? this.layer.getChildren().toArray() : Array.from(this.layer.getChildren())
+                    children.forEach((c) => {
+                        try {
+                            if (!c || typeof c.getClientRect !== 'function') return
+                            // only include draggable content nodes (groups, shapes)
+                            if (typeof c.draggable === 'function' && !c.draggable()) return
+                            const rect = c.getClientRect({ skipTransform: true })
+                            if (!rect) return
+                            const intersect = !(r.x > rect.x + rect.width || r.x + r.width < rect.x || r.y > rect.y + rect.height || r.y + r.height < rect.y)
+                            if (intersect) hits.push(c)
+                        } catch (err) { /* ignore */ }
+                    })
+
+                    const modifier = domEvent
+                    const additive = !!(modifier && (modifier.shiftKey || modifier.ctrlKey || modifier.metaKey))
+                    if (hits.length) {
+                        const nodes = additive ? (this.transformer.nodes().slice().concat(hits.filter(h => this.transformer.nodes().indexOf(h) === -1))) : hits
+                        try { this.transformer.nodes(nodes) } catch (err) { }
+                        try { if (typeof this.transformer.forceUpdate === 'function') this.transformer.forceUpdate() } catch (err) { }
+                        try { this.layer.batchDraw() } catch (err) { }
+                        try { this.emitSelectionChange() } catch (err) { }
+                    } else {
+                        // no hits: clear selection
+                        this.transformer.nodes([])
+                        this.layer.draw()
+                        try { this.emitSelectionChange() } catch (err) { /* ignore */ }
+                    }
+                } catch (err) { /* ignore */ }
+            }
+
+            this.stage.on('mousemove', onMove)
+            this.stage.on('touchmove', onMove)
+            this.stage.on('mouseup', onUp)
+            this.stage.on('touchend', onUp)
+            return
         }
     })
 
@@ -165,8 +305,8 @@ export default function createStage() {
 
         // If double-clicked a Text node -> select and start editing
         if (target && typeof target.getClassName === 'function' && target.getClassName() === 'Text') {
-            const shift = e && e.evt ? !!e.evt.shiftKey : false
-            this.handleNodeSelection(target, shift)
+            const modifierEvent = e && e.evt ? e.evt : null
+            this.handleNodeSelection(target, modifierEvent)
             this.startEditingText(target)
             return
         }

@@ -12,6 +12,7 @@ export default function startInlineEditing(konvaText) {
         height: fontSize,
         fill: 'black',
         listening: false,
+        historyIgnore: true,
     })
     this.caret = caret
     this.layer.add(caret)

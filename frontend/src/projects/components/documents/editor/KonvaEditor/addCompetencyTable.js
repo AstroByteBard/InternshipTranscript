@@ -25,7 +25,7 @@ export default function addCompetencyTable(variableName, opts = {}) {
         });
         this.assignCreationOrder(group);
 
-        const hitRect = new Konva.Rect({ width: defaultW, height: 100, fill: 'rgba(0,0,0,0)', listening: true });
+        const hitRect = new Konva.Rect({ width: defaultW, height: 100, fill: 'rgba(0,0,0,0)', listening: true, name: 'hit-area', historyIgnore: true });
         group.add(hitRect);
 
         const setupTextNodeTransform = (txtNode) => {
@@ -50,16 +50,20 @@ export default function addCompetencyTable(variableName, opts = {}) {
         };
 
         const titleText = new Konva.Text({ text: title, fontSize: 18, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#4b5563', y: 0 });
+        this.assignCreationOrder(titleText);
         group.add(titleText);
         setupTextNodeTransform(titleText);
         titleText.on('click tap', (e) => { this.handleNodeSelection(titleText, e.evt.shiftKey) });
         titleText.on('dblclick dbltap', (e) => { this.handleNodeSelection(titleText, e.evt.shiftKey); this.startEditingText(titleText); });
+        titleText.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(titleText, e.evt.shiftKey); });
 
         const scoreHeader = new Konva.Text({ text: 'Score', fontSize: 18, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#4b5563', x: 350, y: 0 });
+        this.assignCreationOrder(scoreHeader);
         group.add(scoreHeader);
         setupTextNodeTransform(scoreHeader);
         scoreHeader.on('click tap', (e) => { this.handleNodeSelection(scoreHeader, e.evt.shiftKey) });
         scoreHeader.on('dblclick dbltap', (e) => { this.handleNodeSelection(scoreHeader, e.evt.shiftKey); this.startEditingText(scoreHeader); });
+        scoreHeader.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(scoreHeader, e.evt.shiftKey); });
 
         let currentY = 50;
         const rowFontSize = opts.fontSize ? Number(opts.fontSize) : 14;
@@ -77,10 +81,12 @@ export default function addCompetencyTable(variableName, opts = {}) {
                 y: currentY,
                 width: 320
             });
+            this.assignCreationOrder(nameNode);
             group.add(nameNode);
             setupTextNodeTransform(nameNode);
             nameNode.on('click tap', (e) => { this.handleNodeSelection(nameNode, e.evt.shiftKey) });
             nameNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(nameNode, e.evt.shiftKey); this.startEditingText(nameNode); });
+            nameNode.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(nameNode, e.evt.shiftKey); });
 
             const scoreNode = new Konva.Text({
                 text: 'X.X',
@@ -91,10 +97,12 @@ export default function addCompetencyTable(variableName, opts = {}) {
                 x: 350,
                 y: currentY
             });
+            this.assignCreationOrder(scoreNode);
             group.add(scoreNode);
             setupTextNodeTransform(scoreNode);
             scoreNode.on('click tap', (e) => { this.handleNodeSelection(scoreNode, e.evt.shiftKey) });
             scoreNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(scoreNode, e.evt.shiftKey); this.startEditingText(scoreNode); });
+            scoreNode.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(scoreNode, e.evt.shiftKey); });
 
             currentY += Math.max(30, rowFontSize * 3);
         });
@@ -105,6 +113,11 @@ export default function addCompetencyTable(variableName, opts = {}) {
         if (typeof opts.onCreate === 'function') opts.onCreate(group);
 
         group.on('click tap', (e) => {
+            const tgt = e.target;
+            if (tgt && tgt !== group && tgt !== hitRect) return;
+            this.handleNodeSelection(group, e.evt.shiftKey)
+        });
+        group.on('mousedown touchstart', (e) => {
             const tgt = e.target;
             if (tgt && tgt !== group && tgt !== hitRect) return;
             this.handleNodeSelection(group, e.evt.shiftKey)

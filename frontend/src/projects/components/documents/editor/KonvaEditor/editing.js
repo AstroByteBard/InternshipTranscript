@@ -158,6 +158,7 @@ export default {
             height: fontSize,
             fill: 'black',
             listening: false,
+            historyIgnore: true,
         })
         this.caret = caret
         this.layer.add(caret)

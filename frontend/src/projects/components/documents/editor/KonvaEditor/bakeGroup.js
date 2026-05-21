@@ -40,6 +40,26 @@ export default function bakeGroup(group, parentSx = 1, parentSy = 1) {
         } else {
             // Non-text child: preserve size attributes; only adjust positional coords above.
             // Do NOT bake width/height here to avoid layout changes — caller may handle shapes separately.
+            // EXCEPT for graph-placeholder components where we need vector shapes to scale perfectly:
+            const gName = typeof group.name === 'function' ? group.name() : '';
+            if (gName && gName.includes('graph-placeholder')) {
+                if (ccls === 'Rect') {
+                    try { if (typeof child.width === 'function') child.width(child.width() * sx) } catch (e) { }
+                    try { if (typeof child.height === 'function') child.height(child.height() * sy) } catch (e) { }
+                } else if (ccls === 'Circle') {
+                    try { if (typeof child.radius === 'function') child.radius(child.radius() * Math.min(sx, sy)) } catch (e) { }
+                } else if (ccls === 'Line') {
+                    try {
+                        if (typeof child.points === 'function' && Array.isArray(child.points())) {
+                            const newPoints = child.points().map((val, idx) => idx % 2 === 0 ? val * sx : val * sy)
+                            child.points(newPoints)
+                        }
+                        if (typeof child.strokeWidth === 'function') {
+                            child.strokeWidth((child.strokeWidth() || 1) * Math.min(sx, sy))
+                        }
+                    } catch (e) { }
+                }
+            }
         }
     })
 

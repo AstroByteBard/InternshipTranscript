@@ -3,6 +3,8 @@ export default function bakeNodeScale(node) {
     const cls = node.getClassName()
     try {
         if (cls === 'Group') {
+            const name = (typeof node.name === 'function') ? node.name() : ''
+            if (name && name.includes('graph-placeholder')) return
             this.bakeGroup(node, 1, 1)
             return
         }

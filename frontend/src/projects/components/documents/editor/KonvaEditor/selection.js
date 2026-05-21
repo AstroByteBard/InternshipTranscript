@@ -97,19 +97,49 @@ export default {
 
     handleNodeSelection(node, shiftKey) {
         if (!this.transformer) return
+        const additive = !!(shiftKey && typeof shiftKey === 'object'
+            ? (shiftKey.shiftKey || shiftKey.ctrlKey || shiftKey.metaKey)
+            : shiftKey)
+        const eventTime = shiftKey && typeof shiftKey === 'object' && typeof shiftKey.timeStamp === 'number'
+            ? shiftKey.timeStamp
+            : null
+        if (this._lastSelectionEvent && this._lastSelectionEvent.node === node && this._lastSelectionEvent.additive === additive) {
+            if (eventTime !== null && typeof this._lastSelectionEvent.timeStamp === 'number') {
+                if (Math.abs(eventTime - this._lastSelectionEvent.timeStamp) < 300) return
+            }
+        }
+        this._lastSelectionEvent = { node, additive, timeStamp: eventTime }
         const nodes = this.transformer.nodes().slice()
-        if (shiftKey) {
+        if (additive) {
             const index = nodes.indexOf(node)
-            if (index >= 0) {
-                nodes.splice(index, 1)
-            } else {
+            if (index < 0) {
                 nodes.push(node)
             }
             this.transformer.nodes(nodes)
         } else {
             this.transformer.nodes([node])
         }
+        try {
+            if (typeof this.transformer.forceUpdate === 'function') {
+                this.transformer.forceUpdate()
+            }
+        } catch (err) { /* ignore */ }
+        setTimeout(() => {
+            try {
+                if (this.transformer && typeof this.transformer.forceUpdate === 'function') {
+                    this.transformer.forceUpdate()
+                }
+                if (this.layer && typeof this.layer.batchDraw === 'function') {
+                    this.layer.batchDraw()
+                }
+            } catch (err) { /* ignore */ }
+        }, 0)
         this.layer.batchDraw()
+        try {
+            if (typeof this.updateSelectionHighlights === 'function') {
+                this.updateSelectionHighlights()
+            }
+        } catch (err) { /* ignore */ }
         try { this.emitSelectionChange() } catch (err) { /* ignore */ }
     }
 }

@@ -233,6 +233,7 @@ import {
   cibExpertsExchange,
   cibExpo,
   cibEyeem,
+  cibEye,
   cibFacebookF,
   cibFSecure,
   cibFacebook,
@@ -1533,7 +1534,17 @@ import {
   cilZoomOut
 } from '@coreui/icons'
 import { logo } from './logo'
+// Local custom icons (thin outline)
+export const cilEye = ['16 16', `
+  <g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/>
+  </g>
+  <g>
+    <circle cx="8" cy="8" r="1.4" fill="currentColor" />
+  </g>
+`]
 export const iconsSet = Object.assign({}, { logo }, {
+  cilEye,
   cil3d,
   cil4k,
   cilAccountLogout,
