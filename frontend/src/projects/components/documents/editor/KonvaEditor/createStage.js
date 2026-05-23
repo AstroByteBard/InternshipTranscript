@@ -69,6 +69,9 @@ export default function createStage() {
             if (nodes.length === 1 && nodes[0] && typeof this.showAlignmentGuides === 'function') {
                 this.showAlignmentGuides(nodes[0])
             }
+            if (typeof this.renderManualDataVariableConnectors === 'function') {
+                this.renderManualDataVariableConnectors()
+            }
         } catch (e) { }
         if (typeof this.updateSelectionHighlights === 'function') {
             this.updateSelectionHighlights();
@@ -162,6 +165,10 @@ export default function createStage() {
     })
 
     // guide layer for alignment lines (on top of main layer)
+    this.connectorLayer = new Konva.Layer()
+    this.stage.add(this.connectorLayer)
+
+    // guide layer for alignment lines (on top of connector layer)
     this.guideLayer = new Konva.Layer()
     this.stage.add(this.guideLayer)
 
@@ -181,12 +188,21 @@ export default function createStage() {
         const target = e.target
         if (!target || typeof target.draggable !== 'function' || !target.draggable()) return
         this.showAlignmentGuides(target)
+        if (typeof this.renderManualDataVariableConnectors === 'function') {
+            this.renderManualDataVariableConnectors()
+        }
         if (typeof this.updateSelectionHighlights === 'function') {
             this.updateSelectionHighlights();
         }
     })
     this.stage.on('dragend', () => {
         this.clearAlignmentGuides()
+        if (typeof this.clearManualDataVariableLinkPreview === 'function') {
+            this.clearManualDataVariableLinkPreview()
+        }
+        if (typeof this.renderManualDataVariableConnectors === 'function') {
+            this.renderManualDataVariableConnectors()
+        }
         if (typeof this.updateSelectionHighlights === 'function') {
             this.updateSelectionHighlights();
         }
@@ -295,8 +311,34 @@ export default function createStage() {
 
     this.stage.on('dblclick dbltap', (e) => {
         const target = e.target
+        const selectedNodes = (this.transformer && typeof this.transformer.nodes === 'function') ? (this.transformer.nodes() || []) : []
+
+        const isTargetInSelectedTree = (node) => {
+            if (!node || !selectedNodes.length) return false
+            return selectedNodes.some((selected) => {
+                let current = node
+                while (current) {
+                    if (current === selected) return true
+                    current = (typeof current.getParent === 'function') ? current.getParent() : null
+                }
+                return false
+            })
+        }
+
+        const isTransformerTarget = target === this.transformer ||
+            (target && typeof target.getClassName === 'function' && target.getClassName() === 'Transformer') ||
+            (target && typeof target.getParent === 'function' && target.getParent() === this.transformer)
+
         // If double-clicked on background/stage -> clear selection
         if (target === this.stage || target === bg) {
+            this.transformer.nodes([])
+            this.layer.draw()
+            try { this.emitSelectionChange() } catch (err) { /* ignore */ }
+            return
+        }
+
+        // Double-click current selection frame (or selected non-text node) -> unselect
+        if (isTransformerTarget || (isTargetInSelectedTree(target) && !(target && typeof target.getClassName === 'function' && target.getClassName() === 'Text'))) {
             this.transformer.nodes([])
             this.layer.draw()
             try { this.emitSelectionChange() } catch (err) { /* ignore */ }

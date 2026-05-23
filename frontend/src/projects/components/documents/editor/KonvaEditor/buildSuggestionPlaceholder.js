@@ -1,7 +1,6 @@
 export default function buildSuggestionPlaceholder(count, lineLength) {
-    const chunk = Math.max(10, Number(lineLength) || 20);
-    // Intentionally make it longer than the line to ensure it fills up to the edge
-    const line = '• ' + 'X'.repeat(chunk + 10);
-    // Show 3 placeholder list items
+    const desiredCount = Math.max(1, Number(count) || 40);
+    const line = 'X'.repeat(desiredCount);
+    // Show 3 placeholder list items with the requested placeholder length
     return [line, line, line].join('\n');
 }

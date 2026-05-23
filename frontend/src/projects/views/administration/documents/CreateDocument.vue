@@ -222,7 +222,7 @@ export default {
                         editor.updateCompetencyGroupStyle(node, style);
                         return;
                     }
-                    if (name && name.includes('suggestion-table-part')) {
+                    if (name && (name.includes('suggestion-table') || name.includes('suggestion-table-part'))) {
                         editor.updateSuggestionGroupStyle(node, style);
                         return;
                     }

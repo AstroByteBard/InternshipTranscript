@@ -5,6 +5,28 @@ export default function computeSelectionStyle() {
     const result = {};
     attrs.forEach((a) => result[a] = undefined);
 
+    const scaledContextNames = new Set(['graph-placeholder', 'competency-table', 'suggestion-table', 'suggestion-table-part']);
+
+    const getContextScaleY = (targetNode) => {
+        try {
+            let curr = targetNode;
+            while (curr && curr.getClassName && curr.getClassName() !== 'Stage') {
+                const elementType = (curr.getAttr && curr.getAttr('elementType')) || '';
+                const name = (curr.getAttr && curr.getAttr('name')) || '';
+                const isGraphContext = elementType === 'graph' || name === 'graph-placeholder';
+                const isDataVariableContext = scaledContextNames.has(name);
+                if (isGraphContext || isDataVariableContext) {
+                    const scaleY = (typeof curr.scaleY === 'function' && Number.isFinite(curr.scaleY()) && curr.scaleY() !== 0)
+                        ? curr.scaleY()
+                        : 1;
+                    return scaleY;
+                }
+                curr = curr.getParent ? curr.getParent() : null;
+            }
+        } catch (e) { }
+        return 1;
+    };
+
     nodes.forEach((node, idx) => {
         let targetNode = node;
         if (typeof node.getAttr === 'function' && node.getAttr('graphType')) {
@@ -17,17 +39,10 @@ export default function computeSelectionStyle() {
                 if (firstText) {
                     targetNode = firstText;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
-        let scaleY = 1;
-        try {
-            let curr = targetNode;
-            while (curr && curr.getClassName && curr.getClassName() !== 'Stage') {
-                scaleY *= (typeof curr.scaleY === 'function' ? curr.scaleY() : 1);
-                curr = curr.getParent ? curr.getParent() : null;
-            }
-        } catch (e) { scaleY = 1; }
+        const contextScaleY = getContextScaleY(targetNode);
 
         attrs.forEach((a) => {
             let val;
@@ -36,13 +51,16 @@ export default function computeSelectionStyle() {
                     const av = targetNode.getAttr(a);
                     if (typeof av !== 'undefined' && av !== null) {
                         if (a === 'fontSize') {
-                            val = Math.round(Number(av) * scaleY);
+                            const baseFontSize = Number(av);
+                            if (Number.isFinite(baseFontSize)) {
+                                val = Math.round(baseFontSize * contextScaleY);
+                            }
                         } else {
                             val = av;
                         }
                     } else {
                         if (a === 'fontSize' && targetNode.fontSize) {
-                            val = Math.round(targetNode.fontSize() * scaleY);
+                            val = Math.round(targetNode.fontSize() * contextScaleY);
                         } else if (a === 'fontFamily' && targetNode.fontFamily) {
                             val = targetNode.fontFamily();
                         } else if (a === 'fill' && targetNode.fill) {
@@ -58,7 +76,7 @@ export default function computeSelectionStyle() {
                         }
                     }
                 } else if (a === 'fontSize' && targetNode.fontSize) {
-                    val = Math.round(targetNode.fontSize() * scaleY);
+                    val = Math.round(targetNode.fontSize() * contextScaleY);
                 } else if (a === 'fontFamily' && targetNode.fontFamily) {
                     val = targetNode.fontFamily();
                 } else if (a === 'fill' && targetNode.fill) {

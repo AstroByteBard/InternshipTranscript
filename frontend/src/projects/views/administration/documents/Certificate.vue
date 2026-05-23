@@ -2,31 +2,22 @@
     <div>
         <CertificatesHeader @create-click="$router.push('/documents/certificate/create')" />
 
-        <WidgetsCertificates 
-            :total="certificatesData.length" 
-            :issued="issuedCount" 
-            :draft="draftCount" 
-            :revoked="revokedCount" 
-        />
+        <WidgetsCertificates :total="certificatesData.length" :issued="issuedCount" :draft="draftCount"
+            :revoked="revokedCount" />
 
         <CRow class="mb-4">
             <CCol>
                 <DocsFilterCard @search="(q) => { }" />
 
-                <DocumentsTable 
-                    :items="certificatesData" 
-                    :fields="documentFields" 
-                    @download="onDownload"
-                    @edit="onEdit" 
-                    @copy="onCopy" 
-                    @delete="onDelete" 
-                />
+                <DocumentsTable :items="certificatesData" :fields="documentFields" @download="onDownload" @edit="onEdit"
+                    @copy="onCopy" @delete="onDelete" />
             </CCol>
         </CRow>
     </div>
 </template>
 
 <script>
+import { downloadClientPDF } from '@/utils/pdfGenerator'
 import CertificatesHeader from '../../../components/Layout/CertificatesHeader.vue'
 import WidgetsCertificates from '../../../components/widgets/WidgetsCertificates.vue'
 import DocsFilterCard from '../../../components/documents/list/DocsFilterCard.vue'
@@ -68,8 +59,14 @@ export default {
                 console.error('Failed to load certificates', err);
             }
         },
-        onDownload(item) {
-            console.log('download', item)
+        async onDownload(item) {
+            if (!item || !item.content) return;
+            try {
+                const filename = `${String(item.title || item.name || 'certificate').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`;
+                await downloadClientPDF(item.content, {}, filename);
+            } catch (err) {
+                console.error('Download failed', err);
+            }
         },
         onEdit(item) {
             this.$router.push(`/documents/certificate/edit/${item._id}`);

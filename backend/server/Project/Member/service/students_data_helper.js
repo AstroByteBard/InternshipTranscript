@@ -11,30 +11,30 @@ const maskStudentName = (name, lang = 'en') => {
     if (lang === 'th') {
         const prefix = 'Name';
         const xCount = Math.max(0, name.length - prefix.length);
-        return prefix + 'X'.repeat(xCount);
+        return prefix + 'x'.repeat(xCount);
     } else {
         const prefix = 'Name ';
         const xCount = Math.max(0, name.length - prefix.length);
-        return prefix + 'X'.repeat(xCount);
+        return prefix + 'x'.repeat(xCount);
     }
 };
 
 const maskStudentID = (id) => {
     if (!id || id.length < 9) return 'Student ID';
     const xCount = Math.max(1, id.length - 9);
-    return 'Student ID ' + 'X'.repeat(xCount);
+    return 'Student ID ' + 'x'.repeat(xCount);
 };
 
 const maskSchoolName = (name) => {
     if (!name || name.length < 6) return 'School';
     const xCount = Math.max(1, name.length - 6);
-    return 'School ' + 'X'.repeat(xCount);
+    return 'School ' + 'x'.repeat(xCount);
 };
 
 const maskProgramName = (name) => {
     if (!name || name.length < 5) return 'Major';
     const xCount = Math.max(1, name.length - 5);
-    return 'Major ' + 'X'.repeat(xCount);
+    return 'Major ' + 'x'.repeat(xCount);
 };
 
 /**
@@ -213,7 +213,7 @@ exports.getMostCompetenciesProgram = async function () {
         }
 
         let result = {
-            programWithMostCompetencies: 'Major XXXXXXXXXXXXXXXXXXX',
+            programWithMostCompetencies: 'Major xxxxxxxxxxxxxxxxxxx',
             competenciesCount: 0,
             competenciesList: [],
             totalHardskills: hardskills.length,

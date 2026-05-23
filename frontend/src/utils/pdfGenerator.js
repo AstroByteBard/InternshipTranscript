@@ -1,5 +1,7 @@
 import Konva from 'konva';
 import { jsPDF } from 'jspdf';
+import wordcut from 'wordcut';
+import { formatChartLabel } from '@/utils/chartLabel';
 
 /**
  * Generate PDF purely on the client side using replacing variables in Konva Stage JSON
@@ -14,8 +16,13 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     container.style.left = '-9999px';
     document.body.appendChild(container);
 
-    const width = templateJSON.width || 794;
-    const height = templateJSON.height || 1123;
+    const templateRoot = templateJSON && templateJSON.content && Array.isArray(templateJSON.content.elements)
+        ? templateJSON.content
+        : templateJSON;
+    const elements = Array.isArray(templateRoot && templateRoot.elements) ? templateRoot.elements : [];
+
+    const width = templateRoot.width || templateJSON.width || 794;
+    const height = templateRoot.height || templateJSON.height || 1123;
 
     const stage = new Konva.Stage({
         container: container,
@@ -25,6 +32,13 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
     const layer = new Konva.Layer();
     stage.add(layer);
+
+    // Initialize third-party Thai segmenter if available
+    try {
+        if (typeof wordcut !== 'undefined' && wordcut && typeof wordcut.init === 'function') {
+            try { wordcut.init(); } catch (e) { /* ignore init errors */ }
+        }
+    } catch (e) { /* ignore */ }
 
     // Solid white background to avoid transparent edge artifacts
     const pdfBg = new Konva.Rect({
@@ -68,7 +82,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     // NOTE: Skip loading inline placeholder dataURLs (canvas-made placeholders)
     // for variable-backed images so their dashed stroke/placeholder does not
     // end up embedded in the exported PDF.
-    const preloads = templateJSON.elements.map(async (el) => {
+    const preloads = elements.map(async (el) => {
         if (el.className === 'Image') {
             const attrs = el.attrs || {};
             // Support preloading of chart images passed via dataMap.__chartImages
@@ -148,35 +162,107 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     // Manual wrapping for Thai text (and others)
     const wrapTextManual = (text, maxWidth, fontSize, fontFamily) => {
         if (!text || typeof text !== 'string') return text;
-        if (typeof Intl === 'undefined' || !Intl.Segmenter) return text;
-
-        const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
-        const segments = segmenter.segment(text);
-
-        let lines = [];
-        let currentLine = '';
-
-        for (const segment of segments) {
-            const word = segment.segment;
-            // Handle existing newlines in source text
-            if (word === '\n') {
-                lines.push(currentLine);
-                currentLine = '';
-                continue;
+        // Prefer third-party word segmentation when available for Thai
+        let segmentsArr = null;
+        try {
+            if (wordcut && typeof wordcut.cut === 'function') {
+                try {
+                    // wordcut.cut may return words separated by '|' or spaces.
+                    // Normalize any '|' to spaces before splitting.
+                    let spaced = wordcut.cut(text || '') || '';
+                    spaced = String(spaced).replace(/\|/g, ' ');
+                    segmentsArr = spaced.split(/\s+/).filter(Boolean);
+                } catch (e) {
+                    segmentsArr = null;
+                }
             }
+        } catch (e) { segmentsArr = null; }
 
-            const testLine = currentLine + word;
-            const testWidth = measureTextWidth(testLine, fontSize, fontFamily);
+        if (!segmentsArr) {
+            if (typeof Intl === 'undefined' || !Intl.Segmenter) return text;
+            const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+            segmentsArr = Array.from(segmenter.segment(text)).map(s => s.segment);
+        }
 
-            if (testWidth > maxWidth && currentLine !== '') {
-                lines.push(currentLine);
-                currentLine = word;
+        // Use dynamic programming to minimize raggedness (optimal line breaks)
+        // Build words array (preserve existing newlines as separate tokens)
+        const words = [];
+        for (const w of segmentsArr) {
+            if (w === '\n') {
+                words.push('\n');
             } else {
-                currentLine = testLine;
+                words.push(w);
             }
         }
-        if (currentLine !== '') lines.push(currentLine);
-        return lines.join('\n');
+
+        // Precompute widths for any run of words (i..j)
+        const n = words.length;
+        const INF = 1e9;
+        const widths = Array.from({ length: n }, () => Array(n).fill(INF));
+        for (let i = 0; i < n; i++) {
+            if (words[i] === '\n') { widths[i][i] = 0; continue; }
+            let acc = '';
+            for (let j = i; j < n; j++) {
+                if (words[j] === '\n') break;
+                acc += words[j];
+                widths[i][j] = measureTextWidth(acc, fontSize, fontFamily);
+            }
+        }
+
+        // DP: cost[k] = minimal badness for words[0..k-1]
+        const cost = Array(n + 1).fill(INF);
+        const prev = Array(n + 1).fill(-1);
+        cost[0] = 0;
+
+        const badness = (w) => Math.pow(Math.max(0, maxWidth - w), 2);
+
+        for (let i = 0; i < n; i++) {
+            if (cost[i] >= INF) continue;
+            if (words[i] === '\n') {
+                if (cost[i + 1] > cost[i]) { cost[i + 1] = cost[i]; prev[i + 1] = i; }
+                continue;
+            }
+            for (let j = i; j < n; j++) {
+                if (words[j] === '\n') { // treat newline as line break
+                    if (cost[j + 1] > cost[i]) { cost[j + 1] = cost[i]; prev[j + 1] = i; }
+                    break;
+                }
+                const w = widths[i][j];
+                if (w === INF || w > maxWidth) break;
+                const c = cost[i] + badness(w);
+                if (c < cost[j + 1]) { cost[j + 1] = c; prev[j + 1] = i; }
+            }
+        }
+
+        // Reconstruct lines
+        const linesArr = [];
+        let idx = n;
+        const splits = [];
+        while (idx > 0) {
+            const p = prev[idx];
+            if (p === -1) { // fallback: greedy
+                let cur = '';
+                for (let k = 0; k < n; k++) {
+                    if (words[k] === '\n') { linesArr.push(cur); cur = ''; continue; }
+                    const test = cur + words[k];
+                    if (measureTextWidth(test, fontSize, fontFamily) > maxWidth && cur !== '') { linesArr.push(cur); cur = words[k]; } else { cur = test; }
+                }
+                if (cur) linesArr.push(cur);
+                return linesArr.join('\n');
+            }
+            splits.push([p, idx]);
+            idx = p;
+        }
+        splits.reverse();
+        for (const [s, e] of splits) {
+            let line = '';
+            for (let k = s; k < e; k++) {
+                if (words[k] === '\n') continue;
+                line += words[k];
+            }
+            linesArr.push(line);
+        }
+        return linesArr.join('\n');
     };
 
     // Helper to allow Thai text to wrap in Konva (legacy fallback if needed)
@@ -203,6 +289,103 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         if (typeof attrs.zIndex === 'number') {
             node.zIndex(attrs.zIndex);
         }
+    };
+
+    const getVisibleTextWidth = (node) => {
+        try {
+            const attrs = node && typeof node.getAttrs === 'function' ? node.getAttrs() : {};
+            const text = String((typeof node.text === 'function' ? node.text() : attrs.text) || '');
+            if (!text) return 0;
+            const fontSize = Number((typeof node.fontSize === 'function' ? node.fontSize() : attrs.fontSize) || 16);
+            const fontFamily = String((typeof node.fontFamily === 'function' ? node.fontFamily() : attrs.fontFamily) || 'Arial');
+            const padding = Number((typeof node.padding === 'function' ? node.padding() : attrs.padding) || 0);
+            const lines = text.split(/\r?\n/);
+            const widestLine = lines.reduce((max, line) => Math.max(max, measureTextWidth(String(line || ''), fontSize, fontFamily)), 0);
+            const scaleX = Number((typeof node.scaleX === 'function' ? node.scaleX() : attrs.scaleX) || 1);
+            return (widestLine + padding * 2) * Math.max(1, scaleX);
+        } catch (err) {
+            return 0;
+        }
+    };
+
+    const renderedNodesByOrder = new Map();
+
+    const applyManualLinkedVariableExportLayout = () => {
+        const gap = 20;
+        const linkedSources = [];
+
+        renderedNodesByOrder.forEach((node) => {
+            try {
+                const attrs = node && typeof node.getAttrs === 'function' ? node.getAttrs() : null;
+                if (!attrs) return;
+                if (attrs.linkedConnectionMode !== 'manual') return;
+                if (typeof attrs.linkedTargetCreatedOrder === 'undefined' || attrs.linkedTargetCreatedOrder === null) return;
+                linkedSources.push(node);
+            } catch (err) { /* ignore */ }
+        });
+
+        linkedSources.sort((a, b) => {
+            const aOrder = Number(a.getAttr && a.getAttr('createdOrder')) || 0;
+            const bOrder = Number(b.getAttr && b.getAttr('createdOrder')) || 0;
+            return aOrder - bOrder;
+        });
+
+        linkedSources.forEach((sourceNode) => {
+            try {
+                const sourceAttrs = sourceNode.getAttrs ? sourceNode.getAttrs() : {};
+                const targetOrder = Number(sourceAttrs.linkedTargetCreatedOrder);
+                if (!Number.isFinite(targetOrder)) return;
+
+                const targetNode = renderedNodesByOrder.get(targetOrder);
+                if (!targetNode) return;
+
+                const sourceX = typeof sourceNode.x === 'function' ? sourceNode.x() : Number(sourceAttrs.x || 0);
+                const sourceY = typeof sourceNode.y === 'function' ? sourceNode.y() : Number(sourceAttrs.y || 0);
+                const sourceBox = typeof sourceNode.getClientRect === 'function' ? sourceNode.getClientRect({ skipTransform: false }) : null;
+                const targetBox = typeof targetNode.getClientRect === 'function' ? targetNode.getClientRect({ skipTransform: false }) : null;
+                if (!sourceBox || !targetBox) return;
+
+                const sourceVisibleWidth = Math.max(0, getVisibleTextWidth(sourceNode));
+                const targetVisibleWidth = Math.max(0, getVisibleTextWidth(targetNode));
+                const shouldPlaceRight = targetBox.x >= sourceBox.x;
+                const nextX = shouldPlaceRight
+                    ? Math.max(0, Math.round(sourceBox.x + (sourceVisibleWidth || sourceBox.width) + gap))
+                    : Math.max(0, Math.round(sourceBox.x - (targetVisibleWidth || targetBox.width) - gap));
+                const nextY = Math.round(sourceY);
+
+                if (typeof targetNode.position === 'function') {
+                    targetNode.position({ x: nextX, y: nextY });
+                } else {
+                    if (typeof targetNode.x === 'function') targetNode.x(nextX);
+                    if (typeof targetNode.y === 'function') targetNode.y(nextY);
+                }
+            } catch (err) { /* ignore */ }
+        });
+    };
+
+    const lookupNestedValue = (source, path) => {
+        if (!source || !path) return undefined;
+        if (Object.prototype.hasOwnProperty.call(source, path)) return source[path];
+
+        const parts = String(path).split('.').filter(Boolean);
+        if (!parts.length) return undefined;
+
+        let current = source;
+        for (const part of parts) {
+            if (current === null || current === undefined) return undefined;
+            if (Object.prototype.hasOwnProperty.call(current, part)) {
+                current = current[part];
+                continue;
+            }
+            const compactPart = part.replace(/\s+/g, '');
+            if (compactPart !== part && Object.prototype.hasOwnProperty.call(current, compactPart)) {
+                current = current[compactPart];
+                continue;
+            }
+            return undefined;
+        }
+
+        return current;
     };
 
     const normalizeScore = (value) => {
@@ -237,9 +420,62 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         return 0;
     };
 
+    const normalizeTextForMatch = (text) => String(text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+    const findTemplateTextAttrs = (templateChildren, matchText) => {
+        if (!Array.isArray(templateChildren) || !templateChildren.length) return null;
+        const needle = normalizeTextForMatch(matchText);
+        if (!needle) return null;
+
+        const exact = templateChildren.find((child) => {
+            const attrs = child && child.attrs ? child.attrs : null;
+            if (!attrs || child.className !== 'Text') return false;
+            return normalizeTextForMatch(attrs.text) === needle;
+        });
+        if (exact && exact.attrs) return Object.assign({}, exact.attrs);
+
+        const partial = templateChildren.find((child) => {
+            const attrs = child && child.attrs ? child.attrs : null;
+            if (!attrs || child.className !== 'Text') return false;
+            const hay = normalizeTextForMatch(attrs.text);
+            return hay && (hay.includes(needle) || needle.includes(hay));
+        });
+        return partial && partial.attrs ? Object.assign({}, partial.attrs) : null;
+    };
+
+    const getRadarLabelTemplateAttrs = (templateChildren, title) => {
+        if (!Array.isArray(templateChildren) || !templateChildren.length) return [];
+        const skipTexts = new Set([
+            normalizeTextForMatch(title),
+            normalizeTextForMatch('You'),
+            normalizeTextForMatch('Average'),
+            normalizeTextForMatch('20'),
+            normalizeTextForMatch('40'),
+            normalizeTextForMatch('60'),
+            normalizeTextForMatch('80'),
+            normalizeTextForMatch('100')
+        ]);
+
+        return templateChildren
+            .filter((child) => {
+                const attrs = child && child.attrs ? child.attrs : null;
+                if (!attrs || child.className !== 'Text') return false;
+                const text = normalizeTextForMatch(attrs.text);
+                if (!text || skipTexts.has(text)) return false;
+                if (attrs.placeholderType) return false;
+                if (typeof attrs.width === 'number' && attrs.width < 60) return false;
+                if (attrs.fontStyle && String(attrs.fontStyle).toLowerCase() !== 'bold') return false;
+                return true;
+            })
+            .map((child) => Object.assign({}, child.attrs || {}));
+    };
+
+    // Fixed outward margin (pixels) to ensure radar labels sit outside the polygon
+    const RADAR_LABEL_OUTER_MARGIN = 40;
 
 
-    const addRadarGraph = (attrs, graphData, items, title) => {
+
+    const addRadarGraph = (attrs, graphData, items, title, templateChildren = []) => {
         const x = attrs.x || 0;
         const y = attrs.y || 0;
         const scaleX = attrs.scaleX || 1;
@@ -249,16 +485,182 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         const height = attrs.height || 260;
         const group = new Konva.Group({ x, y, scaleX, scaleY, rotation, name: 'graph-placeholder', graphType: attrs.graphType });
 
+        // Try to find title attrs by the localized title first; if not found,
+        // fall back to canonical English titles so templates authored in English
+        // still provide the intended font size/position for localized titles.
+        const titleAttrs = (() => {
+            let t = findTemplateTextAttrs(templateChildren, title);
+            if (!t) {
+                const ttl = String(title || '').toLowerCase();
+                let canonical = null;
+                if (ttl.indexOf('general') >= 0 || ttl.indexOf('ทักษะทั่วไป') >= 0) canonical = 'General Competencies';
+                else if (ttl.indexOf('specific') >= 0 || ttl.indexOf('ทักษะเฉพาะ') >= 0) canonical = 'Specific Competencies';
+                if (canonical) t = findTemplateTextAttrs(templateChildren, canonical) || t;
+            }
+            return t || {};
+        })();
+        const layoutScale = Math.max(0.55, Math.min(1.25, Math.min(width / 600, height / 450)));
+        const pdfLang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
+        const isThaiLang = String(pdfLang).toLowerCase().startsWith('th');
+
         group.add(new Konva.Rect({ x: 0, y: 0, width, height, fill: '#ffffff' }));
-        group.add(new Konva.Text({ x: 10, y: 8, text: title || 'Radar', fontSize: 16, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#1e293b' }));
+        group.add(new Konva.Text({
+            x: typeof titleAttrs.x === 'number' ? titleAttrs.x : 10,
+            y: typeof titleAttrs.y === 'number' ? titleAttrs.y : 8,
+            text: title || 'Radar',
+            fontSize: titleAttrs.fontSize || 16,
+            fontFamily: titleAttrs.fontFamily || 'Inter, Arial',
+            fontStyle: titleAttrs.fontStyle || '600',
+            fill: titleAttrs.fill || '#1e293b',
+            width: typeof titleAttrs.width === 'number' ? titleAttrs.width : undefined,
+            align: titleAttrs.align || 'left'
+        }));
 
         const labels = (graphData.labels && graphData.labels.length)
             ? graphData.labels
             : items.map((item) => item.name || item.label || '');
+        const radarLabelTemplateAttrsFromTemplate = getRadarLabelTemplateAttrs(templateChildren, title);
+        let radarLabelTemplateAttrs = radarLabelTemplateAttrsFromTemplate || [];
         const sides = Math.max(3, labels.length);
         const centerX = width / 2;
-        const centerY = height / 2 + 50;
-        const radius = Math.min(width, height) / 2 - 50;
+        const radius = Math.max(40, Math.min(width, height) * 0.34 * layoutScale);
+        const centerY = Math.round(height * 0.72);
+        const labelOffsetX = Math.max(12, Math.round(25 * layoutScale));
+        const labelOffsetY = Math.max(10, Math.round(20 * layoutScale));
+        const labelFontSize = Math.max(10, Math.round(12 * layoutScale));
+        const labelWidth = Math.max(70, Math.round(120 * layoutScale));
+
+        // If template contains positioned text nodes around the radar, map them by angular order
+        try {
+            if (Array.isArray(templateChildren) && templateChildren.length) {
+                const positioned = templateChildren
+                    .filter((child) => child && child.attrs && child.className === 'Text')
+                    .map((child) => {
+                        const attrs = Object.assign({}, child.attrs || {});
+                        if (typeof attrs.x !== 'number' || typeof attrs.y !== 'number') return null;
+                        const w = typeof attrs.width === 'number' ? attrs.width : labelWidth;
+                        const h = typeof attrs.fontSize === 'number' ? attrs.fontSize : labelFontSize;
+                        const cx = attrs.x + (w / 2);
+                        const cy = attrs.y + (h / 2);
+                        const dx = cx - centerX;
+                        const dy = cy - centerY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx);
+                        return { attrs, dist, angle };
+                    })
+                    .filter(Boolean)
+                    .filter((o) => o.dist > (radius * 0.9) && o.dist < (radius * 1.3));
+
+                positioned.sort((a, b) => {
+                    const na = (a.angle + Math.PI / 2 + 2 * Math.PI) % (2 * Math.PI);
+                    const nb = (b.angle + Math.PI / 2 + 2 * Math.PI) % (2 * Math.PI);
+                    return na - nb;
+                });
+
+                const positionedAttrs = positioned.map((p) => p.attrs);
+                if (positionedAttrs.length === sides) {
+                    radarLabelTemplateAttrs = positionedAttrs.slice(0, sides);
+                }
+            }
+        } catch (e) {
+            // ignore and fallback to original template attrs
+        }
+
+        // If the template contains text nodes that match the English labels exactly,
+        // prefer those attrs (positions + font sizes) and use them only when all labels match.
+        try {
+            const englishLabels = items.map((item) => (item && (item.name || item.label)) ? String(item.name || item.label || '') : '').slice(0, Math.max(0, (labels && labels.length) ? labels.length : 0));
+            const engMatched = englishLabels.map((lbl) => findTemplateTextAttrs(templateChildren, lbl) || null);
+            // If any English label matches a template node, prefer those attrs for the corresponding indices.
+            if (engMatched && engMatched.some((a) => a)) {
+                radarLabelTemplateAttrs = engMatched.slice(0, (labels ? labels.length : 0)).map(a => a ? Object.assign({}, a) : null);
+            }
+        } catch (e) {
+            // ignore and keep previous mapping
+        }
+        // For Specific Competencies: map each label index to the nearest positioned
+        // template text node by angular distance so we use template positions per-index.
+        try {
+            const ttl = String(title || '').toLowerCase();
+            const isSpecificTitle = ttl.indexOf('specific') >= 0 || ttl.indexOf('ทักษะเฉพาะ') >= 0;
+            if (isSpecificTitle && Array.isArray(templateChildren) && templateChildren.length) {
+                const positionedAll = templateChildren
+                    .filter((child) => child && child.attrs && child.className === 'Text')
+                    .map((child) => {
+                        const attrs = Object.assign({}, child.attrs || {});
+                        if (typeof attrs.x !== 'number' || typeof attrs.y !== 'number') return null;
+                        const w = typeof attrs.width === 'number' ? attrs.width : labelWidth;
+                        const h = typeof attrs.fontSize === 'number' ? attrs.fontSize : labelFontSize;
+                        const cx = attrs.x + (w / 2);
+                        const cy = attrs.y + (h / 2);
+                        const dx = cx - centerX;
+                        const dy = cy - centerY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const angle = (Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI);
+                        return { attrs, dist, angle };
+                    })
+                    .filter(Boolean)
+                    .filter((o) => o.dist > (radius * 0.6) && o.dist < (radius * 1.6));
+
+                if (positionedAll.length) {
+                    const used = new Array(positionedAll.length).fill(false);
+                    for (let i = 0; i < sides; i++) {
+                        const idealAngle = ((Math.PI * 2 * i) / sides - Math.PI / 2 + 2 * Math.PI) % (2 * Math.PI);
+                        let bestIdx = -1;
+                        let bestDiff = Infinity;
+                        for (let j = 0; j < positionedAll.length; j++) {
+                            if (used[j]) continue;
+                            const a = positionedAll[j].angle;
+                            let diff = Math.abs(a - idealAngle);
+                            if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                            if (diff < bestDiff) {
+                                bestDiff = diff;
+                                bestIdx = j;
+                            }
+                        }
+                        if (bestIdx >= 0) {
+                            used[bestIdx] = true;
+                            radarLabelTemplateAttrs[i] = Object.assign({}, positionedAll[bestIdx].attrs);
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+        // If this is the general competencies radar, prefer the canonical English labels
+        try {
+            const titleNorm = String(title || '').toLowerCase();
+            const isGeneralTitle = titleNorm.indexOf('general') >= 0 || titleNorm.indexOf('ทักษะทั่วไป') >= 0;
+            if (isGeneralTitle) {
+                const DEFAULT_GENERAL_LABELS = [
+                    'Creativity',
+                    'Analytical thinking and Problem solving',
+                    'Digital literacy',
+                    'Curiosity and life-long learning',
+                    'Resilience, flexibility and agility',
+                    'Voluntary and empathy',
+                    'Leadership and social influence',
+                    'Collaboration',
+                    'Cultural and civic literacy',
+                    'Entrepreneurial mindset',
+                    'Foreign language',
+                    'Communication'
+                ];
+                const engList = DEFAULT_GENERAL_LABELS.slice(0, sides);
+                const engMatched = engList.map((lbl) => findTemplateTextAttrs(templateChildren, lbl) || null);
+                // override per-index when a matching english attr exists
+                engMatched.forEach((a, idx) => {
+                    if (a) {
+                        radarLabelTemplateAttrs[idx] = Object.assign({}, a);
+                    }
+                });
+            }
+        } catch (e) {
+            // ignore
+        }
+        // processedLabels are generated per-label below because width/fontSize
+        // may come from template attrs — we need those values to wrap Thai correctly.
 
         for (let r = 1; r <= 5; r++) {
             const currentR = (radius / 5) * r;
@@ -270,12 +672,20 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             group.add(new Konva.Line({ points, closed: true, stroke: '#e2e8f0', strokeWidth: 1 }));
         }
 
-        // Draw radial tick labels (20,40,60,80,100) along vertical axis for PDF readability
         for (let r = 1; r <= 5; r++) {
             const val = r * 20;
-            const y = centerY - (radius / 5) * r;
-            // center the small label horizontally near the vertical center
-            group.add(new Konva.Text({ x: centerX - 16, y: y - 6, text: String(val), fontSize: 10, fontFamily: 'Inter, Arial', fill: '#64748b', width: 32, align: 'center' }));
+            const tickY = centerY - (radius / 5) * r;
+            const tickAttrs = findTemplateTextAttrs(templateChildren, String(val)) || {};
+            group.add(new Konva.Text({
+                x: typeof tickAttrs.x === 'number' ? tickAttrs.x : centerX - 16,
+                y: typeof tickAttrs.y === 'number' ? tickAttrs.y : (tickY - 6),
+                text: String(val),
+                fontSize: tickAttrs.fontSize || 10,
+                fontFamily: tickAttrs.fontFamily || 'Inter, Arial',
+                fill: tickAttrs.fill || '#64748b',
+                width: typeof tickAttrs.width === 'number' ? tickAttrs.width : 32,
+                align: tickAttrs.align || 'center'
+            }));
         }
 
         const values = (graphData.you && graphData.you.length) ? graphData.you : items.map((item) => getPercentForItem(item));
@@ -308,37 +718,106 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             group.add(new Konva.Line({ points: youPolygon, closed: true, fill: 'rgba(124, 58, 237, 0.35)', stroke: '#7c3aed', strokeWidth: 3 }));
         }
 
-        labels.slice(0, sides).forEach((label, i) => {
+        labels.slice(0, sides).forEach((origLabel, i) => {
             const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
-            const labelX = centerX + (radius + 20) * Math.cos(angle);
-            const labelY = centerY + (radius + 20) * Math.sin(angle);
+            const idealX = centerX + (radius + labelOffsetX) * Math.cos(angle);
+            const idealY = centerY + (radius + labelOffsetY) * Math.sin(angle);
+            const cos = Math.cos(angle);
+            const defaultAlign = Math.abs(cos) < 0.25 ? 'center' : (cos > 0 ? 'left' : 'right');
+            const labelAttrs = radarLabelTemplateAttrs[i] || findTemplateTextAttrs(templateChildren, origLabel) || {};
+            const resolvedWidth = typeof labelAttrs.width === 'number' ? labelAttrs.width : labelWidth;
+            const resolvedAlign = labelAttrs.align || defaultAlign;
+            const fontSz = labelAttrs.fontSize || labelFontSize;
+            const fontFamily = labelAttrs.fontFamily || 'Inter, Arial';
 
-            let labelText = String(label);
-            if (labelText.length > 16) {
-                const words = labelText.split(' ');
-                labelText = words.slice(0, Math.ceil(words.length / 2)).join(' ') + '\n' + words.slice(Math.ceil(words.length / 2)).join(' ');
+            // Determine label text with proper Thai wrapping when needed
+            const formattedLabel = formatChartLabel(origLabel, Math.max(18, Math.floor(resolvedWidth / Math.max(1, fontSz)) + 4), pdfLang);
+            let labelText = Array.isArray(formattedLabel) ? formattedLabel.join('\n') : String(formattedLabel || '');
 
+            const lineH = labelAttrs.lineHeight || 1;
+            const lines = (labelText || '').split('\n').length || 1;
+            const labelHeight = Math.round(lines * fontSz * lineH);
+
+            // compute resolvedX/Y (use saved if present, otherwise ideal)
+            const hasTemplatePosition = (typeof labelAttrs.x === 'number') && (typeof labelAttrs.y === 'number');
+            let resolvedX = (resolvedAlign === 'center' ? idealX - (resolvedWidth / 2) : (resolvedAlign === 'left' ? idealX : idealX - resolvedWidth));
+            let resolvedY = (idealY - Math.round(isThaiLang ? 10 : (8 * layoutScale)));
+
+            if (hasTemplatePosition) {
+                // Use template's exact position/size/font when both x and y are provided
+                resolvedX = labelAttrs.x;
+                resolvedY = labelAttrs.y;
             }
 
-            group.add(new Konva.Text({ x: labelX - 40, y: labelY - 8, text: labelText, fontSize: 10, fontFamily: 'Inter, Arial', fill: '#475569', width: 80, align: 'center' }));
+            // compute label center and ensure it is outside the radar area (avoid overlap)
+            // For Thai multiline labels, always allow an outward nudge even when template
+            // coordinates exist, because the English template y-position is usually only
+            // valid for a single line.
+            const allowNudge = !hasTemplatePosition || (isThaiLang && labelHeight > fontSz * 1.1);
+            if (allowNudge) {
+                const labelCenterX = resolvedX + (resolvedWidth / 2);
+                const labelCenterY = resolvedY + (labelHeight / 2);
+                const dx = labelCenterX - centerX;
+                const dy = labelCenterY - centerY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                // Include half label height so text clears the polygon edge
+                const minDist = radius + RADAR_LABEL_OUTER_MARGIN + Math.max(0, Math.round(labelHeight / 3));
+                if (dist < minDist) {
+                    // nudge outward along angle to sit just outside the polygon
+                    const targetDist = minDist;
+                    const newCenterX = centerX + targetDist * Math.cos(angle);
+                    const newCenterY = centerY + targetDist * Math.sin(angle);
+                    // rederive resolvedX/Y from new center (resolvedX is left coordinate)
+                    resolvedX = (resolvedAlign === 'center') ? (newCenterX - resolvedWidth / 2) : (resolvedAlign === 'left' ? newCenterX : (newCenterX - resolvedWidth));
+                    resolvedY = newCenterY - labelHeight / 2;
+                }
+            }
+
+            group.add(new Konva.Text({
+                x: resolvedX,
+                y: resolvedY,
+                text: labelText,
+                fontSize: fontSz,
+                fontFamily,
+                fill: labelAttrs.fill || '#475569',
+                width: resolvedWidth,
+                align: resolvedAlign,
+                fontStyle: labelAttrs.fontStyle || 'bold',
+                lineHeight: labelAttrs.lineHeight || undefined,
+                wrap: labelAttrs.wrap || (isThaiLang ? 'none' : 'word')
+            }));
         });
 
-        // Legend
         const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
-        const lblYou = lang === 'th' ? 'คุณ' : 'You';
-        const lblAvg = lang === 'th' ? 'ค่าเฉลี่ย' : 'Average';
-
-        const legendY = 50;
+        const lblYou = String(lang).toLowerCase().startsWith('th') ? 'คุณ' : 'You';
+        const lblAvg = String(lang).toLowerCase().startsWith('th') ? 'ค่าเฉลี่ย' : 'Average';
+        const legendY = Math.round(50 * layoutScale);
         group.add(new Konva.Circle({ x: centerX - 40, y: legendY, radius: 4, fill: '#7c3aed' }));
-        group.add(new Konva.Text({ x: centerX - 30, y: legendY - 5, text: lblYou, fontSize: 11, fontFamily: 'Inter, Arial', fill: '#64748b' }));
+        const youLegendAttrs = findTemplateTextAttrs(templateChildren, lblYou) || {};
+        group.add(new Konva.Text({
+            x: typeof youLegendAttrs.x === 'number' ? youLegendAttrs.x : centerX - 30,
+            y: typeof youLegendAttrs.y === 'number' ? youLegendAttrs.y : legendY - 5,
+            text: lblYou,
+            fontSize: youLegendAttrs.fontSize || (isThaiLang ? 10 : 11),
+            fontFamily: youLegendAttrs.fontFamily || 'Inter, Arial',
+            fill: youLegendAttrs.fill || '#64748b'
+        }));
         group.add(new Konva.Circle({ x: centerX + 20, y: legendY, radius: 4, fill: '#fb7185' }));
-        group.add(new Konva.Text({ x: centerX + 30, y: legendY - 5, text: lblAvg, fontSize: 11, fontFamily: 'Inter, Arial', fill: '#64748b' }));
+        const avgLegendAttrs = findTemplateTextAttrs(templateChildren, lblAvg) || {};
+        group.add(new Konva.Text({
+            x: typeof avgLegendAttrs.x === 'number' ? avgLegendAttrs.x : centerX + 30,
+            y: typeof avgLegendAttrs.y === 'number' ? avgLegendAttrs.y : legendY - 5,
+            text: lblAvg,
+            fontSize: avgLegendAttrs.fontSize || (isThaiLang ? 10 : 11),
+            fontFamily: avgLegendAttrs.fontFamily || 'Inter, Arial',
+            fill: avgLegendAttrs.fill || '#64748b'
+        }));
 
         layer.add(group);
         applyZIndex(group, attrs);
     };
 
-    const addBarGraph = (attrs, items, title) => {
+    const addBarGraph = (attrs, items, title, templateChildren = []) => {
         const x = attrs.x || 0;
         const y = attrs.y || 0;
         const scaleX = attrs.scaleX || 1;
@@ -348,8 +827,20 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         const height = attrs.height || 220;
         const group = new Konva.Group({ x, y, scaleX, scaleY, rotation, name: 'graph-placeholder', graphType: attrs.graphType });
 
+        const titleAttrs = findTemplateTextAttrs(templateChildren, title) || {};
+
         group.add(new Konva.Rect({ x: 0, y: 0, width, height, fill: '#ffffff' }));
-        group.add(new Konva.Text({ x: 10, y: 8, text: title || 'Bar', fontSize: 16, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#1e293b' }));
+        group.add(new Konva.Text({
+            x: typeof titleAttrs.x === 'number' ? titleAttrs.x : 10,
+            y: typeof titleAttrs.y === 'number' ? titleAttrs.y : 8,
+            text: title || 'Bar',
+            fontSize: titleAttrs.fontSize || 16,
+            fontFamily: titleAttrs.fontFamily || 'Inter, Arial',
+            fontStyle: titleAttrs.fontStyle || '600',
+            fill: titleAttrs.fill || '#1e293b',
+            width: typeof titleAttrs.width === 'number' ? titleAttrs.width : undefined,
+            align: titleAttrs.align || 'left'
+        }));
 
         const rows = items.length ? items : [{ name: 'Skill', score: 80 }];
         const barX = 10;
@@ -359,22 +850,67 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
         rows.forEach((item) => {
             const label = item.name || item.label || 'Skill';
-            let value = getPercentForItem(item);
-            const ratio = normalizeScore(value) || 0;
+            const ratio = normalizeScore(getPercentForItem(item)) || 0;
 
-            group.add(new Konva.Text({ x: barX, y: currentY - 2, text: String(label), fontSize: 11, fontFamily: 'Inter, Arial', fill: '#475569' }));
+            const labelAttrs = findTemplateTextAttrs(templateChildren, label) || {};
+            group.add(new Konva.Text({
+                x: typeof labelAttrs.x === 'number' ? labelAttrs.x : barX,
+                y: typeof labelAttrs.y === 'number' ? labelAttrs.y : (currentY - 2),
+                text: String(label),
+                fontSize: labelAttrs.fontSize || 11,
+                fontFamily: labelAttrs.fontFamily || 'Inter, Arial',
+                fill: labelAttrs.fill || '#475569',
+                fontStyle: labelAttrs.fontStyle || undefined,
+                width: typeof labelAttrs.width === 'number' ? labelAttrs.width : undefined,
+                align: labelAttrs.align || 'left'
+            }));
             group.add(new Konva.Text({ x: barX + barW - 40, y: currentY - 2, text: Math.round(ratio * 100) + '%', fontSize: 11, fontFamily: 'Inter, Arial', fill: '#475569', align: 'right', width: 40 }));
             group.add(new Konva.Rect({ x: barX, y: currentY + 12, width: barW, height: 6, fill: '#e2e8f0', cornerRadius: 3 }));
-
-            // Force red bars for PDF export
-            const fillC = '#dc2626';
-
-            group.add(new Konva.Rect({ x: barX, y: currentY + 12, width: Math.max(4, barW * ratio), height: 6, fill: fillC, cornerRadius: 3 }));
+            group.add(new Konva.Rect({ x: barX, y: currentY + 12, width: Math.max(4, barW * ratio), height: 6, fill: '#dc2626', cornerRadius: 3 }));
             currentY += rowH;
         });
 
         layer.add(group);
         applyZIndex(group, attrs);
+    };
+
+    const renderGraphPlaceholder = (attrs) => {
+        const graphType = attrs.graphType || attrs.variableName || '';
+        const graphKind = String(attrs.graphKind || '').toLowerCase();
+        const isRadar = graphKind === 'radar' || String(graphType).includes('Radar');
+        const cleanKey = String(graphType).replace(/Graph_/g, '');
+        const isGeneral = String(attrs.graphScope || '').toLowerCase() === 'general' || cleanKey.includes('General');
+
+        const fallbackItems = isGeneral
+            ? (dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
+            : (dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
+
+        const pData = {
+            labels: fallbackItems.map((i) => i.name),
+            datasets: [{
+                label: 'You', data: fallbackItems.map((i) => getPercentForItem(i))
+            }, {
+                label: 'Average', data: fallbackItems.map((i) => (i && i.average !== undefined && i.average !== null)
+                    ? (typeof i.average === 'number' ? Number(i.average) : valueToPercent(i.average))
+                    : Math.max(0, getPercentForItem(i) - 10))
+            }]
+        };
+
+        let title = isGeneral ? 'General Competencies' : 'Specific Competencies';
+        const lang = dataMap.__language || 'en';
+        if (lang === 'th') {
+            title = isGeneral ? 'ทักษะทั่วไป' : 'ทักษะเฉพาะทาง';
+            pData.datasets[0].label = 'คุณ';
+            pData.datasets[1].label = 'ค่าเฉลี่ย';
+        }
+
+        const templateChildren = Array.isArray(attrs.children) ? attrs.children : [];
+
+        if (isRadar) {
+            addRadarGraph(attrs, pData, fallbackItems, title, templateChildren);
+        } else {
+            addBarGraph(attrs, fallbackItems, title, templateChildren);
+        }
     };
 
     const addCompetencyTable = (attrs, items, title, placeholderChildren) => {
@@ -479,6 +1015,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     };
 
     const addSuggestionTable = (attrs, suggestionsObj, placeholderChildren) => {
+        const SUGGESTION_HEADER_CONTENT_GAP = 8;
+        const SUGGESTION_ITEM_GAP = 2;
+        const SUGGESTION_CONTENT_X = 20;
+        const SUGGESTION_CONTENT_LINE_HEIGHT = 1.4;
         const group = new Konva.Group({
             x: attrs.x || 0,
             y: attrs.y || 0,
@@ -508,6 +1048,14 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             }
             if (typeof pt === 'number') return String(pt);
             if (typeof pt === 'object') {
+                // New structure support: { title: {th,en}, content: {th,en} }
+                if (pt.title || pt.content) {
+                    const t = (pt.title && (pt.title[lang] || pt.title.en || pt.title.th)) ? (pt.title[lang] || pt.title.en || pt.title.th) : '';
+                    const c = (pt.content && (pt.content[lang] || pt.content.en || pt.content.th)) ? (pt.content[lang] || pt.content.en || pt.content.th) : '';
+                    if (t && c) return String(t) + '\n' + String(c);
+                    if (t) return String(t);
+                    if (c) return String(c);
+                }
                 if (pt[lang]) return String(pt[lang]);
                 if (pt.th || pt.en) return String(pt.th || pt.en);
                 if (pt.text) return ptToString(pt.text);
@@ -550,6 +1098,62 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const items = Array.isArray(maybeItems) ? maybeItems : (maybeItems ? [maybeItems] : []);
             if (!items.length) return [];
 
+            const extractSuggestionPoints = (value) => {
+                const points = [];
+                const pushPoint = (input) => {
+                    if (input == null) return;
+                    if (typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {
+                        const text = ptToString(input).trim();
+                        if (text) points.push(text);
+                        return;
+                    }
+                    if (Array.isArray(input)) {
+                        input.forEach(pushPoint);
+                        return;
+                    }
+                    if (typeof input !== 'object') return;
+                    if (Array.isArray(input.items)) {
+                        input.items.forEach(pushPoint);
+                        return;
+                    }
+                    if (input.content !== undefined) {
+                        pushPoint(input.content);
+                        return;
+                    }
+                    if (input.title && !input.items) {
+                        pushPoint(input.title);
+                        return;
+                    }
+                    if (input.answer && input.answer.value) {
+                        pushPoint(input.answer.value);
+                        return;
+                    }
+                    if (input.value !== undefined) {
+                        pushPoint(input.value);
+                        return;
+                    }
+                    const fallbackText = input[lang] || input.en || input.th || input.text || '';
+                    if (fallbackText) points.push(String(fallbackText));
+                };
+                pushPoint(value);
+                return points.filter(Boolean);
+            };
+
+            if (typeof items[0] === 'object' && !Array.isArray(items[0])) {
+                const first = items[0];
+                const bucketPoints = extractSuggestionPoints(first.items || first.points || first.content || first.value || first);
+                if (bucketPoints.length) {
+                    return [{
+                        id: 1,
+                        name: getName(first, defaultName || dataMap.StudentName || 'Student'),
+                        role: first.role || 'Student',
+                        picture: first.picture || dataMap.StudentPhoto || '',
+                        date: first.date || '',
+                        points: bucketPoints
+                    }];
+                }
+            }
+
             if (typeof items[0] === 'string') {
                 return [{ id: 1, name: defaultName || dataMap.StudentName || 'Student', role: 'Student', picture: dataMap.StudentPhoto || '', date: '', points: items.map(ptToString) }];
             }
@@ -569,7 +1173,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
                 const val = (it.answer && it.answer.value) ? it.answer.value : (it.value || null);
                 if (val && typeof val === 'object') {
-                    const pts = [].concat(val.outstanding || val.opportunity || val.suggestion || val.suggestions || []);
+                    const pts = extractSuggestionPoints(val.outstanding || val.opportunity || val.suggestion || val.suggestions || val.items || val.content || val);
                     if (pts.length) {
                         return {
                             id: it.id || idx + 1,
@@ -613,18 +1217,24 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 let contentFontSize = (typeof cAttrs.contentFontSize === 'number') ? cAttrs.contentFontSize : 14;
                 let contentLineHeight = (typeof cAttrs.lineHeight === 'number') ? cAttrs.lineHeight : 1.4;
                 let contentPlaceholderWidth = null;
+                let labelAttrs = null;
+                let contentAttrs = null;
 
                 for (const ch of cChildren) {
                     if (!ch || !ch.attrs) continue;
                     const a = ch.attrs || {};
-                    if (!labelText && a.text && (a.fontSize && a.fontSize >= 16)) {
+                    const textValue = String(a.text || '').trim();
+                    const looksLikeHeader = textValue && !a.placeholderType && !/^X{4,}$/.test(textValue) && textValue !== '•';
+                    if (!labelText && looksLikeHeader) {
                         labelText = a.text;
                         labelFontSize = a.fontSize || labelFontSize;
+                        labelAttrs = Object.assign({}, a);
                     }
                     if ((a.placeholderType === 'suggestion-item' || a.placeholderType === 'suggestion') || (/^X{4,}$/.test(String(a.text || '')))) {
                         contentFontSize = a.fontSize || contentFontSize;
                         contentLineHeight = a.lineHeight || contentLineHeight;
                         contentPlaceholderWidth = a.width || contentPlaceholderWidth;
+                        contentAttrs = Object.assign({}, a);
                     }
                     if (!colW && typeof a.width === 'number') colW = Math.max(colW, a.width || 0);
                 }
@@ -638,7 +1248,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     labelText = (columns.length === 0) ? 'Outstanding' : 'Opportunity';
                 }
 
-                columns.push({ x: colX, y: colY, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
+                columns.push({ x: colX, y: colY, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth, labelAttrs, contentAttrs });
             });
         } else if (Array.isArray(placeholderChildren) && placeholderChildren.length) {
             // Flat elements: treat the entire group as ONE column
@@ -648,17 +1258,23 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             let contentFontSize = 14;
             let contentLineHeight = 1.4;
             let contentPlaceholderWidth = null;
+            let labelAttrs = null;
+            let contentAttrs = null;
 
             placeholderChildren.forEach(ch => {
                 const a = ch.attrs || {};
-                if (!labelText && a.text && (a.fontSize && a.fontSize >= 14)) {
+                const textValue = String(a.text || '').trim();
+                const looksLikeHeader = textValue && !a.placeholderType && !/^X{4,}$/.test(textValue) && textValue !== '•';
+                if (!labelText && looksLikeHeader) {
                     labelText = a.text;
                     labelFontSize = a.fontSize || labelFontSize;
+                    labelAttrs = Object.assign({}, a);
                 }
                 if (a.placeholderType === 'suggestion' || a.placeholderType === 'suggestion-item' || /^X{4,}$/.test(String(a.text || ''))) {
                     contentFontSize = a.fontSize || contentFontSize;
                     contentLineHeight = a.lineHeight || contentLineHeight;
                     contentPlaceholderWidth = a.width || contentPlaceholderWidth;
+                    contentAttrs = Object.assign({}, a);
                 }
                 if (!colW && typeof a.width === 'number') colW = Math.max(colW, a.width || 0);
             });
@@ -673,7 +1289,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 labelText = vn.includes('oppor') ? 'Opportunity' : 'Outstanding';
             }
 
-            columns.push({ x: 0, y: 0, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth });
+            columns.push({ x: 0, y: 0, width: colW, labelText, labelFontSize, contentFontSize, contentLineHeight, contentPlaceholderWidth, labelAttrs, contentAttrs });
         } else {
             // fallback: try attrs to infer two columns if saved
             const leftLabels = Array.isArray(attrs.labelsLeft) ? attrs.labelsLeft : (Array.isArray(attrs.labels) ? attrs.labels.slice(0, 1) : ['Outstanding']);
@@ -681,10 +1297,10 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const defaultW = typeof attrs.width === 'number' ? attrs.width : 650;
             if (rightLabels && rightLabels.length) {
                 const w = Math.floor((defaultW - (attrs.columnGap || 20)) / 2);
-                columns.push({ x: 0, y: 0, width: w, labelText: leftLabels && leftLabels[0] ? leftLabels[0] : 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
-                columns.push({ x: w + (attrs.columnGap || 20), y: 0, width: defaultW - w - (attrs.columnGap || 20), labelText: rightLabels && rightLabels[0] ? rightLabels[0] : 'Opportunity', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4 });
+                columns.push({ x: 0, y: 0, width: w, labelText: leftLabels && leftLabels[0] ? leftLabels[0] : 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4, labelAttrs: null, contentAttrs: null });
+                columns.push({ x: w + (attrs.columnGap || 20), y: 0, width: defaultW - w - (attrs.columnGap || 20), labelText: rightLabels && rightLabels[0] ? rightLabels[0] : 'Opportunity', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.4, labelAttrs: null, contentAttrs: null });
             } else {
-                columns.push({ x: 0, y: 0, width: defaultW, labelText: 'Outstanding', labelFontSize: 20, contentFontSize: 12, contentLineHeight: 1.4 });
+                columns.push({ x: 0, y: 0, width: defaultW, labelText: 'Outstanding', labelFontSize: 20, contentFontSize: 12, contentLineHeight: 1.4, labelAttrs: null, contentAttrs: null });
             }
         }
 
@@ -714,7 +1330,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                     columns[0] = Object.assign({}, columns[0], { x: 0, width: totalW, labelFontSize: (columns[0] && columns[0].labelFontSize) || 18, contentFontSize: (columns[0] && columns[0].contentFontSize) || 12, contentLineHeight: (columns[0] && columns[0].contentLineHeight) || 1.2 });
                 } else {
                     const w = totalW;
-                    columns.push({ x: 0, width: w, labelText: 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.2 });
+                    columns.push({ x: 0, width: w, labelText: 'Outstanding', labelFontSize: 18, contentFontSize: 12, contentLineHeight: 1.2, labelAttrs: null, contentAttrs: null });
                 }
             } else {
                 // Relax font size normalization to respect template styles
@@ -746,9 +1362,22 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 let y = 0;
 
                 const labelText = isOpp ? 'Opportunity' : 'Outstanding';
-                const labelNode = new Konva.Text({ text: labelText, fontSize: colDef.labelFontSize || 16, fontFamily: attrs.fontFamily || 'Inter, Arial', fontStyle: '600', fill: attrs.fill || '#1e293b', x: 0, y, width: colDef.width });
+                const labelBaseAttrs = Object.assign({}, colDef.labelAttrs || {});
+                const labelNode = new Konva.Text(Object.assign({}, labelBaseAttrs, {
+                    text: labelText,
+                    fontSize: colDef.labelFontSize || labelBaseAttrs.fontSize || 16,
+                    fontFamily: labelBaseAttrs.fontFamily || attrs.fontFamily || 'Inter, Arial',
+                    fontStyle: labelBaseAttrs.fontStyle || '600',
+                    fill: labelBaseAttrs.fill || attrs.fill || '#1e293b',
+                    x: typeof labelBaseAttrs.x === 'number' ? labelBaseAttrs.x : 0,
+                    y: typeof labelBaseAttrs.y === 'number' ? labelBaseAttrs.y : y,
+                    width: typeof labelBaseAttrs.width === 'number' ? labelBaseAttrs.width : colDef.width,
+                    align: labelBaseAttrs.align || 'left',
+                    lineHeight: labelBaseAttrs.lineHeight || 1.0,
+                    wrap: labelBaseAttrs.wrap || 'none'
+                }));
                 colGroup.add(labelNode);
-                y += (labelNode.height() || (colDef.labelFontSize || 16)) + 8;
+                y += (Math.ceil(labelNode.height() || (colDef.labelFontSize || 16))) + SUGGESTION_HEADER_CONTENT_GAP;
 
                 // Flatten groups into item points to fill the column
                 const itemsFlat = [];
@@ -760,39 +1389,49 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 });
 
                 const leftMargin = 6;
-                const textX = 24;
+                const contentBaseAttrs = colDef.contentAttrs || {};
+                // Prefer template's contentAttrs.x but ensure a minimum left indent to match Editor
+                const AFTER_HEADER_INDENT = 12;
+                const rawTextX = (typeof contentBaseAttrs.x === 'number') ? contentBaseAttrs.x : SUGGESTION_CONTENT_X;
+                // If label exists, nudge content further right to separate from header
+                const labelLeftX = (typeof labelBaseAttrs.x === 'number') ? labelBaseAttrs.x : 0;
+                const textX = Math.max(SUGGESTION_CONTENT_X, Math.max(rawTextX, labelLeftX + AFTER_HEADER_INDENT));
                 const groupX = attrs.x || 0;
                 const sX = attrs.scaleX || 1;
                 // Clamp width based on paper edge, accounting for scale and indentation (740 is safer than 794)
                 const maxColWidth = ((740 - groupX) / sX) - colDef.x - textX - 10;
 
-                // Prioritize contentPlaceholderWidth from the template if it exists
-                let targetWidth = colDef.contentPlaceholderWidth || (colDef.width ? (colDef.width - textX - 8) : 250);
+                // Prefer editor behavior: use column width minus padding (colDef.width - 20) when available
+                let targetWidth = (typeof colDef.width === 'number' && colDef.width > 20) ? (colDef.width - 20) : ((typeof contentBaseAttrs.width === 'number') ? contentBaseAttrs.width : (contentBaseAttrs.contentPlaceholderWidth || colDef.contentPlaceholderWidth || 250));
                 const contentWidth = Math.max(20, Math.min(targetWidth, maxColWidth));
 
                 itemsFlat.forEach((it, idx) => {
-                    const fontSize = colDef.contentFontSize || 12;
-                    const bullet = new Konva.Circle({ x: leftMargin, y: y + (fontSize * 0.6), radius: 2.5, fill: attrs.fill || '#1e293b' });
+                    const fontSize = (typeof contentBaseAttrs.fontSize === 'number') ? contentBaseAttrs.fontSize : (colDef.contentFontSize || 12);
+                    // Keep first content line below header gap; do not override with template y.
+                    const itemY = y;
+                    const bullet = new Konva.Circle({ x: Math.max(0, textX - 8), y: itemY + (fontSize * 0.6), radius: 3, fill: attrs.fill || '#1e293b' });
                     colGroup.add(bullet);
 
-                    const txtFull = addThaiWordBreaks(ptToString(it.text));
-                    const txtNode = new Konva.Text({
+                    const rawText = ptToString(it.text);
+                    const txtFull = (contentBaseAttrs && contentBaseAttrs.wrap === 'none') ? rawText : addThaiWordBreaks(rawText);
+                    const txtNode = new Konva.Text(Object.assign({}, contentBaseAttrs, {
                         text: txtFull,
-                        fontSize: colDef.contentFontSize || 14,
-                        fontFamily: attrs.fontFamily || 'Inter, Arial',
-                        fontStyle: attrs.fontStyle || 'normal',
-                        fill: attrs.fill || '#1e293b',
+                        fontSize: fontSize,
+                        fontFamily: contentBaseAttrs.fontFamily || attrs.fontFamily || 'Inter, Arial',
+                        fontStyle: contentBaseAttrs.fontStyle || attrs.fontStyle || 'normal',
+                        fill: contentBaseAttrs.fill || attrs.fill || '#1e293b',
                         x: textX,
-                        y,
+                        y: itemY,
                         width: contentWidth,
                         align: 'left',
-                        lineHeight: colDef.contentLineHeight || 1.4,
-                        wrap: 'word'
-                    });
+                        // Use template lineHeight if provided, otherwise default to editor standard
+                        lineHeight: (typeof contentBaseAttrs.lineHeight === 'number') ? contentBaseAttrs.lineHeight : SUGGESTION_CONTENT_LINE_HEIGHT,
+                        wrap: (typeof contentBaseAttrs.wrap === 'string') ? contentBaseAttrs.wrap : 'word'
+                    }));
                     colGroup.add(txtNode);
-                    const h = txtNode.height() || ((colDef.contentFontSize || 14) * (colDef.contentLineHeight || 1.4));
-                    // Match Editor spacing: add proportional padding below each suggestion
-                    y += h + Math.max(8, (colDef.contentFontSize || 14) * 0.8);
+                    const h = Math.ceil(txtNode.height() || (fontSize * SUGGESTION_CONTENT_LINE_HEIGHT));
+                    // Match Editor spacing: add proportional padding below each suggestion and round up
+                    y = itemY + h + SUGGESTION_ITEM_GAP;
                 });
 
                 return y;
@@ -819,15 +1458,18 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             const labelNode = new Konva.Text({
                 text: labelText,
                 fontSize: col.labelFontSize || 16,
-                fontFamily: attrs.fontFamily || 'Inter, Arial',
-                fontStyle: '600',
-                fill: attrs.fill || '#1e293b',
-                x: 0,
-                y,
-                width: col.width
+                fontFamily: (col.labelAttrs && col.labelAttrs.fontFamily) || attrs.fontFamily || 'Inter, Arial',
+                fontStyle: (col.labelAttrs && col.labelAttrs.fontStyle) || '600',
+                fill: (col.labelAttrs && col.labelAttrs.fill) || attrs.fill || '#1e293b',
+                x: (col.labelAttrs && typeof col.labelAttrs.x === 'number') ? col.labelAttrs.x : 0,
+                y: (col.labelAttrs && typeof col.labelAttrs.y === 'number') ? col.labelAttrs.y : y,
+                width: (col.labelAttrs && typeof col.labelAttrs.width === 'number') ? col.labelAttrs.width : col.width,
+                align: (col.labelAttrs && col.labelAttrs.align) || 'left',
+                lineHeight: (col.labelAttrs && col.labelAttrs.lineHeight) || 1.0,
+                wrap: (col.labelAttrs && col.labelAttrs.wrap) || 'none'
             });
             colGroup.add(labelNode);
-            y += (labelNode.height() || (col.labelFontSize || 16)) + 8;
+            y += (Math.ceil(labelNode.height() || (col.labelFontSize || 16))) + SUGGESTION_HEADER_CONTENT_GAP;
 
             const itemsFlat = [];
             data.forEach(g => {
@@ -838,36 +1480,46 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             });
 
             const leftMargin = 6;
-            const textX = 20;
+            const contentBaseAttrs = col.contentAttrs || {};
+            // Prefer template contentAttrs.x but enforce minimum indent like Editor and nudge after header
+            const AFTER_HEADER_INDENT = 12;
+            const rawTextX = (typeof contentBaseAttrs.x === 'number') ? contentBaseAttrs.x : SUGGESTION_CONTENT_X;
+            const labelLeftX = (col.labelAttrs && typeof col.labelAttrs.x === 'number') ? col.labelAttrs.x : 0;
+            const textX = Math.max(SUGGESTION_CONTENT_X, Math.max(rawTextX, labelLeftX + AFTER_HEADER_INDENT));
             const groupX = attrs.x || 0;
             const sX = attrs.scaleX || 1;
             const rightBoundary = isOpp ? 770 : 370;
             const maxColWidth = ((rightBoundary - groupX) / sX) - (col.x || 0) - textX - 5;
 
-            const contentWidth = Math.max(100, maxColWidth);
+            // Editor behavior: prefer column width minus padding (col.width - 20) when available
+            const preferredSingleColContentWidth = (typeof col.width === 'number' && col.width > 20) ? (col.width - 20) : null;
+            const contentWidth = preferredSingleColContentWidth ? Math.max(20, Math.min(preferredSingleColContentWidth, maxColWidth)) : ((typeof contentBaseAttrs.width === 'number') ? Math.max(20, Math.min(contentBaseAttrs.width, maxColWidth)) : Math.max(100, maxColWidth));
 
             itemsFlat.forEach((it, idx) => {
-                const fontSize = col.contentFontSize || 12;
-                const bullet = new Konva.Circle({ x: leftMargin, y: y + (fontSize * 0.6), radius: 2.5, fill: attrs.fill || '#1e293b' });
+                const fontSize = (typeof contentBaseAttrs.fontSize === 'number') ? contentBaseAttrs.fontSize : (col.contentFontSize || 12);
+                // Keep first content line below header gap; do not override with template y.
+                const itemY = y;
+                const bullet = new Konva.Circle({ x: Math.max(0, textX - 8), y: itemY + (fontSize * 0.6), radius: 3, fill: attrs.fill || '#1e293b' });
                 colGroup.add(bullet);
 
-                const txtFull = wrapTextManual(ptToString(it.text), contentWidth, col.contentFontSize || 13, attrs.fontFamily || 'Inter, Arial');
-                const txtNode = new Konva.Text({
+                const rawText = ptToString(it.text);
+                const txtFull = (contentBaseAttrs && contentBaseAttrs.wrap === 'none') ? rawText : wrapTextManual(rawText, contentWidth, (typeof contentBaseAttrs.fontSize === 'number') ? contentBaseAttrs.fontSize : (col.contentFontSize || 13), contentBaseAttrs.fontFamily || attrs.fontFamily || 'Inter, Arial');
+                const txtNode = new Konva.Text(Object.assign({}, contentBaseAttrs, {
                     text: txtFull,
-                    fontSize: col.contentFontSize || 13,
-                    fontFamily: attrs.fontFamily || 'Inter, Arial',
-                    fontStyle: attrs.fontStyle || 'normal',
-                    fill: attrs.fill || '#1e293b',
+                    fontSize: fontSize,
+                    fontFamily: contentBaseAttrs.fontFamily || attrs.fontFamily || 'Inter, Arial',
+                    fontStyle: contentBaseAttrs.fontStyle || attrs.fontStyle || 'normal',
+                    fill: contentBaseAttrs.fill || attrs.fill || '#1e293b',
                     x: textX,
-                    y,
+                    y: itemY,
                     width: contentWidth,
                     align: 'left',
-                    lineHeight: col.contentLineHeight || 1.4,
-                    wrap: 'none' // Use none because we wrapped manually with \n
-                });
+                    lineHeight: (typeof contentBaseAttrs.lineHeight === 'number') ? contentBaseAttrs.lineHeight : SUGGESTION_CONTENT_LINE_HEIGHT,
+                    wrap: (typeof contentBaseAttrs.wrap === 'string') ? contentBaseAttrs.wrap : 'none'
+                }));
                 colGroup.add(txtNode);
-                const h = txtNode.height() || (fontSize * (col.contentLineHeight || 1.4));
-                y += h + 8;
+                const h = Math.ceil(txtNode.height() || (fontSize * SUGGESTION_CONTENT_LINE_HEIGHT));
+                y = itemY + h + SUGGESTION_ITEM_GAP;
             });
 
             currentY = y + 12;
@@ -919,8 +1571,8 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                             });
                             group.add(txtNode);
 
-                            const h = txtNode.height() || (14 * 1.4);
-                            currentY += h + 8;
+                            const h = Math.ceil(txtNode.height() || (14 * SUGGESTION_CONTENT_LINE_HEIGHT));
+                            currentY += h + SUGGESTION_ITEM_GAP;
                         });
                     }
                 });
@@ -951,12 +1603,24 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             if (val === null || val === undefined) return '';
             if (typeof val === 'string') return val;
             if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+            if (val && typeof val === 'object') {
+                if (val.$date) {
+                    const date = new Date(val.$date);
+                    return Number.isNaN(date.getTime()) ? String(val.$date) : date.toLocaleString();
+                }
+                if (val.$oid) return String(val.$oid);
+            }
             if (Array.isArray(val)) {
                 const parts = val.map(el => {
                     if (el === null || el === undefined) return '';
                     if (typeof el === 'string') return el;
                     if (typeof el === 'number' || typeof el === 'boolean') return String(el);
                     if (typeof el === 'object') {
+                        if (el.$date) {
+                            const date = new Date(el.$date);
+                            return Number.isNaN(date.getTime()) ? String(el.$date) : date.toLocaleString();
+                        }
+                        if (el.$oid) return String(el.$oid);
                         if (el.name) return String(el.name);
                         if (el.title) return (typeof el.title === 'string') ? el.title : (el.title.en || el.title.th || JSON.stringify(el.title));
                         if (Array.isArray(el.points)) return el.points.map(p => (typeof p === 'object' ? (p.text || p.value || JSON.stringify(p)) : String(p))).join('; ');
@@ -969,6 +1633,11 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 return parts.join(', ');
             }
             if (typeof val === 'object') {
+                if (val.$date) {
+                    const date = new Date(val.$date);
+                    return Number.isNaN(date.getTime()) ? String(val.$date) : date.toLocaleString();
+                }
+                if (val.$oid) return String(val.$oid);
                 if (val.name) return String(val.name);
                 if (val.title) return (typeof val.title === 'string') ? val.title : (val.title.en || val.title.th || JSON.stringify(val.title));
                 if (Array.isArray(val.outstanding)) return val.outstanding.join('; ');
@@ -987,10 +1656,11 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         }
 
         let v;
-        if (dataMap[cleanKey] !== undefined) v = dataMap[cleanKey];
-        else if (dataMap[key] !== undefined) v = dataMap[key];
-        else if (dataMap.student && dataMap.student[cleanKey] !== undefined) v = dataMap.student[cleanKey];
-        else v = '';
+        v = lookupNestedValue(dataMap, cleanKey);
+        if (v === undefined) v = lookupNestedValue(dataMap, key);
+        if (v === undefined && dataMap.student) v = lookupNestedValue(dataMap.student, cleanKey);
+        if (v === undefined && dataMap.student) v = lookupNestedValue(dataMap.student, key);
+        if (v === undefined) v = '';
 
         return stringify(v);
     };
@@ -1044,7 +1714,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
     // Pre-scan template elements to compute competency bottom Y so suggestions can be placed below
     let competencyBottom = null;
     try {
-        (templateJSON.elements || []).forEach((el) => {
+        elements.forEach((el) => {
             const attrs = el && el.attrs ? el.attrs : {};
             const topY = Number(attrs.y || 0);
             let elHeight = 0;
@@ -1098,7 +1768,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
 
     // Load nodes
-    templateJSON.elements.forEach((el) => {
+    elements.forEach((el) => {
         const attrs = Object.assign({}, el.attrs || {});
 
         // Skip drawing static Text/Image placeholders for dynamic tables to avoid duplication.
@@ -1149,41 +1819,13 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
             }));
             layer.add(node);
             applyZIndex(node, el.attrs);
+            if (typeof attrs.createdOrder === 'number') {
+                renderedNodesByOrder.set(Number(attrs.createdOrder), node);
+            }
         } else if (el.className === 'Image') {
-            const isGraph = attrs.name === 'graph-placeholder' || (attrs.variableName && attrs.variableName.includes('Graph_'));
+            const isGraph = attrs.elementType === 'graph' || attrs.name === 'graph-placeholder' || (attrs.variableName && attrs.variableName.includes('Graph_'));
             if (isGraph) {
-                const graphType = attrs.graphType || attrs.variableName || '';
-                const isRadar = graphType.includes('Radar');
-                const cleanKey = graphType.replace(/Graph_/g, '');
-                const isGeneral = cleanKey.includes('General');
-
-                const fallbackItems = isGeneral
-                    ? (dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
-                    : (dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
-
-                let pData = {
-                    labels: fallbackItems.map(i => i.name),
-                    datasets: [{
-                        label: 'You', data: fallbackItems.map(i => getPercentForItem(i))
-                    }, {
-                        label: 'Average', data: fallbackItems.map(i => (i && i.average !== undefined && i.average !== null) ? (typeof i.average === 'number' ? Number(i.average) : valueToPercent(i.average)) : Math.max(0, getPercentForItem(i) - 10))
-                    }]
-                };
-
-                let title = isGeneral ? 'General Competencies' : 'Specific Competencies';
-
-                const lang = dataMap.__language || 'en';
-                if (lang === 'th') {
-                    title = isGeneral ? 'ทักษะทั่วไป' : 'ทักษะเฉพาะทาง';
-                    pData.datasets[0].label = 'คุณ';
-                    pData.datasets[1].label = 'ค่าเฉลี่ย';
-                }
-
-                if (isRadar) {
-                    addRadarGraph(attrs, pData, fallbackItems, title);
-                } else {
-                    addBarGraph(attrs, fallbackItems, title);
-                }
+                renderGraphPlaceholder(attrs);
             } else if (el._loadedImage) {
                 // sanitize attrs to avoid exporting strokes/borders around images
                 if (attrs) {
@@ -1204,61 +1846,65 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
                 applyZIndex(node, el.attrs);
             }
         } else if (el.className === 'Group') {
-            const vn = String(attrs.variableName || '').toLowerCase();
-            const isCompTable = attrs.name === 'competency-table' || vn.includes('generalcompet') || vn.includes('specificcompet') || (vn.includes('competenc') && !vn.includes('graph'));
+            if (attrs.elementType === 'graph' || attrs.name === 'graph-placeholder') {
+                renderGraphPlaceholder(attrs);
+            } else {
+                const vn = String(attrs.variableName || '').toLowerCase();
+                const isCompTable = attrs.name === 'competency-table' || vn.includes('generalcompet') || vn.includes('specificcompet') || (vn.includes('competenc') && !vn.includes('graph'));
 
-            if (isCompTable) {
-                const key = attrs.variableName || (vn.includes('general') ? '{GeneralCompetencies}' : '{SpecificCompetencies}');
-                const isGeneral = String(key).indexOf('General') >= 0;
-                const items = isGeneral
-                    ? (dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
-                    : (dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
-                // Use actual provided general competency items when available.
-                // Fallback to defaults only when the provided list is empty.
-                const safeItems = Array.isArray(items) ? items : [];
-                const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
-                // record bottom Y of competency area if possible (attrs.height expected)
-                try {
-                    const topY = (attrs.y || 0);
-                    const h = (typeof attrs.height === 'number' && attrs.height > 0) ? attrs.height : 0;
-                    const bottom = topY + h;
-                    if (bottom && (!competencyBottom || bottom > competencyBottom)) competencyBottom = bottom;
-                } catch (e) { }
+                if (isCompTable) {
+                    const key = attrs.variableName || (vn.includes('general') ? '{GeneralCompetencies}' : '{SpecificCompetencies}');
+                    const isGeneral = String(key).indexOf('General') >= 0;
+                    const items = isGeneral
+                        ? (dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
+                        : (dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
+                    // Use actual provided general competency items when available.
+                    // Fallback to defaults only when the provided list is empty.
+                    const safeItems = Array.isArray(items) ? items : [];
+                    const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
+                    // record bottom Y of competency area if possible (attrs.height expected)
+                    try {
+                        const topY = (attrs.y || 0);
+                        const h = (typeof attrs.height === 'number' && attrs.height > 0) ? attrs.height : 0;
+                        const bottom = topY + h;
+                        if (bottom && (!competencyBottom || bottom > competencyBottom)) competencyBottom = bottom;
+                    } catch (e) { }
 
-                addCompetencyTable(attrs, safeItems, title, attrs.children);
-            } else if (attrs.name === 'suggestion-table' || attrs.name === 'suggestion-table-part') {
-                const isPart = attrs.name === 'suggestion-table-part';
-                const savedChildren = Array.isArray(attrs.children) ? attrs.children : null;
-                const sug = dataMap.Suggestion || dataMap.suggestion || {};
+                    addCompetencyTable(attrs, safeItems, title, attrs.children);
+                } else if (attrs.name === 'suggestion-table' || attrs.name === 'suggestion-table-part') {
+                    const isPart = attrs.name === 'suggestion-table-part';
+                    const savedChildren = Array.isArray(attrs.children) ? attrs.children : null;
+                    const sug = dataMap.Suggestion || dataMap.suggestion || {};
 
-                let suggestionsObj;
-                if (isPart) {
-                    const vn = String(attrs.variableName || '').toLowerCase();
-                    const isOutstanding = vn.includes('outstanding');
-                    const data = isOutstanding
-                        ? (dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding || [])
-                        : (dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities || []);
+                    let suggestionsObj;
+                    if (isPart) {
+                        const vn = String(attrs.variableName || '').toLowerCase();
+                        const isOutstanding = vn.includes('outstanding');
+                        const data = isOutstanding
+                            ? (dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding || [])
+                            : (dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities || []);
 
-                    suggestionsObj = isOutstanding ? { Outstanding: data } : { Opportunities: data };
-                } else {
-                    suggestionsObj = {
-                        Outstanding: dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding,
-                        Opportunities: dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities
-                    };
+                        suggestionsObj = isOutstanding ? { Outstanding: data } : { Opportunities: data };
+                    } else {
+                        suggestionsObj = {
+                            Outstanding: dataMap.Outstanding || dataMap.outstanding || sug.Outstanding || sug.outstanding,
+                            Opportunities: dataMap.Opportunities || dataMap.opportunities || sug.Opportunities || sug.opportunities
+                        };
+                    }
+
+                    // Use exact saved position — trust attrs.x/attrs.y as designed in the editor.
+                    // Do NOT apply any automatic bbox offset or competency-bottom nudging.
+                    const localAttrs = Object.assign({}, attrs);
+
+                    // Derive width from saved children bbox only when attrs.width is missing
+                    if (!localAttrs.width && savedChildren && savedChildren.length) {
+                        const bbox = computeBBox(savedChildren);
+                        const w = (bbox.maxX - bbox.minX);
+                        if (w > 0) localAttrs.width = w;
+                    }
+
+                    addSuggestionTable(localAttrs, suggestionsObj, savedChildren);
                 }
-
-                // Use exact saved position — trust attrs.x/attrs.y as designed in the editor.
-                // Do NOT apply any automatic bbox offset or competency-bottom nudging.
-                const localAttrs = Object.assign({}, attrs);
-
-                // Derive width from saved children bbox only when attrs.width is missing
-                if (!localAttrs.width && savedChildren && savedChildren.length) {
-                    const bbox = computeBBox(savedChildren);
-                    const w = (bbox.maxX - bbox.minX);
-                    if (w > 0) localAttrs.width = w;
-                }
-
-                addSuggestionTable(localAttrs, suggestionsObj, savedChildren);
             }
         }
     });
@@ -1281,6 +1927,12 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         return aZ - bZ;
     });
     nodes.forEach(n => n.moveToTop());
+
+    // Reposition manual-linked data variables into the same horizontal plane
+    // with a fixed 20px gap before export, without affecting the editor canvas.
+    try {
+        applyManualLinkedVariableExportLayout();
+    } catch (e) { }
 
     // Remove thin full-width separators that can appear as artifacts
     // (e.g., editor-drawn horizontal rules or placeholder borders). We look

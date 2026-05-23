@@ -81,6 +81,7 @@ import fetchExampleData from './KonvaEditor/fetchExampleData'
 import showSuggestionPicker from './KonvaEditor/showSuggestionPicker'
 import toggleBulletList from './KonvaEditor/toggleBulletList'
 import toggleOrderedList from './KonvaEditor/toggleOrderedList'
+import enableManualDataVariableLinking, { renderManualDataVariableConnectors, clearManualDataVariableLinkPreview } from './KonvaEditor/manualDataVariableLinks'
 
 export default {
     name: 'KonvaEditor',
@@ -109,7 +110,7 @@ export default {
             generalCompetencyDocName: '',
             specificCompetencyLabels: [],
             suggestionLabels: [],
-            suggestionCharCount: 200,
+            suggestionCharCount: 38,
             // snapping/guides
             snapToGuides: true,
             snapThreshold: 6,
@@ -225,7 +226,10 @@ export default {
         fetchExampleData,
         showSuggestionPicker,
         toggleBulletList,
-        toggleOrderedList
+        toggleOrderedList,
+        enableManualDataVariableLinking,
+        renderManualDataVariableConnectors,
+        clearManualDataVariableLinkPreview
     }
 }
 </script>

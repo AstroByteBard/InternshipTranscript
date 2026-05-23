@@ -5,6 +5,8 @@ var Schema = mongoose.Schema;
 
 var evaluationSchema = new Schema({
     studentId: { type: Schema.Types.ObjectId, ref: 'Students', required: true },
+
+    // Helper pattern for localized labels stored as plain strings
     softskills: [{
         answer: {
             title: {
@@ -26,18 +28,34 @@ var evaluationSchema = new Schema({
     sugestion: [{
         answer: {
             title: {
-                th: { type: String, default: '' },
-                en: { type: String, default: '' }
+                th: { type: String, default: 'ข้อเสนอแนะ' },
+                en: { type: String, default: 'Suggestion' }
             },
             value: {
-                outstanding: [{
-                    th: { type: String, default: '' },
-                    en: { type: String, default: '' }
-                }],
-                opportunity: [{
-                    th: { type: String, default: '' },
-                    en: { type: String, default: '' }
-                }]
+                outstanding: {
+                    title: {
+                        th: { type: String, default: 'ความโดดเด่น' },
+                        en: { type: String, default: 'Outstanding' }
+                    },
+                    items: [{
+                        content: {
+                            th: { type: String, default: '' },
+                            en: { type: String, default: '' }
+                        }
+                    }]
+                },
+                opportunity: {
+                    title: {
+                        th: { type: String, default: 'โอกาสในการพัฒนา' },
+                        en: { type: String, default: 'Opportunity' }
+                    },
+                    items: [{
+                        content: {
+                            th: { type: String, default: '' },
+                            en: { type: String, default: '' }
+                        }
+                    }]
+                }
             }
         }
     }],

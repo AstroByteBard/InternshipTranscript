@@ -7,7 +7,6 @@ var objsSchema = new Schema({
     title: { type: String, default: null },
     status: { type: String, default: 'Draft' }, // Draft, Active, Retired
     content: { type: Schema.Types.Mixed, default: {} }, // Stores Konva JSON structure
-    thumbnail: { type: String, default: null },
     create: {
         by: { type: mongoose.Schema.Types.ObjectId, ref: 'Information_Accounts', default: null },
         datetime: { type: Date, default: Date.now }

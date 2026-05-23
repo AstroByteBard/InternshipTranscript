@@ -37,6 +37,10 @@
 
               <transition name="dropdown-fade">
                 <div v-if="openDropdownId === item._id" class="action-dropdown shadow">
+                  <button class="dropdown-item-btn" @click.stop="handleAction('download', item)">
+                    <CIcon name="cil-cloud-download" class="mr-2" />
+                    Download
+                  </button>
                   <button class="dropdown-item-btn" @click.stop="handleAction('edit', item)">
                     <CIcon name="cil-pencil" class="mr-2" />
                     Edit

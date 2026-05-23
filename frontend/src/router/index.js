@@ -80,15 +80,15 @@ export default new Router({
 
                 {
                     path: 'correspondence',
-                    redirect: 'correspondence/student'
+                    redirect: '/correspondence/student'
                 },
                 {
-                    path: 'Correspondence/student',
+                    path: 'correspondence/student',
                     name: 'CorrespondenceStudent',
                     component: CorrespondenceStudent
                 },
                 {
-                    path: 'Correspondence/adviser',
+                    path: 'correspondence/adviser',
                     name: 'CorrespondenceAdviser',
                     component: CorrespondenceAdviser
                 },

@@ -20,7 +20,7 @@ export default async function loadFromJSON(data) {
                 onCreate: (node) => this.applySavedAttrs(node, el.attrs)
             });
         } else if (el.className === 'Image') {
-            if (el.attrs.name === 'graph-placeholder') {
+            if (el.attrs.elementType === 'graph' || el.attrs.name === 'graph-placeholder') {
                 await this.addGraphPlaceholder(el.attrs.graphType, {
                     ...el.attrs,
                     onCreate: (node) => this.applySavedAttrs(node, el.attrs)
@@ -37,7 +37,7 @@ export default async function loadFromJSON(data) {
                 });
             }
         } else if (el.className === 'Group') {
-            if (el.attrs.name === 'graph-placeholder') {
+            if (el.attrs.elementType === 'graph' || el.attrs.name === 'graph-placeholder') {
                 await this.addGraphPlaceholder(el.attrs.graphType, {
                     ...el.attrs,
                     onCreate: (node) => this.applySavedAttrs(node, el.attrs)
@@ -73,4 +73,7 @@ export default async function loadFromJSON(data) {
     this.historyIndex = -1;
     this._historySnapshot = this.saveToJSON();
     this.historyLog = [];
+    if (typeof this.renderManualDataVariableConnectors === 'function') {
+        this.renderManualDataVariableConnectors();
+    }
 }

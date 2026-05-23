@@ -3,7 +3,7 @@ import Konva from 'konva'
 export default function addSuggestionTable(opts = {}) {
     return new Promise(async (resolve) => {
         const maxW = this.stage.width();
-        const defaultW = 650;
+        const defaultW = 700;
         const hasX = typeof opts.x !== 'undefined' || typeof opts.left !== 'undefined'
         const hasY = typeof opts.y !== 'undefined' || typeof opts.top !== 'undefined'
         const x = hasX ? Number(typeof opts.x !== 'undefined' ? opts.x : opts.left) : Math.max(10, Math.floor((maxW - defaultW) / 2));

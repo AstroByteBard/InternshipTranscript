@@ -49,9 +49,9 @@
           </CCardHeader>
           <CCardBody class="px-4 pb-4">
             <div class="chart-container mb-4 d-flex justify-content-center"
-              style="width:400px;height:400px;max-width:100%;margin:0 auto;">
+              style="width:460px;height:460px;max-width:100%;margin:0 auto;">
               <CChartRadar ref="generalChart" :datasets="generalChartDatasets" :labels="generalChartLabels"
-                :options="chartOptions" height="400px" style="width:400px;max-width:100%;" />
+                :options="chartOptions" height="460px" style="width:460px;max-width:100%;" />
             </div>
             <div class="skills-list">
               <div v-for="skill in generalCompetencies" :key="skill.id" class="skill-item mb-3">
@@ -75,9 +75,9 @@
           </CCardHeader>
           <CCardBody class="px-4 pb-4">
             <div class="chart-container mb-4 d-flex justify-content-center"
-              style="width:400px;height:400px;max-width:100%;margin:0 auto;">
+              style="width:460px;height:460px;max-width:100%;margin:0 auto;">
               <CChartRadar ref="specificChart" :datasets="specificChartDatasets" :labels="specificChartLabels"
-                :options="chartOptions" height="400px" style="width:400px;max-width:100%;" />
+                :options="chartOptions" height="460px" style="width:460px;max-width:100%;" />
             </div>
             <div class="skills-list">
               <div v-for="skill in specificCompetencies" :key="skill.id" class="skill-item mb-3">
@@ -110,7 +110,23 @@
                   <div v-for="feedback in Outstanding" :key="feedback.id" class="feedback-card p-3 mb-3">
                     <ul class="mb-0 custom-list">
                       <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">
-                        {{ typeof point === 'object' && point !== null ? (point[selectedLanguage || 'en'] || point.en || point.th || '') : point }}
+                        <template v-if="point && typeof point === 'object'">
+                          <div v-if="point.title && (point.title[selectedLanguage] || point.title.en || point.title.th)"
+                            class="font-weight-bold">
+                            {{ (point.title[selectedLanguage] || point.title.en || point.title.th) }}
+                          </div>
+                          <div
+                            v-if="point.content && (point.content[selectedLanguage] || point.content.en || point.content.th)"
+                            class="text-small text-muted">
+                            {{ (point.content[selectedLanguage] || point.content.en || point.content.th) }}
+                          </div>
+                          <div v-else-if="(point[selectedLanguage] || point.en || point.th)">
+                            {{ (point[selectedLanguage] || point.en || point.th) }}
+                          </div>
+                        </template>
+                        <template v-else>
+                          {{ point }}
+                        </template>
                       </li>
                     </ul>
                   </div>
@@ -130,7 +146,9 @@
                   <div v-for="feedback in Opportunities" :key="feedback.id" class="feedback-card p-3 mb-3">
                     <ul class="mb-0 custom-list">
                       <li v-for="(point, pIdx) in feedback.points" :key="pIdx" class="mb-2 text-muted-dark">
-                        {{ typeof point === 'object' && point !== null ? (point[selectedLanguage || 'en'] || point.en || point.th || '') : point }}
+                        {{ typeof point === 'object' && point !== null ? (point[selectedLanguage || 'en'] || point.en ||
+                          point.th ||
+                          '') : point }}
                       </li>
                     </ul>
                   </div>
@@ -158,7 +176,8 @@
         </div>
         <div class="text-left px-2 mt-3">
           <label class="font-weight-bold small text-uppercase text-muted mb-2">Language</label>
-          <CSelect :options="[{value: 'en', label: 'English'}, {value: 'th', label: 'Thai'}]" :value.sync="selectedLanguage" class="custom-select-modern" />
+          <CSelect :options="[{ value: 'en', label: 'English' }, { value: 'th', label: 'Thai' }]"
+            :value.sync="selectedLanguage" class="custom-select-modern" />
         </div>
       </div>
       <template #footer>
@@ -176,11 +195,36 @@
 import { mapGetters } from 'vuex';
 import { CChartRadar } from '@coreui/vue-chartjs';
 import { downloadClientPDF } from '@/utils/pdfGenerator';
+import { formatChartLabel } from '@/utils/chartLabel';
 
 export default {
   name: 'StudentDashboard',
   components: {
     CChartRadar
+  },
+  created() {
+    // ensure Chart plugin registered early if Chart.js is available
+    try {
+      // require here to avoid build-time issues if Chart is not present
+      // eslint-disable-next-line global-require
+      const Chart = require('chart.js');
+      if (Chart && !Chart._drawScaleOnTopRegistered) {
+        Chart.plugins.register({
+          afterDatasetsDraw(chartInstance) {
+            try {
+              if (chartInstance.scale && typeof chartInstance.scale.draw === 'function') {
+                chartInstance.scale.draw();
+              }
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
+        Chart._drawScaleOnTopRegistered = true;
+      }
+    } catch (e) {
+      // Chart.js not available at create time — skip
+    }
   },
   data() {
     return {
@@ -230,12 +274,19 @@ export default {
             max: 100,
             stepSize: 20,
             fontSize: 12,
-            showLabelBackdrop: false
+            showLabelBackdrop: false, // ปิดพื้นหลังสีขาวเพื่อไม่ให้บังเส้นกราฟ
+            padding: 36,               // เพิ่ม padding มากขึ้นเพื่อเลื่อนตัวเลขให้ออกมาจากตำแหน่งจุด
+
+            // ใช้ callback เติมช่องว่างท้ายตัวเลขในกรณีที่ต้องการปรับตำแหน่งแนวนอน
+            callback: function (value) {
+              return value + '  ';
+            }
           },
           pointLabels: {
             fontSize: 11,
             fontStyle: '600',
-            fontColor: '#333'
+            fontColor: '#333',
+            padding: 36 // เพิ่มค่า padding ของป้ายเพื่อผลักป้ายออกจากตัวเลข
           }
         }
       }
@@ -324,6 +375,57 @@ export default {
         };
       });
     },
+    collectSuggestionTexts(value) {
+      const result = [];
+
+      const pushText = (input) => {
+        if (input == null) return;
+        if (typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {
+          const text = String(input).trim();
+          if (text) result.push(text);
+          return;
+        }
+        if (Array.isArray(input)) {
+          input.forEach(pushText);
+          return;
+        }
+        if (typeof input !== 'object') return;
+
+        if (Array.isArray(input.items)) {
+          input.items.forEach(item => {
+            if (item && typeof item === 'object' && item.content !== undefined) pushText(item.content);
+            else pushText(item);
+          });
+          return;
+        }
+
+        if (input.content !== undefined) {
+          pushText(input.content);
+          return;
+        }
+
+        if (input.title && !input.items) {
+          pushText(input.title);
+          return;
+        }
+
+        if (input.answer && input.answer.value) {
+          pushText(input.answer.value);
+          return;
+        }
+
+        if (input.value !== undefined) {
+          pushText(input.value);
+          return;
+        }
+
+        const localized = input[this.selectedLanguage || 'en'] || input.en || input.th || input.text || '';
+        if (localized) result.push(String(localized).trim());
+      };
+
+      pushText(value);
+      return result.filter(Boolean);
+    },
     mapSuggestionList(list) {
       const items = Array.isArray(list) ? list : (list ? [list] : []);
       if (items.length === 0) return [];
@@ -341,13 +443,11 @@ export default {
 
         let found = false;
         if (outData) {
-          if (Array.isArray(outData)) outstanding.push(...outData.filter(v => v !== null && v !== undefined));
-          else outstanding.push(String(outData));
+          outstanding.push(...this.collectSuggestionTexts(outData));
           found = true;
         }
         if (oppData) {
-          if (Array.isArray(oppData)) opportunity.push(...oppData.filter(v => v !== null && v !== undefined));
-          else opportunity.push(String(oppData));
+          opportunity.push(...this.collectSuggestionTexts(oppData));
           found = true;
         }
 
@@ -398,7 +498,7 @@ export default {
         } catch (e) { }
 
         // Fallback: treat the whole value as an outstanding performance point
-        outstanding.push(String(val));
+        outstanding.push(...this.collectSuggestionTexts(val));
       });
 
       if (outstanding.length === 0 && opportunity.length === 0) return [];
@@ -421,24 +521,12 @@ export default {
       if (!Array.isArray(list)) return { outstandingGroups: [], opportunityGroups: [] };
 
       list.forEach(item => {
-        const val = item?.answer?.value;
+        const val = item?.answer?.value || item?.value;
         if (!val) return;
 
-        // If stored as object with outstanding/opportunity
         if (typeof val === 'object') {
-          if (Array.isArray(val.outstanding)) {
-            val.outstanding.forEach(p => { if (p) outstandingPoints.push(p); });
-          }
-          if (Array.isArray(val.opportunity)) {
-            val.opportunity.forEach(p => { if (p) opportunityPoints.push(p); });
-          }
-          // support alternative keys
-          if (Array.isArray(val.suggestion)) {
-            val.suggestion.forEach(p => { if (p) opportunityPoints.push(p); });
-          }
-          if (Array.isArray(val.suggestions)) {
-            val.suggestions.forEach(p => { if (p) opportunityPoints.push(p); });
-          }
+          outstandingPoints.push(...this.collectSuggestionTexts(val.outstanding || val.Outstanding || val.outstandings));
+          opportunityPoints.push(...this.collectSuggestionTexts(val.opportunity || val.Opportunity || val.opportunities || val.oppotunity || val.Oppotunity || val.suggestion || val.suggestions));
         } else if (typeof val === 'string') {
           // fallback: treat plain string as an opportunity (growth suggestion)
           opportunityPoints.push(val);
@@ -459,10 +547,23 @@ export default {
       return { outstandingGroups, opportunityGroups };
     },
     updateChartsFromCompetencies() {
-      const specificLabels = this.specificCompetencies.map(s => this.formatChartLabel(s.name, 14));
+      const isThai = this.selectedLanguage === 'th';
+      const specificLabelLimit = isThai ? 16 : 14;
+      const generalLabelLimit = isThai ? 16 : 14;
+      const specificLabels = this.specificCompetencies.map(s => this.formatChartLabel(s.name, specificLabelLimit));
       const specificData = this.specificCompetencies.map(s => s.percentage);
-      const generalLabels = this.generalCompetencies.map(s => this.formatChartLabel(s.name, 14));
+      const generalLabels = this.generalCompetencies.map(s => this.formatChartLabel(s.name, generalLabelLimit));
       const generalData = this.generalCompetencies.map(s => s.percentage);
+
+      if (this.chartOptions && this.chartOptions.scale && this.chartOptions.scale.pointLabels) {
+        this.chartOptions.scale.pointLabels.fontSize = isThai ? 9 : 11;
+      }
+      if (this.chartOptions && this.chartOptions.legend && this.chartOptions.legend.labels) {
+        this.chartOptions.legend.labels.fontSize = isThai ? 11 : 12;
+      }
+      if (this.chartOptions && this.chartOptions.scale && this.chartOptions.scale.ticks) {
+        this.chartOptions.scale.ticks.fontSize = isThai ? 10 : 12;
+      }
 
       this.specificChartLabels = specificLabels;
       this.generalChartLabels = generalLabels;
@@ -478,8 +579,8 @@ export default {
           pointHoverBackgroundColor: '#ffffff',
           pointHoverBorderColor: '#7c3aed',
           borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7
+          pointRadius: 3,
+          pointHoverRadius: 5
         },
         {
           label: 'Average',
@@ -492,8 +593,8 @@ export default {
           pointHoverBorderColor: '#fb7185',
           borderDash: [5, 5],
           borderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
+          pointRadius: 3,
+          pointHoverRadius: 4
         }
       ];
       this.generalChartDatasets = [
@@ -507,8 +608,8 @@ export default {
           pointHoverBackgroundColor: '#ffffff',
           pointHoverBorderColor: '#7c3aed',
           borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7
+          pointRadius: 3,
+          pointHoverRadius: 5
         },
         {
           label: 'Average',
@@ -521,39 +622,13 @@ export default {
           pointHoverBorderColor: '#fb7185',
           borderDash: [5, 5],
           borderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
+          pointRadius: 3,
+          pointHoverRadius: 4
         }
       ];
     },
     formatChartLabel(label, maxLen = 14) {
-      try {
-        if (!label) return '';
-        if (Array.isArray(label)) return label;
-        const s = String(label).trim();
-        if (s.length <= maxLen) return s;
-        const words = s.split(' ');
-        const lines = [];
-        let cur = '';
-        for (let i = 0; i < words.length; i++) {
-          const w = words[i];
-          if ((cur + ' ' + w).trim().length <= maxLen) {
-            cur = (cur + ' ' + w).trim();
-          } else {
-            if (cur) lines.push(cur);
-            cur = w;
-          }
-        }
-        if (cur) lines.push(cur);
-        // limit to at most 3 lines for readability
-        if (lines.length > 3) {
-          const merged = [lines.slice(0, 2).join(' '), lines.slice(2).join(' ')];
-          return merged;
-        }
-        return lines.length === 1 ? lines[0] : lines;
-      } catch (e) {
-        return label;
-      }
+      return formatChartLabel(label, maxLen, this.selectedLanguage);
     },
     async loadEvaluationData() {
       try {
@@ -869,32 +944,32 @@ export default {
       let studentForLang = null;
       try {
         const authUser = this.$store?.state?.auth?.user;
-        const email = authUser?.email || (() => { try { const userStr = localStorage.getItem('auth_user'); return userStr ? JSON.parse(userStr)?.email : ''; } catch(e){ return ''; } })();
+        const email = authUser?.email || (() => { try { const userStr = localStorage.getItem('auth_user'); return userStr ? JSON.parse(userStr)?.email : ''; } catch (e) { return ''; } })();
         studentForLang = this.findStudent(this.targetStudentId || authUser?._id, email);
-      } catch (e) {}
+      } catch (e) { }
 
       let studentNameString = this.studentData.name;
       let schoolLang = this.studentData.school;
       let programLang = this.studentData.program;
-      
+
       if (studentForLang) {
         const sLang = this.selectedLanguage || 'en';
         if (Array.isArray(studentForLang.name)) {
-            const found = studentForLang.name.find(n => n?.key === sLang);
-            if (found && found.value) studentNameString = found.value;
+          const found = studentForLang.name.find(n => n?.key === sLang);
+          if (found && found.value) studentNameString = found.value;
         } else if (typeof studentForLang.name === 'object' && studentForLang.name !== null) {
-            if (studentForLang.name[sLang]) studentNameString = studentForLang.name[sLang];
+          if (studentForLang.name[sLang]) studentNameString = studentForLang.name[sLang];
         }
-        
+
         if (studentForLang.info) {
-            if (Array.isArray(studentForLang.info.school?.title)) {
-                const found = studentForLang.info.school.title.find(t => t?.key === sLang);
-                if (found && found.value) schoolLang = found.value;
-            }
-            if (Array.isArray(studentForLang.info.program?.title)) {
-                const found = studentForLang.info.program.title.find(t => t?.key === sLang);
-                if (found && found.value) programLang = found.value;
-            }
+          if (Array.isArray(studentForLang.info.school?.title)) {
+            const found = studentForLang.info.school.title.find(t => t?.key === sLang);
+            if (found && found.value) schoolLang = found.value;
+          }
+          if (Array.isArray(studentForLang.info.program?.title)) {
+            const found = studentForLang.info.program.title.find(t => t?.key === sLang);
+            if (found && found.value) programLang = found.value;
+          }
         }
       }
 
@@ -908,7 +983,7 @@ export default {
           const val = (it && it.answer && it.answer.value) ? it.answer.value : (it && it.value ? it.value : null);
           if (val) {
             const list = [].concat(val.outstanding || val.outcome || val.Opportunity || val.opportunity || []);
-            list.forEach(p => { 
+            list.forEach(p => {
               if (p) {
                 let obj = p;
                 if (typeof p === 'string' && p.trim().startsWith('{')) {
@@ -919,7 +994,7 @@ export default {
                 } else {
                   acc.push(p);
                 }
-              } 
+              }
             });
           }
         } catch (e) { }
@@ -931,7 +1006,7 @@ export default {
           const val = (it && it.answer && it.answer.value) ? it.answer.value : (it && it.value ? it.value : null);
           if (val) {
             const list = [].concat(val.opportunity || val.opportunities || val.suggestion || val.suggestions || []);
-            list.forEach(p => { 
+            list.forEach(p => {
               if (p) {
                 let obj = p;
                 if (typeof p === 'string' && p.trim().startsWith('{')) {
@@ -942,7 +1017,7 @@ export default {
                 } else {
                   acc.push(p);
                 }
-              } 
+              }
             });
           }
         } catch (e) { }
@@ -958,13 +1033,13 @@ export default {
       try {
         const evalPayload = this.storedEvaluations || [];
         const evalData = Array.isArray(evalPayload)
-            ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
-            : evalPayload;
+          ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
+          : evalPayload;
         if (evalData && evalData.softskills) {
-            generalMapped = this.mapEvaluationList(evalData.softskills);
+          generalMapped = this.mapEvaluationList(evalData.softskills);
         }
       } catch (e) {
-          console.warn('Failed to remap general competencies for PDF', e);
+        console.warn('Failed to remap general competencies for PDF', e);
       }
 
       return {

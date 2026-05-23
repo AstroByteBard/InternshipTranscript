@@ -2,6 +2,8 @@ import Konva from 'konva'
 
 export default function addGraphPlaceholder(graphType, opts = {}) {
     return new Promise((resolve) => {
+        const RADAR_LABEL_OUTER_MARGIN = 40
+        const GRAPH_HEADER_TOP_Y = 0
         const baseFontSize = Number(opts.fontSize) || 14
         const fontFamily = opts.fontFamily || 'Inter, Arial'
         const fill = opts.fill || '#1e293b'
@@ -50,6 +52,8 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
 
         const isRadar = String(graphType).includes('Radar');
         const isGeneral = String(graphType).includes('General');
+        const graphKind = isRadar ? 'radar' : 'bar';
+        const graphScope = isGeneral ? 'general' : 'specific';
         const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
 
         const group = new Konva.Group({
@@ -60,6 +64,10 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
             draggable: true,
             name: 'graph-placeholder',
             graphType,
+            graphKind,
+            graphScope,
+            elementType: 'graph',
+            templateKey: graphType,
             fontFamily,
             fontSize: baseFontSize,
             fill,
@@ -105,9 +113,9 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
                 }
             }
 
-            group.add(makeEditableText(title, { x: Math.round(50 * layoutScale), y: Math.round(5 * layoutScale), fontSize: Math.max(20, Math.round(baseFontSize * 1.5 * layoutScale)), fontStyle: 'bold' }, group))
+            group.add(makeEditableText(title, { x: Math.round(50 * layoutScale), y: GRAPH_HEADER_TOP_Y, fontSize: Math.max(20, Math.round(baseFontSize * 1.5 * layoutScale)), fontStyle: 'bold' }, group))
             if (showDocName) {
-                group.add(makeEditableText(this.generalCompetencyDocName, { x: Math.round(50 * layoutScale), y: Math.round(35 * layoutScale), fontSize: Math.max(12, Math.round(baseFontSize * 1.1 * layoutScale)) }, group))
+                group.add(makeEditableText(this.generalCompetencyDocName, { x: Math.round(50 * layoutScale), y: Math.round(30 * layoutScale), fontSize: Math.max(12, Math.round(baseFontSize * 1.1 * layoutScale)) }, group))
                 legendY = Math.round(70 * layoutScale)
             }
 
@@ -211,15 +219,38 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
 
                 const raw = String(labels[i] || '')
                 const textX = align === 'center' ? labelX - maxLabelWidth / 2 : (align === 'left' ? labelX : labelX - maxLabelWidth)
-                group.add(makeEditableText(raw, {
+                const labelFontSize = Math.max(10, Math.round(baseFontSize * 0.85 * layoutScale))
+                let textY = labelY - Math.round(8 * layoutScale)
+
+                const labelNode = makeEditableText(raw, {
                     x: textX,
-                    y: labelY - Math.round(8 * layoutScale),
+                    y: textY,
                     width: maxLabelWidth,
                     align: align,
-                    fontSize: Math.max(10, Math.round(baseFontSize * 0.85 * layoutScale)),
+                    fontSize: labelFontSize,
                     fontStyle: 'bold',
                     wrap: 'word'
-                }, group))
+                }, group)
+
+                // Keep label center outside polygon by a fixed margin so text does not overlap the radar shape.
+                const labelHeight = Math.max(labelNode.height(), Math.round(labelFontSize * (labelNode.lineHeight() || 1)))
+                const labelCenterX = textX + (maxLabelWidth / 2)
+                const labelCenterY = textY + (labelHeight / 2)
+                const dx = labelCenterX - centerX
+                const dy = labelCenterY - centerY
+                const dist = Math.sqrt(dx * dx + dy * dy)
+                const minDist = radius + RADAR_LABEL_OUTER_MARGIN + Math.max(0, Math.round(labelHeight / 2))
+                if (dist < minDist) {
+                    const targetDist = minDist
+                    const newCenterX = centerX + targetDist * Math.cos(angle)
+                    const newCenterY = centerY + targetDist * Math.sin(angle)
+                    const newX = align === 'center' ? newCenterX - (maxLabelWidth / 2) : (align === 'left' ? newCenterX : newCenterX - maxLabelWidth)
+                    textY = newCenterY - (labelHeight / 2)
+                    labelNode.x(newX)
+                    labelNode.y(textY)
+                }
+
+                group.add(labelNode)
             }
 
 
@@ -244,7 +275,7 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
             group.height(requiredHeight)
             bg.height(requiredHeight)
 
-            group.add(makeEditableText(title, { x: 0, y: 4, fontSize: Math.max(18, Math.round(baseFontSize * 1.5)), fontStyle: 'bold' }))
+            group.add(makeEditableText(title, { x: 0, y: GRAPH_HEADER_TOP_Y, fontSize: Math.max(18, Math.round(baseFontSize * 1.5)), fontStyle: 'bold' }))
 
             const percentages = competencies.map(() => 80)
             const percentFontSize = Math.max(11, Math.round(baseFontSize * 1.0))

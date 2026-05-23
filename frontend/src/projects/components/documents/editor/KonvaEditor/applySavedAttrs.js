@@ -1,3 +1,5 @@
+import Konva from 'konva'
+
 export default function applySavedAttrs(node, attrs, zIndex) {
     if (!node || !attrs) return
     // Support both legacy childrenAttrs and new children arrays
@@ -14,6 +16,12 @@ export default function applySavedAttrs(node, attrs, zIndex) {
     } catch (err) {
         // ignore if setAttrs fails for some attrs
     }
+
+    try {
+        if (safeAttrs && safeAttrs.dataVariableLinked && typeof this.enableManualDataVariableLinking === 'function') {
+            this.enableManualDataVariableLinking(node)
+        }
+    } catch (err) { /* ignore */ }
 
     if (typeof zIndex === 'number') {
         const bg = this.layer ? this.layer.findOne('.background-rect') : null
@@ -42,6 +50,29 @@ export default function applySavedAttrs(node, attrs, zIndex) {
                         // fallback to recursive application
                         this.applySavedAttrs(childNode, childAttrs)
                     }
+
+                    // Migration: if saved text contains a leading bullet char, convert to real bullet circle
+                    try {
+                        const isText = childNode && typeof childNode.getClassName === 'function' && childNode.getClassName() === 'Text';
+                        if (isText && typeof childAttrs.text === 'string' && /^\s*•\s+/.test(childAttrs.text)) {
+                            // strip bullet char from text
+                            const newText = childAttrs.text.replace(/^\s*•\s+/, '');
+                            try { childNode.text(newText); } catch (e) { }
+                            try { childNode.x((childNode.x && typeof childNode.x === 'function') ? 22 : ''); } catch (e) { }
+
+                            // create a circle bullet and insert into parent (node)
+                            try {
+                                const Konva = (typeof window !== 'undefined' && window.Konva) ? window.Konva : null;
+                                if (Konva && node && typeof node.add === 'function') {
+                                    const baseFont = (childNode && typeof childNode.fontSize === 'function') ? (childNode.fontSize() || 12) : 12;
+                                    const bulletRadius = Math.max(2, Math.round(baseFont / 4));
+                                    const bullet = new Konva.Circle({ x: 10, y: (childNode.y && typeof childNode.y === 'function') ? (childNode.y() + Math.round(baseFont / 2)) : 0, radius: bulletRadius, fill: (childAttrs.fill || '#000'), listening: false });
+                                    try { bullet.setAttr('placeholderType', 'suggestion-bullet'); } catch (e) { }
+                                    try { node.add(bullet); bullet.zIndex(childNode.zIndex()); } catch (e) { }
+                                }
+                            } catch (e) { }
+                        }
+                    } catch (e) { }
 
                     // If the saved child has nested children, apply recursively
                     if (Array.isArray(savedChild.children) && typeof childNode.getChildren === 'function') {

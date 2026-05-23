@@ -8,6 +8,7 @@ export default function saveToJSON() {
     this.layer.children.forEach(node => {
         // Skip transformer, background, and internal nodes
         if (node === this.transformer || node === bg) return;
+        if (node && typeof node.getAttr === 'function' && node.getAttr('name') === 'data-variable-connector') return;
 
         const attrs = node.getAttrs();
         const el = {
@@ -22,6 +23,11 @@ export default function saveToJSON() {
             const gn = node.name() || '';
             if (gn.includes('table')) {
                 ['fontSize', 'fontFamily', 'fill', 'fontStyle', 'textDecoration', 'align', 'labels', 'columnWidth', 'variableName'].forEach(attr => {
+                    const val = node.getAttr(attr);
+                    if (val !== undefined) el.attrs[attr] = val;
+                });
+            } else if (gn === 'graph-placeholder') {
+                ['graphType', 'graphKind', 'graphScope', 'elementType', 'templateKey'].forEach(attr => {
                     const val = node.getAttr(attr);
                     if (val !== undefined) el.attrs[attr] = val;
                 });

@@ -1,10 +1,17 @@
 export default function updateSuggestionGroupStyle(group, style = {}) {
     if (!group || !group.find) return
-    const fontSize = typeof style.fontSize !== 'undefined' ? Number(style.fontSize) : undefined
-    const fontFamily = style.fontFamily
-    const fill = style.fill
-    const fontStyle = style.fontStyle
-    const textDecoration = style.textDecoration
+    const scaleY = (typeof group.scaleY === 'function' && Number.isFinite(group.scaleY()) && group.scaleY() !== 0)
+        ? group.scaleY()
+        : 1
+    const normalizedStyle = Object.assign({}, style)
+    const fontSize = typeof normalizedStyle.fontSize !== 'undefined' ? Number(normalizedStyle.fontSize) : undefined
+    if (Number.isFinite(fontSize)) {
+        normalizedStyle.fontSize = Math.max(1, fontSize / scaleY)
+    }
+    const fontFamily = normalizedStyle.fontFamily
+    const fill = normalizedStyle.fill
+    const fontStyle = normalizedStyle.fontStyle
+    const textDecoration = normalizedStyle.textDecoration
 
     group.find(node => node.getClassName && node.getClassName() === 'Text')
         .forEach((node) => {

@@ -2,26 +2,23 @@
     <div>
         <DocumentsHeader @create-click="$router.push('/documents/create')" />
 
-        <WidgetsDocuments 
-            :total="documentsData.length" 
-            :published="publishedCount" 
-            :draft="draftCount" 
-            :archived="archivedCount" 
-        />
+        <WidgetsDocuments :total="documentsData.length" :published="publishedCount" :draft="draftCount"
+            :archived="archivedCount" />
 
-            <CRow>
-                <CCol>
-                    <DocsFilterCard @search="(q) => { }" />
+        <CRow>
+            <CCol>
+                <DocsFilterCard @search="(q) => { }" />
 
-                    <DocumentsTable :items="documentsData" :fields="documentFields" @download="onDownload"
-                        @edit="onEdit" @copy="onCopy" @delete="onDelete" />
-                </CCol>
-            </CRow>
+                <DocumentsTable :items="documentsData" :fields="documentFields" @download="onDownload" @edit="onEdit"
+                    @copy="onCopy" @delete="onDelete" />
+            </CCol>
+        </CRow>
 
     </div>
 </template>
 
 <script>
+import { downloadClientPDF } from '@/utils/pdfGenerator'
 import DocumentsHeader from '../../../components/Layout/DocumentsHeader.vue'
 import WidgetsDocuments from '../../../components/widgets/WidgetsDocuments.vue'
 import DocsFilterCard from '../../../components/documents/list/DocsFilterCard.vue'
@@ -72,8 +69,14 @@ export default {
                 console.error('Failed to load documents', err);
             }
         },
-        onDownload(item) {
-            console.log('download', item)
+        async onDownload(item) {
+            if (!item || !item.content) return;
+            try {
+                const filename = `${String(item.title || item.name || 'document').replace(/[\\/:*?"<>|]+/g, '_')}.pdf`;
+                await downloadClientPDF(item.content, {}, filename);
+            } catch (err) {
+                console.error('Download failed', err);
+            }
         },
         onEdit(item) {
             this.$router.push(`/documents/edit/${item._id}`);

@@ -1,6 +1,24 @@
 import Konva from 'konva'
 
 export default function applyFormatToTextNode(node, type, value) {
+    const scaledContextNames = new Set(['graph-placeholder', 'competency-table', 'suggestion-table', 'suggestion-table-part']);
+
+    const getContextScaleY = (targetNode) => {
+        try {
+            let curr = targetNode;
+            while (curr && typeof curr.getClassName === 'function' && curr.getClassName() !== 'Stage') {
+                const elementType = (typeof curr.getAttr === 'function') ? curr.getAttr('elementType') : null;
+                const name = (typeof curr.getAttr === 'function') ? curr.getAttr('name') : null;
+                if (elementType === 'graph' || name === 'graph-placeholder' || scaledContextNames.has(name)) {
+                    const scaleY = typeof curr.scaleY === 'function' ? Number(curr.scaleY()) : 1;
+                    return Number.isFinite(scaleY) && scaleY !== 0 ? scaleY : 1;
+                }
+                curr = typeof curr.getParent === 'function' ? curr.getParent() : null;
+            }
+        } catch (err) { }
+        return 1;
+    }
+
     if (type === 'bold') {
         const current = node.fontStyle();
         if (current.includes('bold')) {
@@ -25,7 +43,13 @@ export default function applyFormatToTextNode(node, type, value) {
     } else if (type === 'fontFamily') {
         node.fontFamily(value);
     } else if (type === 'fontSize') {
-        node.fontSize(value);
+        const desiredSize = Number(value);
+        if (Number.isFinite(desiredSize)) {
+            const contextScaleY = getContextScaleY(node);
+            node.fontSize(Math.max(1, desiredSize / contextScaleY));
+        } else {
+            node.fontSize(value);
+        }
     }
 
     // If node is part of a table group, mirror the attribute to the group for saving/persistence

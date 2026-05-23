@@ -2,7 +2,7 @@ import Konva from 'konva'
 
 export default function addSuggestionColumn(opts = {}) {
     if (!this.layer || !opts.labels || !opts.labels.length) return null;
-    const columnWidth = Number(opts.columnWidth) || 1000;
+    const columnWidth = Number(opts.columnWidth);
     const x = typeof opts.x !== 'undefined' ? Number(opts.x) : 0;
     const y = typeof opts.y !== 'undefined' ? Number(opts.y) : 0;
 
@@ -21,12 +21,13 @@ export default function addSuggestionColumn(opts = {}) {
     });
     group.add(hitRect);
     let currentY = 0;
-    const baseFontSize = (opts.fontSize && !isNaN(Number(opts.fontSize))) ? Number(opts.fontSize) : 14;
+    const baseFontSize = (opts.fontSize && !isNaN(Number(opts.fontSize))) ? Number(opts.fontSize) : 12;
     const labelFontSize = opts.fontSize ? baseFontSize : Math.max(16, Math.floor(baseFontSize * 1.4));
     const fontFamily = opts.fontFamily || 'Inter, Arial';
     const fill = opts.fill || '#1e293b';
     const fontStyle = opts.fontStyle || 'normal';
     const textDecoration = opts.textDecoration || '';
+    const INNER_EDIT_DOUBLE_DBL_MS = 1200;
 
     const setupTextNodeTransform = (txtNode) => {
         txtNode.on('transform', () => {
@@ -50,6 +51,40 @@ export default function addSuggestionColumn(opts = {}) {
     };
 
     opts.labels.forEach((label) => {
+
+        const bindInnerTextInteraction = (txtNode) => {
+            txtNode.on('click tap', (e) => {
+                e.cancelBubble = true;
+                this.handleNodeSelection(group, e.evt);
+            });
+
+            txtNode.on('mousedown touchstart', (e) => {
+                e.cancelBubble = true;
+                this.handleNodeSelection(group, e.evt);
+            });
+
+            txtNode.on('dblclick dbltap', (e) => {
+                e.cancelBubble = true;
+                const now = Date.now();
+                const lastTs = Number(txtNode.__innerEditLastDblTs || 0);
+                const prevCount = Number(txtNode.__innerEditDblCount || 0);
+                const withinWindow = (now - lastTs) <= INNER_EDIT_DOUBLE_DBL_MS;
+                const nextCount = withinWindow ? (prevCount + 1) : 1;
+
+                txtNode.__innerEditLastDblTs = now;
+                txtNode.__innerEditDblCount = nextCount;
+
+                // Require double-click twice before allowing direct inner-text editing.
+                if (nextCount < 2) {
+                    this.handleNodeSelection(group, e.evt);
+                    return;
+                }
+
+                txtNode.__innerEditDblCount = 0;
+                this.handleNodeSelection(txtNode, e.evt);
+                this.startEditingText(txtNode);
+            });
+        };
         const labelNode = new Konva.Text({
             text: label,
             fontSize: labelFontSize,
@@ -63,31 +98,45 @@ export default function addSuggestionColumn(opts = {}) {
         this.assignCreationOrder(labelNode);
         group.add(labelNode);
         setupTextNodeTransform(labelNode);
-        labelNode.on('click tap', (e) => { this.handleNodeSelection(labelNode, e.evt) });
-        labelNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(labelNode, e.evt); this.startEditingText(labelNode); });
-        labelNode.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(labelNode, e.evt); });
+        bindInnerTextInteraction(labelNode);
         currentY += (labelFontSize * 1.4);
 
-        const textNode = new Konva.Text({
-            text: '',
-            fontSize: baseFontSize,
-            fontFamily: fontFamily,
-            fontStyle: fontStyle,
-            fill: fill,
-            textDecoration: textDecoration,
-            x: 10,
-            y: currentY,
-            width: columnWidth - 20,
-            lineHeight: 1.4
-        });
-        textNode.setAttr('placeholderType', 'suggestion');
-        this.assignCreationOrder(textNode);
-        group.add(textNode);
-        setupTextNodeTransform(textNode);
-        textNode.on('click tap', (e) => { this.handleNodeSelection(textNode, e.evt) });
-        textNode.on('dblclick dbltap', (e) => { this.handleNodeSelection(textNode, e.evt); this.startEditingText(textNode); });
-        textNode.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(textNode, e.evt); });
-        currentY += textNode.height() + (baseFontSize * 1.5);
+        // create 3 suggestion items (bullet circle + text) as placeholders
+        const itemCount = 3;
+        const bulletRadius = Math.max(2, Math.round(baseFontSize / 4));
+        for (let ii = 0; ii < itemCount; ii++) {
+            const itemY = currentY;
+            const bullet = new Konva.Circle({
+                x: 10,
+                y: itemY + Math.round(baseFontSize / 2),
+                radius: bulletRadius,
+                fill: fill,
+                listening: false
+            });
+            bullet.setAttr('placeholderType', 'suggestion-bullet');
+            this.assignCreationOrder(bullet);
+            group.add(bullet);
+
+            const textNode = new Konva.Text({
+                text: '',
+                fontSize: baseFontSize,
+                fontFamily: fontFamily,
+                fontStyle: fontStyle,
+                fill: fill,
+                textDecoration: textDecoration,
+                x: 22,
+                y: itemY,
+                width: columnWidth - 20,
+                lineHeight: 1.4,
+                wrap: 'none'
+            });
+            textNode.setAttr('placeholderType', 'suggestion-item');
+            this.assignCreationOrder(textNode);
+            group.add(textNode);
+            setupTextNodeTransform(textNode);
+            bindInnerTextInteraction(textNode);
+            currentY += baseFontSize + Math.round(baseFontSize * 0.8);
+        }
     });
 
     hitRect.height(currentY + 10);
