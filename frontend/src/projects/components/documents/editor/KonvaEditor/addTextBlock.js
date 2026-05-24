@@ -1,21 +1,23 @@
 import Konva from 'konva'
+import getLocaleFontFamily from './getLocaleFontFamily'
 
 export default function addTextBlock(text = 'Add Text', opts = {}) {
     return new Promise((resolve) => {
         const maxW = this.stage.width()
         const maxH = this.stage.height()
         const defaultFontSize = opts.fontSize ? Number(opts.fontSize) : 20
+        const locale = String(opts.locale || this.templateLocale || 'th').toLowerCase()
 
         // If width is not provided, let Konva auto-size it to match text length
         const initialW = opts.width ? Number(opts.width) : undefined
-
         const x = typeof opts.left !== 'undefined' ? Number(opts.left) : (initialW ? Math.max(10, Math.floor((maxW - initialW) / 2)) : 50)
         const y = typeof opts.top !== 'undefined' ? Number(opts.top) : 30
 
-        const konvaText = new Konva.Text({
-            x, y, text,
+        const textAttrs = {
+            x,
+            y,
+            text,
             fontSize: defaultFontSize,
-            fontFamily: 'Inter, Arial',
             fill: '#1e293b',
             fontStyle: opts.fontWeight || 'normal',
             draggable: true,
@@ -24,7 +26,18 @@ export default function addTextBlock(text = 'Add Text', opts = {}) {
             padding: 5,
             lineHeight: 1.2,
             align: 'left'
-        });
+        }
+
+        if (typeof opts.fontFamily === 'string' && opts.fontFamily.trim()) {
+            textAttrs.fontFamily = opts.fontFamily.trim()
+        } else {
+            const localeFontFamily = getLocaleFontFamily(locale)
+            if (localeFontFamily) {
+                textAttrs.fontFamily = localeFontFamily
+            }
+        }
+
+        const konvaText = new Konva.Text(textAttrs)
 
         this.assignCreationOrder(konvaText)
         this.layer.add(konvaText)

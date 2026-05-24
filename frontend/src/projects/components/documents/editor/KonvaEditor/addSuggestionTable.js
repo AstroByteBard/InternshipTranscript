@@ -2,6 +2,8 @@ import Konva from 'konva'
 
 export default function addSuggestionTable(opts = {}) {
     return new Promise(async (resolve) => {
+        const locale = String(opts.locale || this.templateLocale || 'th').toLowerCase()
+        const isThai = locale.startsWith('th')
         const maxW = this.stage.width();
         const defaultW = 700;
         const hasX = typeof opts.x !== 'undefined' || typeof opts.left !== 'undefined'
@@ -10,7 +12,7 @@ export default function addSuggestionTable(opts = {}) {
         const y = hasY ? Number(typeof opts.y !== 'undefined' ? opts.y : opts.top) : 100;
 
         // Explicitly split into two columns: Outstanding and Opportunity
-        const labels = ['Outstanding', 'Opportunity'];
+        const labels = isThai ? ['จุดเด่น', 'จุดที่ควรพัฒนา'] : ['Outstanding', 'Opportunity'];
         const columnGap = 30;
         const columnWidth = Math.floor((defaultW - columnGap) / 2);
 
@@ -29,7 +31,7 @@ export default function addSuggestionTable(opts = {}) {
             columnWidth
         });
         if (leftGroup) {
-            leftGroup.setAttr('variableName', '{Outstanding}');
+            leftGroup.setAttr('variableName', isThai ? '{จุดเด่น}' : '{Outstanding}');
             // Move into parentGroup and adjust local coords
             try {
                 leftGroup.x(leftGroup.x() - parentGroup.x());
@@ -49,7 +51,7 @@ export default function addSuggestionTable(opts = {}) {
             columnWidth
         });
         if (rightGroup) {
-            rightGroup.setAttr('variableName', '{Opportunities}');
+            rightGroup.setAttr('variableName', isThai ? '{จุดที่ควรพัฒนา}' : '{Opportunities}');
             try {
                 rightGroup.x(rightGroup.x() - parentGroup.x());
                 rightGroup.y(rightGroup.y() - parentGroup.y());

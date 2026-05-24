@@ -2,8 +2,13 @@ import Konva from 'konva'
 
 export default function addCompetencyTable(variableName, opts = {}) {
     return new Promise((resolve) => {
+        const locale = String(opts.locale || this.templateLocale || 'th').toLowerCase()
+        const isThai = locale.startsWith('th')
+        const localeFontFamily = typeof opts.fontFamily === 'string' && opts.fontFamily.trim() ? opts.fontFamily.trim() : undefined
         const isGeneral = variableName.includes('General');
-        const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
+        const title = isGeneral
+            ? (isThai ? 'ทักษะทั่วไป' : 'General Competencies')
+            : (isThai ? 'ทักษะเฉพาะ' : 'Specific Competencies');
 
         const maxW = this.stage.width();
         const defaultW = 450;
@@ -14,15 +19,17 @@ export default function addCompetencyTable(variableName, opts = {}) {
 
         const competencies = isGeneral
             ? this.getGeneralCompetencyLabels()
-            : this.getSpecificCompetencyPlaceholders();
+            : (isThai ? this.getSpecificCompetencyLabels() : this.getSpecificCompetencyPlaceholders());
 
         const group = new Konva.Group({ x, y, draggable: true, name: 'competency-table', variableName });
         group.setAttrs({
             fontSize: opts.fontSize || 14,
-            fontFamily: opts.fontFamily || 'Inter, Arial',
             fill: opts.fill || '#64748b',
             fontStyle: opts.fontStyle || 'normal'
         });
+        if (localeFontFamily) {
+            group.setAttr('fontFamily', localeFontFamily);
+        }
         this.assignCreationOrder(group);
 
         const hitRect = new Konva.Rect({ width: defaultW, height: 100, fill: 'rgba(0,0,0,0)', listening: true, name: 'hit-area', historyIgnore: true });
@@ -49,7 +56,9 @@ export default function addCompetencyTable(variableName, opts = {}) {
             });
         };
 
-        const titleText = new Konva.Text({ text: title, fontSize: 18, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#4b5563', y: 0 });
+        const titleTextAttrs = { text: title, fontSize: 18, fontStyle: '600', fill: '#4b5563', y: 0 };
+        if (localeFontFamily) titleTextAttrs.fontFamily = localeFontFamily;
+        const titleText = new Konva.Text(titleTextAttrs);
         this.assignCreationOrder(titleText);
         group.add(titleText);
         setupTextNodeTransform(titleText);
@@ -57,7 +66,9 @@ export default function addCompetencyTable(variableName, opts = {}) {
         titleText.on('dblclick dbltap', (e) => { this.handleNodeSelection(titleText, e.evt.shiftKey); this.startEditingText(titleText); });
         titleText.on('mousedown touchstart', (e) => { e.cancelBubble = true; this.handleNodeSelection(titleText, e.evt.shiftKey); });
 
-        const scoreHeader = new Konva.Text({ text: 'Score', fontSize: 18, fontFamily: 'Inter, Arial', fontStyle: '600', fill: '#4b5563', x: 350, y: 0 });
+        const scoreHeaderAttrs = { text: isThai ? 'คะแนน' : 'Score', fontSize: 18, fontStyle: '600', fill: '#4b5563', x: 350, y: 0 };
+        if (localeFontFamily) scoreHeaderAttrs.fontFamily = localeFontFamily;
+        const scoreHeader = new Konva.Text(scoreHeaderAttrs);
         this.assignCreationOrder(scoreHeader);
         group.add(scoreHeader);
         setupTextNodeTransform(scoreHeader);
@@ -67,7 +78,7 @@ export default function addCompetencyTable(variableName, opts = {}) {
 
         let currentY = 50;
         const rowFontSize = opts.fontSize ? Number(opts.fontSize) : 14;
-        const rowFontFamily = opts.fontFamily || 'Inter, Arial';
+        const rowFontFamily = localeFontFamily;
         const rowFill = opts.fill || '#64748b';
         const rowFontStyle = opts.fontStyle || 'normal';
 
@@ -75,7 +86,7 @@ export default function addCompetencyTable(variableName, opts = {}) {
             const nameNode = new Konva.Text({
                 text: comp,
                 fontSize: rowFontSize,
-                fontFamily: rowFontFamily,
+                ...(rowFontFamily ? { fontFamily: rowFontFamily } : {}),
                 fill: rowFill,
                 fontStyle: rowFontStyle,
                 y: currentY,
@@ -91,7 +102,7 @@ export default function addCompetencyTable(variableName, opts = {}) {
             const scoreNode = new Konva.Text({
                 text: 'X.X',
                 fontSize: rowFontSize,
-                fontFamily: rowFontFamily,
+                ...(rowFontFamily ? { fontFamily: rowFontFamily } : {}),
                 fill: rowFill,
                 fontStyle: rowFontStyle,
                 x: 350,

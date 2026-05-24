@@ -1,24 +1,38 @@
 // Here you can add other styles
 
+@import 'locale-fonts';
+
 /* Custom scrollbar for webkit */
-.custom-scrollbar {
-    scrollbar-width: thin;
-}
 
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1; 
+    background: #f1f1f1;
     border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #ccc; 
+    background: #ccc;
     border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #bbb; 
+    background: #bbb;
+}
+
+/* Compatibility fixes: prefer setting these in source so built CSS includes standard props */
+html {
+    -webkit-tap-highlight-color: rgba(0, 0, 21, 0);
+}
+
+/* Ensure standard appearance property is present alongside vendor prefixes where native controls are reset */
+input,
+button,
+select,
+textarea {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }

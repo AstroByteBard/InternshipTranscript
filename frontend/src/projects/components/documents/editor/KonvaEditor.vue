@@ -86,7 +86,8 @@ import enableManualDataVariableLinking, { renderManualDataVariableConnectors, cl
 export default {
     name: 'KonvaEditor',
     props: {
-        isPreview: { type: Boolean, default: false }
+        isPreview: { type: Boolean, default: false },
+        templateLocale: { type: String, default: 'th' }
     },
     data() {
         return {
@@ -134,7 +135,23 @@ export default {
     },
     async mounted() {
         this.createStage()
+        if (typeof this.ensureFontLoaded === 'function') {
+            await this.ensureFontLoaded(this.templateLocale === 'th' ? 'Noto Sans Thai' : 'Source Sans 3')
+        }
         await this.fetchExampleData()
+    },
+    watch: {
+        templateLocale() {
+            this.fetchExampleData()
+            // If currently in preview, refresh displayed linked variable texts
+            this.$nextTick(() => {
+                if (this.isPreview) this.updateLinkedVariableDisplay(true)
+            })
+        },
+        isPreview(newVal) {
+            // When entering or leaving preview, update linked variable displays
+            this.$nextTick(() => this.updateLinkedVariableDisplay(Boolean(newVal)))
+        }
     },
     beforeDestroy() {
         // Clean up keydown listener
@@ -143,6 +160,14 @@ export default {
         }
     },
     methods: {
+        async ensureFontLoaded(fontFamily) {
+            const family = String(fontFamily || '').trim()
+            if (!family || typeof document === 'undefined' || !document.fonts) return
+            try {
+                await document.fonts.load(`16px "${family}"`)
+                await document.fonts.ready
+            } catch (err) { /* ignore font-loading failures */ }
+        },
         computeSelectionStyle,
         emitSelectionChange,
         multiEditSelectedNodes,
@@ -229,7 +254,52 @@ export default {
         toggleOrderedList,
         enableManualDataVariableLinking,
         renderManualDataVariableConnectors,
-        clearManualDataVariableLinkPreview
+        clearManualDataVariableLinkPreview,
+
+        updateLinkedVariableDisplay(showPreview = false) {
+            if (!this.layer || typeof this.layer.getChildren !== 'function') return
+
+            const locale = String(this.templateLocale || 'th').toLowerCase()
+            const isThai = locale.startsWith('th')
+
+            const mapping = {
+                // Strict language selection: only use Th or En specific fields.
+                '{StudentName}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.studentNameTh ? this.exampleData.studentNameTh : '') : (this.exampleData && this.exampleData.studentNameEn ? this.exampleData.studentNameEn : ''),
+                '{StudentID}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.studentIDTh ? this.exampleData.studentIDTh : '') : (this.exampleData && this.exampleData.studentIDEn ? this.exampleData.studentIDEn : ''),
+                '{School}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.schoolTh ? this.exampleData.schoolTh : '') : (this.exampleData && this.exampleData.schoolEn ? this.exampleData.schoolEn : ''),
+                '{Program}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.programTh ? this.exampleData.programTh : '') : (this.exampleData && this.exampleData.programEn ? this.exampleData.programEn : ''),
+                '{AcademyYear}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.academyYearTh ? this.exampleData.academyYearTh : '') : (this.exampleData && this.exampleData.academyYearEn ? this.exampleData.academyYearEn : '')
+            }
+
+            // iterate text nodes and update those with variableName attr
+            this.layer.getChildren().forEach((node) => {
+                try {
+                    if (!node || typeof node.getClassName !== 'function' || node.getClassName() !== 'Text') return
+                    const variableName = node.getAttr && node.getAttr('variableName')
+                    if (!variableName) return
+
+                    if (showPreview) {
+                        // store original text so we can revert later
+                        if (!node.getAttr('originalText')) node.setAttr('originalText', (typeof node.text === 'function') ? node.text() : (node.text || ''))
+                        // Select language-specific mapping only; do not fall back to originalText (which may be in the other language).
+                        const getMappingValue = (k) => (k && Object.prototype.hasOwnProperty.call(mapping, k) && mapping[k] !== '') ? mapping[k] : ''
+                        const newText = getMappingValue(variableName) || getMappingValue(node.getAttr('placeholder')) || ''
+                        if (typeof node.text === 'function') node.text(newText)
+                        else node.setAttr('text', newText)
+                    } else {
+                        // revert to original
+                        const orig = node.getAttr && node.getAttr('originalText')
+                        if (typeof orig !== 'undefined' && orig !== null) {
+                            if (typeof node.text === 'function') node.text(orig)
+                            else node.setAttr('text', orig)
+                            node.setAttr('originalText', null)
+                        }
+                    }
+                } catch (err) { /* ignore individual node errors */ }
+            })
+
+            if (typeof this.layer.batchDraw === 'function') this.layer.batchDraw()
+        }
     }
 }
 </script>

@@ -17,17 +17,18 @@ export default function updateSuggestionPlaceholderForGroup(group) {
                 // remove bullet char from text content; a real circle will be rendered
                 node.text(placeholderText);
                 node.width(localWidth - 10);
-                // allow wrapping so placeholder shows multiple lines when needed
-                if (typeof node.wrap === 'function') node.wrap('word');
+                if (typeof node.wrap === 'function') node.wrap('none');
             } else if (pType === 'suggestion-item') {
                 const nodeWidth = Math.max(10, node.width() || (localWidth - 10));
                 const nodeFontSize = (node && typeof node.fontSize === 'function') ? (node.fontSize() || fontSize) : fontSize;
                 const nodeFontFamily = (node && typeof node.fontFamily === 'function') ? (node.fontFamily() || fontFamily) : fontFamily;
                 const desiredCount = Math.max(1, Number(this.suggestionCharCount) || 40);
-                // set a long X string and allow wrapping so it can occupy multiple lines
-                node.text('X'.repeat(desiredCount));
+                const nodeCharWidth = Math.max(1, this.measureTextWidth('X', nodeFontSize, nodeFontFamily));
+                const charsPerLine = Math.max(1, Math.min(desiredCount, Math.floor(nodeWidth / nodeCharWidth)));
+                // keep placeholder text within the visible column width
+                node.text('X'.repeat(charsPerLine));
                 node.width(nodeWidth);
-                if (typeof node.wrap === 'function') node.wrap('word');
+                if (typeof node.wrap === 'function') node.wrap('none');
             }
         });
 }

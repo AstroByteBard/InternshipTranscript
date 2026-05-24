@@ -1,4 +1,6 @@
 export default function getSpecificCompetencyPlaceholders() {
+    const locale = String(this.templateLocale || 'th').toLowerCase();
+    const isThai = locale.startsWith('th');
     const fromConfig = this.getSpecificCompetencyLabels();
     if (Array.isArray(fromConfig) && fromConfig.length) {
         const maxLength = fromConfig.reduce((max, label) => {
@@ -20,7 +22,13 @@ export default function getSpecificCompetencyPlaceholders() {
         return list.map(() => 'X'.repeat(maxLength));
     }
 
-    const fallbackLabels = [
+    const fallbackLabels = isThai ? [
+        'ตัวอย่างทักษะเฉพาะ',
+        'ตัวอย่างทักษะเฉพาะ',
+        'ตัวอย่างทักษะเฉพาะ',
+        'ตัวอย่างทักษะเฉพาะ',
+        'ตัวอย่างทักษะเฉพาะ'
+    ] : [
         'xxxxxxxxxxxxxxxxx',
         'xxxxxxxxxxxxxxxxx',
         'xxxxxxxxxxxxxxxxx',

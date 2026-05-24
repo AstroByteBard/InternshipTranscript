@@ -1,16 +1,23 @@
 import Konva from 'konva'
 
+function getOrderedListDefaultText(locale) {
+    const isThai = String(locale || 'th').toLowerCase().startsWith('th')
+    const itemText = isThai ? 'รายการ' : 'List Item'
+
+    return [
+        `1. ${itemText}`,
+        `2. ${itemText}`,
+        `3. ${itemText}`,
+        `4. ${itemText}`,
+        `5. ${itemText}`,
+    ].join('\n')
+}
+
 export default function toggleOrderedList() {
     const nodes = this.transformer.nodes();
     if (!nodes.length) {
         // If no node is selected, create a new ordered list block with 5 items
-        const defaultText = [
-            '1. List Item',
-            '2. List Item',
-            '3. List Item',
-            '4. List Item',
-            '5. List Item'
-        ].join('\n');
+        const defaultText = getOrderedListDefaultText(this.templateLocale);
         this.addTextBlock(defaultText).then(node => {
             try { this.startInlineEditing(node) } catch (e) { }
         });

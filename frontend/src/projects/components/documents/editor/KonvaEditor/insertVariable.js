@@ -1,6 +1,9 @@
 export default function insertVariable(variableName, opts = {}) {
     if (!variableName) return;
 
+    const locale = String(opts.locale || this.templateLocale || 'th').toLowerCase();
+    const isThai = locale.startsWith('th');
+
     if (variableName === '{GeneralCompetencies}' || variableName === '{SpecificCompetencies}') {
         return this.addCompetencyTable(variableName, opts);
     } else if (variableName === '{Suggestion}') {
@@ -16,12 +19,14 @@ export default function insertVariable(variableName, opts = {}) {
             '{AcademyYear}': 4,
         };
         const isLinkedDataVariable = Object.prototype.hasOwnProperty.call(linkedOrderMap, variableName);
+        const linkedDataVariableGap = locale.startsWith('en') ? 20 : 0;
+        // Use explicit language-specific fields (Th/En) only
         const mapping = {
-            '{StudentName}': this.exampleData.studentName || 'Name',
-            '{StudentID}': this.exampleData.studentID || 'Student ID',
-            '{School}': this.exampleData.school || 'School',
-            '{Program}': this.exampleData.program || 'Major',
-            '{AcademyYear}': 'Academic Year xxxx'
+            '{StudentName}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.studentNameTh ? this.exampleData.studentNameTh : '') : (this.exampleData && this.exampleData.studentNameEn ? this.exampleData.studentNameEn : ''),
+            '{StudentID}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.studentIDTh ? this.exampleData.studentIDTh : '') : (this.exampleData && this.exampleData.studentIDEn ? this.exampleData.studentIDEn : ''),
+            '{School}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.schoolTh ? this.exampleData.schoolTh : '') : (this.exampleData && this.exampleData.schoolEn ? this.exampleData.schoolEn : ''),
+            '{Program}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.programTh ? this.exampleData.programTh : '') : (this.exampleData && this.exampleData.programEn ? this.exampleData.programEn : ''),
+            '{AcademyYear}': (locale.startsWith('th')) ? (this.exampleData && this.exampleData.academyYearTh ? this.exampleData.academyYearTh : '') : (this.exampleData && this.exampleData.academyYearEn ? this.exampleData.academyYearEn : '')
         };
         const text = mapping[variableName] || variableName;
         return this.addTextBlock(text, {
@@ -32,7 +37,7 @@ export default function insertVariable(variableName, opts = {}) {
                 if (isLinkedDataVariable) {
                     node.setAttr('dataVariableLinked', true);
                     node.setAttr('dataVariableOrder', linkedOrderMap[variableName]);
-                    node.setAttr('linkedDataVariableGap', 0);
+                    node.setAttr('linkedDataVariableGap', linkedDataVariableGap);
                     node.setAttr('linkedDataVariableGroup', 'student-profile');
                     if (typeof this.enableManualDataVariableLinking === 'function') {
                         this.enableManualDataVariableLinking(node);

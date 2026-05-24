@@ -10,8 +10,14 @@
               </div>
               <div>
                 <div class="font-weight-bold" style="color: #1f2937; font-size: 14px;">{{ item.title }}</div>
-                <div class="text-muted small">Document Template &bull; {{ (item.update && item.update.datetime) ?
-                  moment(item.update.datetime).fromNow() : '-' }}</div>
+                <div class="d-flex align-items-center flex-wrap text-muted small mt-1">
+                  <span class="mr-2">Document Template</span>
+                  <CBadge class="locale-badge mr-2" :color="getLocaleValue(item) === 'th' ? 'warning' : 'info'">
+                    {{ getLocaleValue(item) }}
+                  </CBadge>
+                  <span>&bull; {{ (item.update && item.update.datetime) ? moment(item.update.datetime).fromNow() : '-'
+                    }}</span>
+                </div>
               </div>
             </div>
           </td>
@@ -22,6 +28,14 @@
             <CBadge :color="item.status === 'Active' ? 'success' : (item.status === 'Published' ? 'info' : 'secondary')"
               class="custom-badge">
               {{ item.status }}
+            </CBadge>
+          </td>
+        </template>
+
+        <template #locale="{ item }">
+          <td class="align-middle">
+            <CBadge :color="getLocaleValue(item) === 'th' ? 'warning' : 'info'" class="locale-badge">
+              {{ getLocaleValue(item) }}
             </CBadge>
           </td>
         </template>
@@ -83,6 +97,10 @@ export default {
     document.removeEventListener('click', this.closeDropdown)
   },
   methods: {
+    getLocaleValue(item) {
+      const rawLocale = String((item && (item.locale || (item.content && item.content.__language))) || 'th').toLowerCase()
+      return rawLocale.startsWith('th') ? 'th' : 'en'
+    },
     toggleDropdown(id) {
       this.openDropdownId = this.openDropdownId === id ? null : id
     },
@@ -105,6 +123,11 @@ export default {
   padding: 6px 12px;
   border-radius: 12px;
   font-size: 11px;
+}
+
+.locale-badge {
+  font-size: 10px;
+  padding: 4px 8px;
 }
 
 .doc-icon-wrapper {

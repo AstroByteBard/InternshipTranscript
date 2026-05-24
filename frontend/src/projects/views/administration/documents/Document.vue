@@ -37,6 +37,7 @@ export default {
             selected: 'Document',
             documentFields: [
                 { key: 'nameContent', label: 'NAME' },
+                { key: 'locale', label: 'LANGUAGE' },
                 { key: 'status', label: 'STATUS' },
                 { key: 'actions', label: 'ACTIONS', _classes: 'text-right pe-4', sorter: false, filter: false },
             ],
@@ -86,6 +87,7 @@ export default {
             const payload = {
                 title: item.title + ' (Copy)',
                 status: 'Draft',
+                locale: item.locale || 'th',
                 content: item.content,
             };
             this.$api.documents('post', payload)

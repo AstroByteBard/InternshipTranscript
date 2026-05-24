@@ -1,11 +1,50 @@
 <template>
     <div class="create-document-container">
-        <DocumentTopNav :isPreview.sync="isPreview" :showSettings.sync="showSettings"
+        <DocumentTopNav v-if="isTemplateReady" :isPreview.sync="isPreview" :showSettings.sync="showSettings"
             :showHistorySidebar="showHistorySidebar" @toggle-history-sidebar="toggleSidebar('history')"
             @cancel="$router.push('/documents')" @save="handleSave" />
 
+        <CModal :show.sync="showTemplateSetupModal" centered :close-on-backdrop="false" :close-on-esc="false"
+            :close-button="false" title="Create Template" color="primary" size="lg"
+            @update:show="handleTemplateModalVisibility">
+            <CCard class="border-0 shadow-none mb-0">
+                <CCardBody class="p-3 p-md-4">
+                    <p class="text-muted mb-4">
+                        Set the template name and language before you start designing the layout.
+                    </p>
+
+                    <CForm @submit.prevent="confirmTemplateSetup">
+                        <CRow>
+                            <CCol md="7">
+                                <label class="font-weight-bold text-uppercase text-muted mb-2">Template Name</label>
+                                <CInput v-model="templateNameDraft" placeholder="Enter template name" />
+                            </CCol>
+                            <CCol md="5">
+                                <label class="font-weight-bold text-uppercase text-muted mb-2">Template Language</label>
+                                <select v-model="templateLocale" class="form-control">
+                                    <option value="th">th - ไทย</option>
+                                    <option value="en">en - English</option>
+                                </select>
+                                <small class="text-muted d-block mt-2">Selected: {{ templateLocale }}</small>
+                            </CCol>
+                        </CRow>
+                    </CForm>
+                </CCardBody>
+            </CCard>
+            <template #footer-wrapper>
+                <div class="d-flex justify-content-end w-100 p-3 px-md-4 pb-md-4 pt-0">
+                    <CButton color="light" class="mr-2" @click="cancelTemplateSetup">
+                        Cancel
+                    </CButton>
+                    <CButton color="primary" @click="confirmTemplateSetup">
+                        OK
+                    </CButton>
+                </div>
+            </template>
+        </CModal>
+
         <!-- Main Content Area -->
-        <CRow class="px-4">
+        <CRow v-if="isTemplateReady" class="px-4">
             <!-- Left Sidebar Column (Data Variables) -->
             <CCol md="3" v-if="showDataSidebar || showGraphSidebar">
                 <DocumentDataSidebar v-if="showDataSidebar" @insert-variable="insertVariable" />
@@ -19,8 +58,8 @@
                 <CCard class="toolbar-card mb-3 border-0 shadow-sm" v-show="!isPreview">
                     <CCardBody class="p-3">
                         <EditorToolbar ref="editorToolbar" :konvaEditor="$refs.konvaEditor" :scale="scale"
-                            @image-uploaded="handleToolbarImage" @insert-styled-text="handleStyledText"
-                            @bring-forward="callEditorMethod('bringForward')"
+                            :templateLocale="templateLocale" @image-uploaded="handleToolbarImage"
+                            @insert-styled-text="handleStyledText" @bring-forward="callEditorMethod('bringForward')"
                             @bring-to-front="callEditorMethod('bringToFront')"
                             @send-backward="callEditorMethod('sendBackward')"
                             @send-to-back="callEditorMethod('sendToBack')" @toggle-data-sidebar="toggleSidebar('data')"
@@ -33,8 +72,8 @@
                 <div class="editor-zoom-wrapper" :style="{ height: wrapperHeight + 'px' }">
                     <div class="document-editor-full" :class="{ 'preview-mode': isPreview }"
                         :style="{ transform: `scale(${scale})` }">
-                        <KonvaEditor ref="konvaEditor" :isPreview="isPreview" @selection-changed="onSelectionChanged"
-                            @history-recorded="onHistoryRecorded" />
+                        <KonvaEditor ref="konvaEditor" :isPreview="isPreview" :templateLocale="templateLocale"
+                            @selection-changed="onSelectionChanged" @history-recorded="onHistoryRecorded" />
                     </div>
                 </div>
             </CCol>
@@ -73,7 +112,9 @@ export default {
         return {
             docId: null,
             documentName: 'Untitled Document',
+            templateNameDraft: '',
             documentTitle: '',
+            templateLocale: 'th',
             status: 'Draft',
             currentDate: '',
             currentTime: '',
@@ -86,6 +127,8 @@ export default {
             showGraphSidebar: false,
             showHistorySidebar: false,
             showSettings: false,
+            showTemplateSetupModal: false,
+            templateSetupConfirmed: false,
             historyLog: []
         }
     },
@@ -99,6 +142,11 @@ export default {
         if (this.$route.params.id) {
             this.docId = this.$route.params.id;
             this.loadDocument();
+        } else {
+            this.showTemplateSetupModal = true;
+            this.templateNameDraft = '';
+            this.templateLocale = 'th';
+            this.templateSetupConfirmed = false;
         }
     },
     beforeDestroy() {
@@ -114,8 +162,12 @@ export default {
                 if (res.data && res.data.data) {
                     const doc = res.data.data;
                     this.documentName = doc.title;
+                    this.templateNameDraft = doc.title || '';
+                    this.templateLocale = doc.locale || (doc.content && doc.content.__language) || this.templateLocale || 'th';
                     this.status = doc.status;
                     this.historyLog = [];
+                    this.templateSetupConfirmed = true;
+                    this.showTemplateSetupModal = false;
                     if (this.$refs.konvaEditor) {
                         this.$refs.konvaEditor.loadFromJSON(doc.content);
                     }
@@ -150,6 +202,7 @@ export default {
             const payload = {
                 title: this.documentName,
                 status: this.status,
+                locale: this.templateLocale,
                 content: content,
             };
 
@@ -177,6 +230,29 @@ export default {
                 window.alert && window.alert('Failed to save document: ' + msg);
             }
         },
+        confirmTemplateSetup() {
+            const name = String(this.templateNameDraft || '').trim();
+            if (!name) {
+                window.alert && window.alert('Template name is required.');
+                return;
+            }
+
+            this.documentName = name;
+            this.templateNameDraft = name;
+            this.templateLocale = this.templateLocale || 'th';
+            this.templateSetupConfirmed = true;
+            this.showTemplateSetupModal = false;
+        },
+        cancelTemplateSetup() {
+            this.showTemplateSetupModal = false;
+            this.$router.push('/documents');
+        },
+        handleTemplateModalVisibility(visible) {
+            if (visible) return;
+            if (!this.templateSetupConfirmed) {
+                this.showTemplateSetupModal = true;
+            }
+        },
         handleToolbarImage(dataUrl) {
             if (this.$refs.konvaEditor && this.$refs.konvaEditor.addImage) {
                 this.$refs.konvaEditor.addImage(dataUrl)
@@ -187,10 +263,13 @@ export default {
                 this.$refs.konvaEditor.addStyledTextBlock(type)
             }
         },
-        handleFormatText(payload) {
+        async handleFormatText(payload) {
             if (!this.$refs.konvaEditor) return;
             try {
                 const editor = this.$refs.konvaEditor;
+                if (payload && payload.type === 'fontFamily' && payload.value && typeof editor.ensureFontLoaded === 'function') {
+                    await editor.ensureFontLoaded(payload.value);
+                }
                 // If a group selection corresponds to competency or suggestion, apply group style
                 const nodes = (editor.transformer && typeof editor.transformer.nodes === 'function') ? editor.transformer.nodes() : [];
                 if (nodes && nodes.length === 1) {
@@ -217,7 +296,6 @@ export default {
                         const cur = (node.getAttr && node.getAttr('textDecoration')) || (node.textDecoration ? node.textDecoration() : '') || '';
                         style.textDecoration = cur === 'underline' ? '' : 'underline';
                     }
-
                     if (name && name.includes('competency-table')) {
                         editor.updateCompetencyGroupStyle(node, style);
                         return;
@@ -240,6 +318,7 @@ export default {
                 const tb = this.$refs.editorToolbar;
                 if (!tb) return;
                 if (!info || !info.style) {
+                    tb.selectedFont = '';
                     tb.boldActive = false;
                     tb.italicActive = false;
                     tb.underlineActive = false;
@@ -248,6 +327,7 @@ export default {
                 const s = info.style || {};
                 if (typeof s.fontSize !== 'undefined' && s.fontSize !== null) tb.fontSize = Number(s.fontSize) || tb.fontSize;
                 if (typeof s.fontFamily !== 'undefined' && s.fontFamily) tb.selectedFont = s.fontFamily;
+                else tb.selectedFont = '';
                 if (typeof s.fill !== 'undefined' && s.fill) {
                     const f = String(s.fill || '');
                     if (f.startsWith('rgb')) {
@@ -399,11 +479,13 @@ export default {
         isPreview() { this.$nextTick(() => this.calculateScale()); }
     },
     computed: {
+        isTemplateReady() {
+            return this.templateSetupConfirmed || !!this.docId;
+        },
         computeEditorColSize() {
-            let size = 12;
-            if (this.showDataSidebar || this.showGraphSidebar) size -= 3;
-            if (this.showSettings || this.showHistorySidebar) size -= 3;
-            return size;
+            if (this.showDataSidebar || this.showGraphSidebar) return 6;
+            if (this.showSettings || this.showHistorySidebar) return 9;
+            return 12;
         }
     }
 }

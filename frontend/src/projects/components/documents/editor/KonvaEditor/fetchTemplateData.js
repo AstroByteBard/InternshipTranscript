@@ -1,5 +1,7 @@
 export default async function fetchTemplateData() {
     try {
+        const locale = String(this.templateLocale || 'th').toLowerCase();
+        const localeKey = locale.startsWith('th') ? 'th' : 'en';
         await Promise.all([
             this.$store.dispatch('competencies/general/general'),
             this.$store.dispatch('competencies/specific/specific'),
@@ -20,7 +22,7 @@ export default async function fetchTemplateData() {
 
         this.generalCompetencyLabels = this.extractSoftskillLabels(generalDoc);
         // store active general softskill document's localized title for display
-        this.generalCompetencyDocName = generalDoc ? this.getLocalizedValue(generalDoc.title, 'en') : '';
+        this.generalCompetencyDocName = generalDoc ? this.getLocalizedValue(generalDoc.title, localeKey) : '';
         this.specificCompetencyLabels = this.extractHardskillLabels(specificDoc, true);
         this.suggestionLabels = this.extractSuggestionLabels(suggestionDoc);
     } catch (err) {

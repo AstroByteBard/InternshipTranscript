@@ -23,7 +23,8 @@ export default function addSuggestionColumn(opts = {}) {
     let currentY = 0;
     const baseFontSize = (opts.fontSize && !isNaN(Number(opts.fontSize))) ? Number(opts.fontSize) : 12;
     const labelFontSize = opts.fontSize ? baseFontSize : Math.max(16, Math.floor(baseFontSize * 1.4));
-    const fontFamily = opts.fontFamily || 'Inter, Arial';
+    const locale = String(opts.locale || this.templateLocale || 'en').toLowerCase();
+    const fontFamily = typeof opts.fontFamily === 'string' && opts.fontFamily.trim() ? opts.fontFamily.trim() : undefined;
     const fill = opts.fill || '#1e293b';
     const fontStyle = opts.fontStyle || 'normal';
     const textDecoration = opts.textDecoration || '';
@@ -88,13 +89,13 @@ export default function addSuggestionColumn(opts = {}) {
         const labelNode = new Konva.Text({
             text: label,
             fontSize: labelFontSize,
-            fontFamily: fontFamily,
             fontStyle: fontStyle.includes('bold') ? fontStyle : (fontStyle === 'normal' ? '600' : fontStyle + ' 600'),
             fill: fill,
             textDecoration: textDecoration,
             y: currentY,
             width: columnWidth
         });
+        if (fontFamily) labelNode.setAttr('fontFamily', fontFamily);
         this.assignCreationOrder(labelNode);
         group.add(labelNode);
         setupTextNodeTransform(labelNode);
@@ -120,7 +121,6 @@ export default function addSuggestionColumn(opts = {}) {
             const textNode = new Konva.Text({
                 text: '',
                 fontSize: baseFontSize,
-                fontFamily: fontFamily,
                 fontStyle: fontStyle,
                 fill: fill,
                 textDecoration: textDecoration,
@@ -130,6 +130,7 @@ export default function addSuggestionColumn(opts = {}) {
                 lineHeight: 1.4,
                 wrap: 'none'
             });
+            if (fontFamily) textNode.setAttr('fontFamily', fontFamily);
             textNode.setAttr('placeholderType', 'suggestion-item');
             this.assignCreationOrder(textNode);
             group.add(textNode);

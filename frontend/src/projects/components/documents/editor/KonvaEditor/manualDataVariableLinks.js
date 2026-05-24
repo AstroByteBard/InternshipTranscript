@@ -123,7 +123,9 @@ function renderConnector(vm, sourceNode, targetNode, gap) {
     const targetCenterY = targetBox.y + targetBox.height / 2
     const dx = targetCenterX - sourceCenterX
     const dy = targetCenterY - sourceCenterY
-    const pad = Number.isFinite(gap) ? gap : 20
+    const locale = String(vm && vm.templateLocale ? vm.templateLocale : 'th').toLowerCase()
+    const defaultGap = locale.startsWith('en') ? 20 : 0
+    const pad = Number.isFinite(gap) && gap > 0 ? gap : defaultGap
     const endpointOffset = ENDPOINT_OFFSET
 
     let points
@@ -311,7 +313,8 @@ export default function enableManualDataVariableLinking(node) {
                 const targetOrder = targetNode.getAttr && targetNode.getAttr('createdOrder')
                 if (typeof targetOrder !== 'undefined' && targetOrder !== null) {
                     gesture.sourceNode.setAttr('linkedTargetCreatedOrder', targetOrder)
-                    gesture.sourceNode.setAttr('linkedTargetGap', 0)
+                    const locale = String(vm && vm.templateLocale ? vm.templateLocale : 'th').toLowerCase()
+                    gesture.sourceNode.setAttr('linkedTargetGap', locale.startsWith('en') ? 20 : 0)
                     gesture.sourceNode.setAttr('linkedConnectionMode', 'manual')
                     gesture.sourceNode.setAttr('linkedSourceCreatedOrder', sourceOrder)
                     try { targetNode.setAttr('linkedFromCreatedOrder', sourceOrder) } catch (err) { }

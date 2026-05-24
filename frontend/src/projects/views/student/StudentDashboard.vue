@@ -164,20 +164,17 @@
     </CRow>
 
     <!-- Download Modal -->
-    <CModal title="Download Documentation" :show.sync="showDownloadModal" centered color="primary" size="sm">
-      <div class="py-3 px-1 text-center">
+    <CModal title="Download Documentation" :show.sync="showDownloadModal" centered color="primary" size="lg"
+      class="download-modal-dialog">
+      <div class="download-modal-body py-3 px-1 text-center">
         <CIcon name="cil-cloud-download" size="xl" class="text-primary mb-3" style="font-size: 3rem" />
         <h5 class="font-weight-bold mb-2">Ready to download?</h5>
-        <p class="text-muted small mb-4">Select a report template to generate your personalized document.</p>
+        <p class="text-muted small mb-4">Select a report template to generate your personalized document for the current
+          locale.</p>
         <div class="text-left px-2">
           <label class="font-weight-bold small text-uppercase text-muted mb-2">Report Template</label>
           <CSelect :options="publicDocumentOptions" :value.sync="selectedDocumentId" placeholder="Select a template..."
             class="custom-select-modern" />
-        </div>
-        <div class="text-left px-2 mt-3">
-          <label class="font-weight-bold small text-uppercase text-muted mb-2">Language</label>
-          <CSelect :options="[{ value: 'en', label: 'English' }, { value: 'th', label: 'Thai' }]"
-            :value.sync="selectedLanguage" class="custom-select-modern" />
         </div>
       </div>
       <template #footer>
@@ -351,14 +348,13 @@ export default {
       if (num >= 0 && num <= 100) return Math.round(num);
       return Math.max(0, Math.min(100, Math.round(num)));
     },
-    mapEvaluationList(list) {
+    mapEvaluationList(list, lang = this.selectedLanguage || 'en') {
       if (!Array.isArray(list)) return [];
       return list.map((item, index) => {
         const raw = (item && item.answer && item.answer.score !== undefined) ? item.answer.score : (item && item.score !== undefined ? item.score : undefined);
         const rawNum = raw !== undefined && raw !== null ? Number(raw) : undefined;
 
         // Derive display name: prefer selectedLanguage -> alternative language -> criteriaId.
-        const lang = this.selectedLanguage || 'en';
         const altLang = lang === 'en' ? 'th' : 'en';
         let rawTitle = (item?.answer?.title?.[lang]) || (item?.answer?.title?.[altLang]) || item?.criteriaId || 'Criteria';
         rawTitle = String(rawTitle || '');
@@ -375,7 +371,7 @@ export default {
         };
       });
     },
-    collectSuggestionTexts(value) {
+    collectSuggestionTexts(value, lang = this.selectedLanguage || 'en') {
       const result = [];
 
       const pushText = (input) => {
@@ -419,14 +415,14 @@ export default {
           return;
         }
 
-        const localized = input[this.selectedLanguage || 'en'] || input.en || input.th || input.text || '';
+        const localized = input[lang] || input.en || input.th || input.text || '';
         if (localized) result.push(String(localized).trim());
       };
 
       pushText(value);
       return result.filter(Boolean);
     },
-    mapSuggestionList(list) {
+    mapSuggestionList(list, lang = this.selectedLanguage || 'en') {
       const items = Array.isArray(list) ? list : (list ? [list] : []);
       if (items.length === 0) return [];
 
@@ -443,11 +439,11 @@ export default {
 
         let found = false;
         if (outData) {
-          outstanding.push(...this.collectSuggestionTexts(outData));
+          outstanding.push(...this.collectSuggestionTexts(outData, lang));
           found = true;
         }
         if (oppData) {
-          opportunity.push(...this.collectSuggestionTexts(oppData));
+          opportunity.push(...this.collectSuggestionTexts(oppData, lang));
           found = true;
         }
 
@@ -515,7 +511,7 @@ export default {
     },
 
     // New: parse suggestions into two lists (outstanding & opportunities)
-    parseSuggestionLists(list) {
+    parseSuggestionLists(list, lang = this.selectedLanguage || 'en') {
       const outstandingPoints = [];
       const opportunityPoints = [];
       if (!Array.isArray(list)) return { outstandingGroups: [], opportunityGroups: [] };
@@ -525,8 +521,8 @@ export default {
         if (!val) return;
 
         if (typeof val === 'object') {
-          outstandingPoints.push(...this.collectSuggestionTexts(val.outstanding || val.Outstanding || val.outstandings));
-          opportunityPoints.push(...this.collectSuggestionTexts(val.opportunity || val.Opportunity || val.opportunities || val.oppotunity || val.Oppotunity || val.suggestion || val.suggestions));
+          outstandingPoints.push(...this.collectSuggestionTexts(val.outstanding || val.Outstanding || val.outstandings, lang));
+          opportunityPoints.push(...this.collectSuggestionTexts(val.opportunity || val.Opportunity || val.opportunities || val.oppotunity || val.Oppotunity || val.suggestion || val.suggestions, lang));
         } else if (typeof val === 'string') {
           // fallback: treat plain string as an opportunity (growth suggestion)
           opportunityPoints.push(val);
@@ -810,7 +806,7 @@ export default {
         this.publicDocuments = [];
       }
     },
-    async buildDocumentData() {
+    async buildDocumentData(exportLanguage = this.selectedLanguage || 'en') {
       const toPdfItems = (items) => {
         if (!Array.isArray(items)) return [];
         return items.map(item => {
@@ -846,7 +842,7 @@ export default {
         const hards = (res && res.data && res.data.data) ? res.data.data : [];
 
         // helper to read localized value
-        const getVal = (arr, k = this.selectedLanguage) => {
+        const getVal = (arr, k = exportLanguage) => {
           if (!Array.isArray(arr)) return '';
           const found = arr.find(i => i.key === k);
           return found ? found.value : (arr[0] ? arr[0].value : '');
@@ -876,7 +872,7 @@ export default {
             const labelTh = getVal(conf.label, 'th');
             const labelEn = getVal(conf.label, 'en');
             // Fetch the label in the target language (fallback to English if not found)
-            const labelTarget = getVal(conf.label, this.selectedLanguage) || getVal(conf.label, 'en');
+            const labelTarget = getVal(conf.label, exportLanguage) || getVal(conf.label, 'en');
             if (qTh) qToLabel.set(String(qTh).trim().toLowerCase(), labelTarget);
             if (qEn) qToLabel.set(String(qEn).trim().toLowerCase(), labelTarget);
             // Crucial: also map the exact labels to the target label!
@@ -953,7 +949,7 @@ export default {
       let programLang = this.studentData.program;
 
       if (studentForLang) {
-        const sLang = this.selectedLanguage || 'en';
+        const sLang = exportLanguage || 'en';
         if (Array.isArray(studentForLang.name)) {
           const found = studentForLang.name.find(n => n?.key === sLang);
           if (found && found.value) studentNameString = found.value;
@@ -990,7 +986,7 @@ export default {
                   try { obj = JSON.parse(p); } catch (e) { }
                 }
                 if (typeof obj === 'object' && obj !== null && (obj.th || obj.en)) {
-                  acc.push(obj[this.selectedLanguage || 'en'] || obj.en || obj.th || '');
+                  acc.push(obj[exportLanguage || 'en'] || obj.en || obj.th || '');
                 } else {
                   acc.push(p);
                 }
@@ -1013,7 +1009,7 @@ export default {
                   try { obj = JSON.parse(p); } catch (e) { }
                 }
                 if (typeof obj === 'object' && obj !== null && (obj.th || obj.en)) {
-                  acc.push(obj[this.selectedLanguage || 'en'] || obj.en || obj.th || '');
+                  acc.push(obj[exportLanguage || 'en'] || obj.en || obj.th || '');
                 } else {
                   acc.push(p);
                 }
@@ -1024,9 +1020,10 @@ export default {
         return acc;
       }, []) : []);
 
-      // Use existing Outstanding/Opportunities groups if available; otherwise fall back to flattened arrays
-      const outForPdf = (Array.isArray(this.Outstanding) && this.Outstanding.length) ? this.Outstanding : outstandingFlatten;
-      const oppForPdf = (Array.isArray(this.Opportunities) && this.Opportunities.length) ? this.Opportunities : opportunityFlatten;
+      // Always rebuild suggestion data from the raw payload for export language.
+      const suggestionGroups = this.parseSuggestionLists(rawSuggestions, exportLanguage);
+      const outForPdf = suggestionGroups.outstandingGroups;
+      const oppForPdf = suggestionGroups.opportunityGroups;
 
       // Re-map evaluation data into the selected language for the PDF without updating the UI state
       let generalMapped = this.generalCompetencies;
@@ -1036,11 +1033,24 @@ export default {
           ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
           : evalPayload;
         if (evalData && evalData.softskills) {
-          generalMapped = this.mapEvaluationList(evalData.softskills);
+          generalMapped = this.mapEvaluationList(evalData.softskills, exportLanguage);
         }
       } catch (e) {
         console.warn('Failed to remap general competencies for PDF', e);
       }
+
+      const specificMappedLocalized = (() => {
+        try {
+          const evalPayload = this.storedEvaluations || [];
+          const evalData = Array.isArray(evalPayload)
+            ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
+            : evalPayload;
+          if (evalData && evalData.hardskills) {
+            return this.mapEvaluationList(evalData.hardskills, exportLanguage);
+          }
+        } catch (e) { }
+        return specificMapped;
+      })();
 
       return {
         StudentName: studentNameString,
@@ -1051,14 +1061,14 @@ export default {
         CompanyLogo: '',
         StudentPhoto: this.studentData.picture,
         GeneralCompetencies: toPdfItems(generalMapped),
-        SpecificCompetencies: specificMapped,
+        SpecificCompetencies: specificMappedLocalized,
         Outstanding: outForPdf,
         Opportunities: oppForPdf,
         // include raw suggestion objects so generator can pull answer.value.outstanding/opportunity if needed
         Suggestion: rawSuggestions,
         suggestion: rawSuggestions,
         __chartImages: chartImages,
-        __language: this.selectedLanguage
+        __language: exportLanguage
       };
     },
     async handleDownload() {
@@ -1067,7 +1077,7 @@ export default {
 
       try {
         if (doc.content && doc.content.elements) {
-          const dataMap = await this.buildDocumentData();
+          const dataMap = await this.buildDocumentData(doc.content.locale || doc.locale || this.selectedLanguage || 'en');
           // Debug: show data passed into PDF generator
           console.log('download PDF dataMap', {
             StudentName: dataMap.StudentName,
@@ -1089,7 +1099,7 @@ export default {
   },
   watch: {
     selectedLanguage() {
-      // Re-map evaluation lists and charts using the newly selected language to update the UI
+      // Re-map evaluation lists and charts when the app locale changes.
       this.loadEvaluationData();
     }
   },
@@ -1273,6 +1283,29 @@ export default {
 .download-action-btn {
   border-radius: 12px;
   padding: 0.6rem 2rem;
+}
+
+.download-modal-dialog ::v-deep .modal-dialog {
+  max-width: 720px;
+  width: calc(100vw - 2rem);
+}
+
+.download-modal-body {
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}
+
+.download-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.download-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.download-modal-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @media (max-width: 991px) {

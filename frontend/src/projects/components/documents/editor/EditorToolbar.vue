@@ -26,7 +26,8 @@
 
         <!-- Font Family Picker -->
         <div class="font-family-picker mr-1">
-            <select class="font-select" v-model="selectedFont" @change="handleFontFamily">
+            <select class="font-select" v-model="selectedFont" @change="handleFontFamily($event)">
+                <option value="" disabled hidden></option>
                 <option v-for="f in fontList" :key="f.value" :value="f.value" :style="{ fontFamily: f.value }">
                     {{ f.label }}
                 </option>
@@ -50,21 +51,21 @@
 
         <div class="toolbar-divider"></div>
 
-        <CDropdown color="light" class="toolbar-dropdown mr-1" toggler-text="H">
-            <CDropdownItem @click="$emit('insert-styled-text', 'h1')">Heading 1</CDropdownItem>
-            <CDropdownItem @click="$emit('insert-styled-text', 'h2')">Heading 2</CDropdownItem>
-            <CDropdownItem @click="$emit('insert-styled-text', 'h3')">Heading 3</CDropdownItem>
-            <CDropdownItem @click="$emit('insert-styled-text', 'paragraph')">Paragraph</CDropdownItem>
+        <CDropdown color="light" class="toolbar-dropdown mr-1" :toggler-text="headingDropdownLabel">
+            <CDropdownItem v-for="item in headingDropdownItems" :key="item.value"
+                @click="$emit('insert-styled-text', item.value)">
+                {{ item.label }}
+            </CDropdownItem>
         </CDropdown>
 
-        <CDropdown color="light" class="toolbar-dropdown mr-1" toggler-text="List">
+        <CDropdown color="light" class="toolbar-dropdown mr-1" :toggler-text="listDropdownLabel">
             <CDropdownItem @click="handleAction('toggleBulletList')"
                 :class="{ 'text-primary font-weight-bold': isActive('bulletList') }">
-                <CIcon name="cil-list" size="sm" class="mr-2" /> Bullet List
+                <CIcon name="cil-list" size="sm" class="mr-2" /> {{ bulletListLabel }}
             </CDropdownItem>
             <CDropdownItem @click="handleAction('toggleOrderedList')"
                 :class="{ 'text-primary font-weight-bold': isActive('orderedList') }">
-                <CIcon name="cil-list-numbered" size="sm" class="mr-2" /> Ordered List
+                <CIcon name="cil-list-numbered" size="sm" class="mr-2" /> {{ orderedListLabel }}
             </CDropdownItem>
         </CDropdown>
 
@@ -174,34 +175,93 @@
 </template>
 
 <script>
+const EN_FONT_OPTIONS = [
+    'Inter',
+    'Roboto',
+    'Open Sans',
+    'Lato',
+    'Poppins',
+    'Montserrat',
+    'Nunito',
+    'Merriweather',
+    'Playfair Display',
+    'Source Sans 3',
+]
+
+const TH_FONT_OPTIONS = [
+    'Sarabun',
+    'Prompt',
+    'Kanit',
+    'Noto Sans Thai',
+    'IBM Plex Sans Thai',
+    'Mali',
+    'Mitr',
+    'Pridi',
+    'KoHo',
+    'Chakra Petch',
+]
+
 export default {
     name: 'EditorToolbar',
     props: {
         editor: { type: Object, required: false },
         konvaEditor: { type: Object, required: false },
-        scale: { type: Number, default: 1 }
+        scale: { type: Number, default: 1 },
+        templateLocale: { type: String, default: 'th' }
     },
     data() {
         return {
             hexColor: "#000000",
             fontSize: 16,
             tempFontSize: null,
-            selectedFont: 'Arial, sans-serif',
+            selectedFont: '',
             boldActive: false,
             italicActive: false,
             underlineActive: false,
-            fontList: [
-                { label: 'Arial', value: 'Arial, sans-serif' },
-                { label: 'Sarabun', value: 'Sarabun, sans-serif' },
-                { label: 'Kanit', value: 'Kanit, sans-serif' },
-                { label: 'Prompt', value: 'Prompt, sans-serif' },
-                { label: 'Inter', value: 'Inter, sans-serif' },
-                { label: 'Georgia', value: 'Georgia, serif' },
-                { label: 'Times New Roman', value: 'Times New Roman, serif' },
-                { label: 'Courier New', value: 'Courier New, monospace' },
-                { label: 'Tahoma', value: 'Tahoma, sans-serif' },
-                { label: 'Verdana', value: 'Verdana, sans-serif' },
+        }
+    },
+    computed: {
+        localeIsThai() {
+            return String(this.templateLocale || 'th').toLowerCase().startsWith('th')
+        },
+        headingDropdownLabel() {
+            return 'H'
+        },
+        listDropdownLabel() {
+            return 'List'
+        },
+        headingDropdownItems() {
+            return [
+                { label: 'Heading 1', value: 'h1' },
+                { label: 'Heading 2', value: 'h2' },
+                { label: 'Heading 3', value: 'h3' },
+                { label: 'Paragraph', value: 'paragraph' },
             ]
+        },
+        bulletListLabel() {
+            return 'Bullet List'
+        },
+        orderedListLabel() {
+            return 'Ordered List'
+        },
+        localeFont() {
+            return this.localeIsThai ? 'Noto Sans Thai' : 'Source Sans 3'
+        },
+        fontList() {
+            const fonts = this.localeIsThai ? TH_FONT_OPTIONS : EN_FONT_OPTIONS
+
+            return fonts.map((fontName) => ({
+                label: fontName,
+                value: fontName,
+            }))
+        }
+    },
+    watch: {
+        templateLocale: {
+            immediate: true,
+            handler() {
+                this.selectedFont = ''
+            }
         }
     },
     methods: {
@@ -268,8 +328,10 @@ export default {
                 this.$emit('action', action);
             }
         },
-        handleFontFamily() {
-            this.$emit('format-text', { type: 'fontFamily', value: this.selectedFont });
+        handleFontFamily(event) {
+            const value = event && event.target ? event.target.value : this.selectedFont;
+            this.selectedFont = value;
+            this.$emit('format-text', { type: 'fontFamily', value });
         },
         changeFontSize(delta) {
             const min = 6;

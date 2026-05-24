@@ -35,7 +35,10 @@ function getConnectorLayer(layer) {
 export default function syncLinkedDataVariableGuides() {
     if (!this.layer) return
 
-    const gap = Number(this.linkedDataVariableGap || 0)
+    const locale = String(this.templateLocale || 'th').toLowerCase()
+    const fallbackGap = locale.startsWith('en') ? 20 : 0
+    const rawGap = Number(this.linkedDataVariableGap)
+    const gap = Number.isFinite(rawGap) && rawGap > 0 ? rawGap : fallbackGap
     const nodes = getLinkedDataVariableNodes(this.layer)
     if (!nodes.length) {
         getConnectorLayer(this.layer).forEach((line) => line.destroy())

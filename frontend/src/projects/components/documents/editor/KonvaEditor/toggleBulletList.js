@@ -1,16 +1,23 @@
 import Konva from 'konva'
 
+function getBulletListDefaultText(locale) {
+    const isThai = String(locale || 'th').toLowerCase().startsWith('th')
+    const itemText = isThai ? 'รายการ' : 'List Item'
+
+    return [
+        `• ${itemText}`,
+        `• ${itemText}`,
+        `• ${itemText}`,
+        `• ${itemText}`,
+        `• ${itemText}`,
+    ].join('\n')
+}
+
 export default function toggleBulletList() {
     const nodes = this.transformer.nodes();
     if (!nodes.length) {
         // If no node is selected, create a new bullet list block with 5 items
-        const defaultText = [
-            '• List Item',
-            '• List Item',
-            '• List Item',
-            '• List Item',
-            '• List Item'
-        ].join('\n');
+        const defaultText = getBulletListDefaultText(this.templateLocale);
         this.addTextBlock(defaultText).then(node => {
             try { this.startInlineEditing(node) } catch (e) { }
         });

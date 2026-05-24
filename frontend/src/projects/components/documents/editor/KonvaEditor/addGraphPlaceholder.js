@@ -1,18 +1,21 @@
 import Konva from 'konva'
+import { formatChartLabel } from '@/utils/chartLabel'
+import { wrapTextManualForRadarLabel } from '@/utils/pdfGenerator/pdfGenerator.logic'
 
 export default function addGraphPlaceholder(graphType, opts = {}) {
     return new Promise((resolve) => {
+        const locale = String(opts.locale || this.templateLocale || 'th').toLowerCase()
+        const isThai = locale.startsWith('th')
         const RADAR_LABEL_OUTER_MARGIN = 40
         const GRAPH_HEADER_TOP_Y = 0
         const baseFontSize = Number(opts.fontSize) || 14
-        const fontFamily = opts.fontFamily || 'Inter, Arial'
+        const fontFamily = typeof opts.fontFamily === 'string' && opts.fontFamily.trim() ? opts.fontFamily.trim() : undefined
         const fill = opts.fill || '#1e293b'
         const fontStyle = opts.fontStyle || 'normal'
         const textDecoration = opts.textDecoration || ''
 
         const makeText = (text, extra = {}) => new Konva.Text({
             text: text ?? '',
-            fontFamily,
             fill,
             fontSize: baseFontSize,
             fontStyle,
@@ -54,7 +57,9 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
         const isGeneral = String(graphType).includes('General');
         const graphKind = isRadar ? 'radar' : 'bar';
         const graphScope = isGeneral ? 'general' : 'specific';
-        const title = isGeneral ? 'General Competencies' : 'Specific Competencies';
+        const title = isGeneral
+            ? (isThai ? 'ทักษะทั่วไป' : 'General Competencies')
+            : (isThai ? 'ทักษะเฉพาะ' : 'Specific Competencies');
 
         const group = new Konva.Group({
             x: Number(opts.x ?? 0),
@@ -68,12 +73,15 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
             graphScope,
             elementType: 'graph',
             templateKey: graphType,
-            fontFamily,
             fontSize: baseFontSize,
             fill,
             fontStyle,
             textDecoration
         })
+
+        if (fontFamily) {
+            group.setAttr('fontFamily', fontFamily)
+        }
 
         // Background card rect
         const bg = new Konva.Rect({
@@ -129,18 +137,22 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
 
             // Legend You
             group.add(new Konva.Circle({ x: legendYouX, y: legendY, radius: 5, fill: '#7c3aed', listening: false }))
-            group.add(makeEditableText('You', { x: legendYouX + 12, y: legendY - 7, fontSize: legendFontSize }, group))
+            group.add(makeEditableText(isThai ? 'คุณ' : 'You', { x: legendYouX + 12, y: legendY - 7, fontSize: legendFontSize }, group))
 
             // Legend Average
             group.add(new Konva.Circle({ x: legendAvgX, y: legendY, radius: 5, fill: '#fb7185', listening: false }))
-            group.add(makeEditableText('Average', { x: legendAvgX + 12, y: legendY - 7, fontSize: legendFontSize }, group))
+            group.add(makeEditableText(isThai ? 'ค่าเฉลี่ย' : 'Average', { x: legendAvgX + 12, y: legendY - 7, fontSize: legendFontSize }, group))
 
             // Get labels
             let labels = isGeneral ? this.getGeneralCompetencyLabels() : this.getSpecificCompetencyPlaceholders()
             if (!Array.isArray(labels) || !labels.length) {
                 labels = isGeneral
-                    ? ['Creativity', 'Problem Solving', 'Digital Literacy', 'Learning', 'Agility', 'Communication']
-                    : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing']
+                    ? (isThai
+                        ? ['ความคิดสร้างสรรค์', 'การแก้ปัญหา', 'ความรู้ดิจิทัล', 'การเรียนรู้', 'ความคล่องตัว', 'การสื่อสาร']
+                        : ['Creativity', 'Problem Solving', 'Digital Literacy', 'Learning', 'Agility', 'Communication'])
+                    : (isThai
+                        ? ['การเขียนโปรแกรม', 'เฟรมเวิร์ก', 'ฐานข้อมูล', 'การควบคุมเวอร์ชัน', 'สถาปัตยกรรม', 'การทดสอบ']
+                        : ['Programming', 'Frameworks', 'Database', 'Version Control', 'Architecture', 'Testing'])
             }
             const sides = Math.max(3, labels.length)
 
@@ -217,19 +229,25 @@ export default function addGraphPlaceholder(graphType, opts = {}) {
                     align = 'right'
                 }
 
-                const raw = String(labels[i] || '')
-                const textX = align === 'center' ? labelX - maxLabelWidth / 2 : (align === 'left' ? labelX : labelX - maxLabelWidth)
                 const labelFontSize = Math.max(10, Math.round(baseFontSize * 0.85 * layoutScale))
+                const raw = String(labels[i] || '')
+                const wrapWidth = isThai ? Math.max(70, Math.round(maxLabelWidth * 0.75)) : maxLabelWidth
+                const formattedLabel = isThai
+                    ? wrapTextManualForRadarLabel(raw, wrapWidth, labelFontSize, fontFamily, 3)
+                    : formatChartLabel(raw, Math.max(14, Math.floor(maxLabelWidth / Math.max(1, labelFontSize)) + 2), locale)
+                const labelText = Array.isArray(formattedLabel) ? formattedLabel.join('\n') : String(formattedLabel || raw)
+                const textX = align === 'center' ? labelX - maxLabelWidth / 2 : (align === 'left' ? labelX : labelX - maxLabelWidth)
                 let textY = labelY - Math.round(8 * layoutScale)
 
-                const labelNode = makeEditableText(raw, {
+                const labelNode = makeEditableText(labelText, {
                     x: textX,
                     y: textY,
                     width: maxLabelWidth,
                     align: align,
                     fontSize: labelFontSize,
                     fontStyle: 'bold',
-                    wrap: 'word'
+                    wrap: 'none',
+                    lineHeight: 1.05
                 }, group)
 
                 // Keep label center outside polygon by a fixed margin so text does not overlap the radar shape.

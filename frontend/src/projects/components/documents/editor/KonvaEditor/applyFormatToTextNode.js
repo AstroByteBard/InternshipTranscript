@@ -3,6 +3,24 @@ import Konva from 'konva'
 export default function applyFormatToTextNode(node, type, value) {
     const scaledContextNames = new Set(['graph-placeholder', 'competency-table', 'suggestion-table', 'suggestion-table-part']);
 
+    const refreshTextNode = (textNode) => {
+        try {
+            if (!textNode || typeof textNode.text !== 'function') return;
+            const currentText = textNode.text();
+            textNode.text(currentText);
+            if (typeof textNode._setTextData === 'function') {
+                textNode._setTextData();
+            }
+            if (typeof textNode.clearCache === 'function') {
+                textNode.clearCache();
+            }
+            const textParent = typeof textNode.getParent === 'function' ? textNode.getParent() : null;
+            if (textParent && typeof textParent.clearCache === 'function') {
+                textParent.clearCache();
+            }
+        } catch (err) { /* ignore */ }
+    }
+
     const getContextScaleY = (targetNode) => {
         try {
             let curr = targetNode;
@@ -42,6 +60,7 @@ export default function applyFormatToTextNode(node, type, value) {
         node.align(value);
     } else if (type === 'fontFamily') {
         node.fontFamily(value);
+        refreshTextNode(node);
     } else if (type === 'fontSize') {
         const desiredSize = Number(value);
         if (Number.isFinite(desiredSize)) {
@@ -56,6 +75,33 @@ export default function applyFormatToTextNode(node, type, value) {
     const parent = node.getParent();
     if (parent && parent instanceof Konva.Group) {
         const groupName = parent.name() || '';
+        const shouldMirrorToGroupTexts = type === 'fontFamily' && !groupName.includes('graph-placeholder') && !groupName.includes('competency-table') && !groupName.includes('suggestion-table');
+        if (shouldMirrorToGroupTexts && typeof parent.find === 'function') {
+            try {
+                const textNodes = parent.find('Text');
+                if (textNodes && textNodes.length > 1) {
+                    textNodes.forEach((textNode) => {
+                        try {
+                            textNode.fontFamily(value);
+                            refreshTextNode(textNode);
+                        } catch (err) { /* ignore */ }
+                    });
+                }
+            } catch (err) { /* ignore */ }
+        }
+        if (type === 'fontFamily' && !groupName.includes('graph-placeholder') && !groupName.includes('competency-table') && !groupName.includes('suggestion-table')) {
+            try {
+                const descendants = typeof parent.find === 'function' ? parent.find('Text') : [];
+                if (descendants && descendants.length) {
+                    descendants.forEach((textNode) => {
+                        try {
+                            textNode.fontFamily(value);
+                            refreshTextNode(textNode);
+                        } catch (err) { /* ignore */ }
+                    });
+                }
+            } catch (err) { /* ignore */ }
+        }
         if (groupName.includes('suggestion-table-part')) {
             if (type === 'bold' || type === 'italic') {
                 parent.setAttrs({ fontStyle: node.fontStyle() });
@@ -81,5 +127,11 @@ export default function applyFormatToTextNode(node, type, value) {
             }
         }
     }
+    try {
+        const layer = typeof node.getLayer === 'function' ? node.getLayer() : null;
+        if (layer && typeof layer.batchDraw === 'function') {
+            layer.batchDraw();
+        }
+    } catch (err) { /* ignore */ }
     this.saveHistory();
 }

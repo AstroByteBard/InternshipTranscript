@@ -5,11 +5,42 @@ const SoftskillModel = require('../../Competencies/models/softskill.model');
 const SchoolModel = require('../../Academic/models/school.model');
 const ProgramModel = require('../../Academic/models/program.model');
 
+const getLocalizedCandidates = (items) => {
+    if (!Array.isArray(items)) return [];
+    return items
+        .filter(Boolean)
+        .map((item) => {
+            if (typeof item === 'string') {
+                return { value: item, lang: 'en' };
+            }
+            return {
+                value: item.value || item.name || item.title || '',
+                lang: item.key || 'en'
+            };
+        })
+        .filter((item) => String(item.value || '').trim());
+};
+
+const pickLongestLocalizedValue = (items) => {
+    const candidates = getLocalizedCandidates(items);
+    let longest = { value: '', lang: 'en', length: 0 };
+
+    for (const candidate of candidates) {
+        const value = String(candidate.value || '').trim();
+        const length = value.length;
+        if (length > longest.length) {
+            longest = { value, lang: candidate.lang || 'en', length };
+        }
+    }
+
+    return longest;
+};
+
 // Helper functions for masking sensitive data
 const maskStudentName = (name, lang = 'en') => {
-    if (!name) return 'Name';
+    if (!name) return (lang === 'th') ? 'ชื่อ' : 'Name';
     if (lang === 'th') {
-        const prefix = 'Name';
+        const prefix = 'ชื่อ ';
         const xCount = Math.max(0, name.length - prefix.length);
         return prefix + 'x'.repeat(xCount);
     } else {
@@ -19,22 +50,26 @@ const maskStudentName = (name, lang = 'en') => {
     }
 };
 
-const maskStudentID = (id) => {
-    if (!id || id.length < 9) return 'Student ID';
+const maskStudentID = (id, lang = 'en') => {
+    if (!id || id.length < 9) return (lang === 'th') ? 'รหัสนักศึกษา' : 'Student ID';
     const xCount = Math.max(1, id.length - 9);
-    return 'Student ID ' + 'x'.repeat(xCount);
+    return (lang === 'th' ? 'รหัสนักศึกษา ' : 'Student ID ') + 'x'.repeat(xCount);
 };
 
-const maskSchoolName = (name) => {
-    if (!name || name.length < 6) return 'School';
-    const xCount = Math.max(1, name.length - 6);
-    return 'School ' + 'x'.repeat(xCount);
+const maskSchoolName = (name, lang = 'en') => {
+    if (!name) return (lang === 'th') ? 'คณะ/โรงเรียน' : 'School';
+    const prefix = (lang === 'th') ? 'คณะ/โรงเรียน ' : 'School ';
+    if (name.length < prefix.length) return prefix.trim();
+    const xCount = Math.max(1, name.length - prefix.length);
+    return prefix + 'x'.repeat(xCount);
 };
 
-const maskProgramName = (name) => {
-    if (!name || name.length < 5) return 'Major';
-    const xCount = Math.max(1, name.length - 5);
-    return 'Major ' + 'x'.repeat(xCount);
+const maskProgramName = (name, lang = 'en') => {
+    if (!name) return (lang === 'th') ? 'สาขาวิชา' : 'Major';
+    const prefix = (lang === 'th') ? 'สาขาวิชา ' : 'Major ';
+    if (name.length < prefix.length) return prefix.trim();
+    const xCount = Math.max(1, name.length - prefix.length);
+    return prefix + 'x'.repeat(xCount);
 };
 
 /**
@@ -54,25 +89,16 @@ exports.getLongestStudentNameData = async function () {
         };
 
         for (const student of students) {
-            if (student.name && Array.isArray(student.name)) {
-                const englishName = student.name.find(n => n.key === 'en');
-                // consider both English and Thai name entries and pick the longest
-                const candidates = [];
-                if (englishName && englishName.value) candidates.push({ val: englishName.value, lang: 'en' });
-                const thaiName = student.name.find(n => n.key === 'th');
-                if (thaiName && thaiName.value) candidates.push({ val: thaiName.value, lang: 'th' });
+            const chosenName = pickLongestLocalizedValue(student.name);
+            if (!chosenName.value) continue;
 
-                for (const c of candidates) {
-                    const nameLength = c.val.length;
-                    if (nameLength > longest.length) {
-                        longest = {
-                            longestName: maskStudentName(c.val, c.lang),
-                            length: nameLength,
-                            studentID: maskStudentID(student.studentID || ''),
-                            lang: c.lang
-                        };
-                    }
-                }
+            if (chosenName.length > longest.length) {
+                longest = {
+                    longestName: maskStudentName(chosenName.value, chosenName.lang),
+                    length: chosenName.length,
+                    studentID: maskStudentID(student.studentID || '', chosenName.lang),
+                    lang: chosenName.lang
+                };
             }
         }
 
@@ -98,17 +124,15 @@ exports.getLongestSchoolName = async function () {
         };
 
         for (const school of schools) {
-            if (school.title && Array.isArray(school.title)) {
-                const englishTitle = school.title.find(t => t.key === 'en');
-                if (englishTitle && englishTitle.value) {
-                    const titleLength = englishTitle.value.length;
-                    if (titleLength > longest.length) {
-                        longest = {
-                            longestSchoolName: maskSchoolName(englishTitle.value),
-                            length: titleLength
-                        };
-                    }
-                }
+            const chosenTitle = pickLongestLocalizedValue(school.title);
+            if (!chosenTitle.value) continue;
+
+            if (chosenTitle.length > longest.length) {
+                longest = {
+                    longestSchoolName: maskSchoolName(chosenTitle.value, chosenTitle.lang),
+                    length: chosenTitle.length,
+                    lang: chosenTitle.lang
+                };
             }
         }
 
@@ -134,17 +158,15 @@ exports.getLongestProgramName = async function () {
         };
 
         for (const program of programs) {
-            if (program.title && Array.isArray(program.title)) {
-                const englishTitle = program.title.find(t => t.key === 'en');
-                if (englishTitle && englishTitle.value) {
-                    const titleLength = englishTitle.value.length;
-                    if (titleLength > longest.length) {
-                        longest = {
-                            longestProgramName: maskProgramName(englishTitle.value),
-                            length: titleLength
-                        };
-                    }
-                }
+            const chosenTitle = pickLongestLocalizedValue(program.title);
+            if (!chosenTitle.value) continue;
+
+            if (chosenTitle.length > longest.length) {
+                longest = {
+                    longestProgramName: maskProgramName(chosenTitle.value, chosenTitle.lang),
+                    length: chosenTitle.length,
+                    lang: chosenTitle.lang
+                };
             }
         }
 
@@ -221,8 +243,8 @@ exports.getMostCompetenciesProgram = async function () {
         };
 
         if (maxProgram && programTitles[maxProgram]) {
-            const titleEn = programTitles[maxProgram].find(t => t.key === 'en');
-            result.programWithMostCompetencies = titleEn ? titleEn.value : 'Unknown Program';
+            const chosenTitle = pickLongestLocalizedValue(programTitles[maxProgram]);
+            result.programWithMostCompetencies = chosenTitle.value || 'Unknown Program';
             result.competenciesCount = maxCount;
             result.competenciesList = programCompetencies[maxProgram] || [];
         }
@@ -246,7 +268,70 @@ exports.getAllExampleData = async function () {
             exports.getMostCompetenciesProgram()
         ]);
 
+        // Additionally compute per-locale longest masked values (en/th)
+        // Students
+        const students = await StudentModel.find().select('studentID name').lean();
+        let studentEn = { value: '', masked: '', studentID: '', length: 0 };
+        let studentTh = { value: '', masked: '', studentID: '', length: 0 };
+        for (const s of students) {
+            if (s.name && Array.isArray(s.name)) {
+                const en = s.name.find(n => n.key === 'en');
+                const th = s.name.find(n => n.key === 'th');
+                if (en && en.value) {
+                    const v = String(en.value).trim();
+                    if (v.length > studentEn.length) {
+                        studentEn = { value: v, masked: maskStudentName(v, 'en'), studentID: maskStudentID(s.studentID || '', 'en'), length: v.length };
+                    }
+                }
+                if (th && th.value) {
+                    const v = String(th.value).trim();
+                    if (v.length > studentTh.length) {
+                        studentTh = { value: v, masked: maskStudentName(v, 'th'), studentID: maskStudentID(s.studentID || '', 'th'), length: v.length };
+                    }
+                }
+            }
+        }
+
+        // Schools
+        const schools = await SchoolModel.find().select('title').lean();
+        let schoolEn = { value: '', masked: '', length: 0 };
+        let schoolTh = { value: '', masked: '', length: 0 };
+        for (const sch of schools) {
+            if (sch.title && Array.isArray(sch.title)) {
+                const en = sch.title.find(t => t.key === 'en');
+                const th = sch.title.find(t => t.key === 'th');
+                if (en && en.value) {
+                    const v = String(en.value).trim();
+                    if (v.length > schoolEn.length) schoolEn = { value: v, masked: maskSchoolName(v, 'en'), length: v.length };
+                }
+                if (th && th.value) {
+                    const v = String(th.value).trim();
+                    if (v.length > schoolTh.length) schoolTh = { value: v, masked: maskSchoolName(v, 'th'), length: v.length };
+                }
+            }
+        }
+
+        // Programs
+        const programs = await ProgramModel.find().select('title').lean();
+        let programEn = { value: '', masked: '', length: 0 };
+        let programTh = { value: '', masked: '', length: 0 };
+        for (const pr of programs) {
+            if (pr.title && Array.isArray(pr.title)) {
+                const en = pr.title.find(t => t.key === 'en');
+                const th = pr.title.find(t => t.key === 'th');
+                if (en && en.value) {
+                    const v = String(en.value).trim();
+                    if (v.length > programEn.length) programEn = { value: v, masked: maskProgramName(v, 'en'), length: v.length };
+                }
+                if (th && th.value) {
+                    const v = String(th.value).trim();
+                    if (v.length > programTh.length) programTh = { value: v, masked: maskProgramName(v, 'th'), length: v.length };
+                }
+            }
+        }
+
         return {
+            // fallback legacy fields (overall longest)
             studentName: studentData.longestName,
             studentID: studentData.studentID,
             studentNameLength: studentData.length,
@@ -254,7 +339,16 @@ exports.getAllExampleData = async function () {
             school: schoolData.longestSchoolName,
             program: programData.longestProgramName,
             competencies: competenciesData,
-            academyYear: new Date().getFullYear().toString()
+            academyYear: new Date().getFullYear().toString(),
+            // per-locale fields for frontend to pick
+            studentNameEn: studentEn.masked || '',
+            studentNameTh: studentTh.masked || '',
+            studentIDEn: studentEn.studentID || '',
+            studentIDTh: studentTh.studentID || '',
+            schoolEn: schoolEn.masked || '',
+            schoolTh: schoolTh.masked || '',
+            programEn: programEn.masked || '',
+            programTh: programTh.masked || ''
         };
     } catch (err) {
         console.error('Error getting all example data:', err);
