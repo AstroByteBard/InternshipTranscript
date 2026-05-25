@@ -8,7 +8,6 @@ import Router from 'vue-router'
 const Dashboard = () => import('@/projects/views/administration/Dashboard')
 const StudentDashboard = () => import('@/projects/views/student/StudentDashboard')
 // AI test page
-const AIFeedbackTest = () => import('@/projects/views/administration/AI/AIFeedbackTest')
 const Login = () => import('@/projects/views/Login')
 
 //administrator
@@ -70,11 +69,7 @@ export default new Router({
                     name: 'Dashboard',
                     component: Dashboard
                 },
-                {
-                    path: 'ai-feedback',
-                    name: 'AIFeedbackTest',
-                    component: AIFeedbackTest
-                },
+                // AI feedback test route removed
                 // gemini-test route removed
 
 
