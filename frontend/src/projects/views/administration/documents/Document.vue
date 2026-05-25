@@ -64,7 +64,10 @@ export default {
             try {
                 const res = await this.$api.documents('get');
                 if (res.data && res.data.data) {
-                    this.documentsData = res.data.data;
+                    this.documentsData = res.data.data.filter((item) => {
+                        const type = String(item && item.type ? item.type : '').toLowerCase();
+                        return !type || type === 'document';
+                    });
                 }
             } catch (err) {
                 console.error('Failed to load documents', err);
@@ -86,6 +89,7 @@ export default {
             if (!confirm(`Copy "${item.title}"?`)) return;
             const payload = {
                 title: item.title + ' (Copy)',
+                type: 'document',
                 status: 'Draft',
                 locale: item.locale || 'th',
                 content: item.content,

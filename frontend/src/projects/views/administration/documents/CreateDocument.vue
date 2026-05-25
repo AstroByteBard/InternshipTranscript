@@ -201,6 +201,7 @@ export default {
 
             const payload = {
                 title: this.documentName,
+                type: 'document',
                 status: this.status,
                 locale: this.templateLocale,
                 content: content,
@@ -319,6 +320,7 @@ export default {
                 if (!tb) return;
                 if (!info || !info.style) {
                     tb.selectedFont = '';
+                    tb.selectedAlign = '';
                     tb.boldActive = false;
                     tb.italicActive = false;
                     tb.underlineActive = false;
@@ -328,6 +330,7 @@ export default {
                 if (typeof s.fontSize !== 'undefined' && s.fontSize !== null) tb.fontSize = Number(s.fontSize) || tb.fontSize;
                 if (typeof s.fontFamily !== 'undefined' && s.fontFamily) tb.selectedFont = s.fontFamily;
                 else tb.selectedFont = '';
+                tb.selectedAlign = typeof s.align !== 'undefined' && s.align ? s.align : '';
                 if (typeof s.fill !== 'undefined' && s.fill) {
                     const f = String(s.fill || '');
                     if (f.startsWith('rgb')) {

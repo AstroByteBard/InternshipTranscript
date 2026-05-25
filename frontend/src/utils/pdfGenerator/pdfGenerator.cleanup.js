@@ -7,12 +7,21 @@ export const applyPdfExportCleanup = (layer, width) => {
             if (node.className === 'Line' && Array.isArray(attrs.points) && attrs.points.length >= 4) {
                 const pts = attrs.points;
                 const ys = [];
+                const xs = [];
+                for (let i = 0; i < pts.length; i += 2) xs.push(pts[i]);
                 for (let i = 1; i < pts.length; i += 2) ys.push(pts[i]);
                 const minY = Math.min.apply(null, ys);
                 const maxY = Math.max.apply(null, ys);
+                const minX = Math.min.apply(null, xs);
+                const maxX = Math.max.apply(null, xs);
                 const span = Math.abs(pts[pts.length - 2] - pts[0]);
                 if (debug) console.log('PDF Export: Line node', { pts, minY, maxY, span });
-                if ((maxY - minY) <= 3 && span >= (width * 0.85)) {
+                const stroke = String(attrs.stroke || '').toLowerCase();
+                const isRedGuide = stroke.includes('ef4444') || stroke.includes('f87171') || stroke.includes('dc2626') || stroke.includes('red');
+                const isDashed = Array.isArray(attrs.dash) && attrs.dash.length > 0;
+                const isHorizontalFullWidth = (maxY - minY) <= 3 && span >= (width * 0.85);
+                const isVerticalFullHeight = (maxX - minX) <= 3 && Math.abs(maxY - minY) >= (Number(node.getStage && node.getStage() ? node.getStage().height() : 0) * 0.85);
+                if (isHorizontalFullWidth || (isRedGuide && isDashed && (isHorizontalFullWidth || isVerticalFullHeight))) {
                     try { node.destroy(); } catch (e) { }
                 }
             }

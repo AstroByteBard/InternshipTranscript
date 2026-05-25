@@ -33,6 +33,8 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
 
     const width = templateRoot.width || templateJSON.width || 794;
     const height = templateRoot.height || templateJSON.height || 1123;
+    const isLandscape = String(templateRoot.orientation || templateJSON.orientation || '').toLowerCase() === 'landscape'
+        || Number(width) > Number(height);
 
     const collectFontFamilies = (elements, fonts = new Set()) => {
         if (!Array.isArray(elements)) return fonts;
@@ -171,7 +173,7 @@ export async function downloadClientPDF(templateJSON, dataMap, filename = 'docum
         setTimeout(() => {
             const dataUrl = stage.toDataURL({ pixelRatio: 2 }); // High-res
             // A4: 210 x 297 mm
-            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdf = new jsPDF(isLandscape ? 'l' : 'p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (height * pdfWidth) / width;
 

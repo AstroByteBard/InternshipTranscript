@@ -5,6 +5,7 @@ var Schema = mongoose.Schema;
 
 var objsSchema = new Schema({
     title: { type: String, default: null },
+    type: { type: String, enum: ['document', 'certificate'], default: 'null' },
     locale: { type: String, default: 'th' },
     status: { type: String, default: 'Draft' }, // Draft, Active, Retired
     content: { type: Schema.Types.Mixed, default: {} }, // Stores Konva JSON structure

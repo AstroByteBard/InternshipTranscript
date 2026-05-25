@@ -11,13 +11,20 @@ export default function updateCompetencyGroupStyle(group, style = {}) {
             normalizedStyle.fontSize = Math.max(1, requested / scaleY)
         }
     }
+
+    const groupOnlyAlign = typeof normalizedStyle.align !== 'undefined' ? normalizedStyle.align : undefined
     // Update group-level attributes for future insertions
     group.setAttrs({
         fontSize: typeof normalizedStyle.fontSize !== 'undefined' ? normalizedStyle.fontSize : group.getAttr('fontSize'),
         fontFamily: normalizedStyle.fontFamily || group.getAttr('fontFamily'),
         fill: normalizedStyle.fill || group.getAttr('fill'),
-        fontStyle: normalizedStyle.fontStyle || group.getAttr('fontStyle')
+        fontStyle: normalizedStyle.fontStyle || group.getAttr('fontStyle'),
+        ...(typeof groupOnlyAlign !== 'undefined' ? { align: groupOnlyAlign } : {})
     })
+
+    if (typeof normalizedStyle.align !== 'undefined') {
+        delete normalizedStyle.align
+    }
     // Apply to all text nodes inside
     children.forEach((c) => {
         if (!c || c.getClassName() !== 'Text') return

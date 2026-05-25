@@ -47,13 +47,12 @@ export default {
     methods: {
         async loadCertificates() {
             try {
-                // Fetching from the same documents endpoint for now
-                // In a real scenario, this might be filtered by type: 'Certificate'
                 const res = await this.$api.documents('get');
                 if (res.data && res.data.data) {
-                    // For now, we show all, but we could filter here:
-                    // this.certificatesData = res.data.data.filter(d => d.type === 'Certificate');
-                    this.certificatesData = res.data.data;
+                    this.certificatesData = res.data.data.filter((item) => {
+                        const type = String(item && item.type ? item.type : '').toLowerCase();
+                        return type === 'certificate';
+                    });
                 }
             } catch (err) {
                 console.error('Failed to load certificates', err);
@@ -75,7 +74,9 @@ export default {
             if (!confirm(`Copy "${item.title}"?`)) return;
             const payload = {
                 title: item.title + ' (Copy)',
+                type: 'certificate',
                 status: 'Draft',
+                locale: item.locale || 'th',
                 content: item.content,
             };
             this.$api.documents('post', payload)

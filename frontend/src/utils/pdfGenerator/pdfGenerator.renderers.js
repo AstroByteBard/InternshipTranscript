@@ -1,5 +1,6 @@
 import Konva from 'konva';
 import { addThaiWordBreaks, applyZIndex, resolveLocalizedValue, getLocaleFontFamily } from '@/utils/pdfGenerator/pdfGenerator.logic';
+import { measureTextWidth } from '@/utils/pdfGenerator/pdfGenerator.logic';
 
 export const createPdfRenderDispatch = ({
     layer,
@@ -36,6 +37,7 @@ export const createPdfRenderDispatch = ({
         }
 
         const lang = dataMap.__language || 'en';
+        const fontSize = Number(attrs.fontSize || 16);
         if (lang === 'th') {
             if (finalValue === 'General Competencies') finalValue = 'ทักษะทั่วไป';
             else if (finalValue === 'Specific Competencies') finalValue = 'ทักษะเฉพาะทาง';
@@ -44,14 +46,26 @@ export const createPdfRenderDispatch = ({
 
         const fontFamily = localeFontFamily(lang);
 
-        const sX = (attrs.scaleX || 1);
-        const finalWidth = attrs.width || ((794 - (attrs.x || 0)) / sX - 10);
+        const measuredFinalWidth = Math.max(20, Math.ceil(measureTextWidth(String(finalValue || ''), fontSize, attrs.fontFamily || fontFamily) + 12));
+        const measuredTemplateWidth = Math.max(20, Math.ceil(measureTextWidth(String(originalText || ''), fontSize, attrs.fontFamily || fontFamily) + 12));
+        const hasExplicitWidth = typeof attrs.width === 'number' && attrs.width > 0;
+        const align = String(attrs.align || 'left').toLowerCase();
+        const finalWidth = hasExplicitWidth
+            ? attrs.width
+            : (align === 'center' || align === 'right')
+                ? Math.max(measuredTemplateWidth, measuredFinalWidth)
+                : measuredFinalWidth;
         const resolvedFontFamily = attrs.fontFamily || fontFamily;
+        const finalWrap = typeof attrs.wrap === 'string'
+            ? attrs.wrap
+            : hasExplicitWidth
+                ? 'word'
+                : 'none';
 
         const node = new Konva.Text(Object.assign({}, attrs, {
             text: addThaiWordBreaks(finalValue),
             width: finalWidth,
-            wrap: 'word',
+            wrap: finalWrap,
             fontFamily: resolvedFontFamily
         }));
         layer.add(node);

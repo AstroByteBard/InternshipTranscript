@@ -87,7 +87,9 @@ export default {
     name: 'KonvaEditor',
     props: {
         isPreview: { type: Boolean, default: false },
-        templateLocale: { type: String, default: 'th' }
+        templateLocale: { type: String, default: 'th' },
+        pageWidth: { type: Number, default: 794 },
+        pageHeight: { type: Number, default: 1123 }
     },
     data() {
         return {

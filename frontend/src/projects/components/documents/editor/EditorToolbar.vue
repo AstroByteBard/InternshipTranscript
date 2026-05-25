@@ -102,19 +102,19 @@
         <div class="toolbar-divider"></div>
 
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
-            :class="{ 'active': isActive({ textAlign: 'left' }) }" @click="handleFormat('align', 'left')">
+            :class="{ 'active': selectedAlign === 'left' }" @click="handleFormat('align', 'left')">
             <CIcon name="cil-align-left" size="sm" />
         </CButton>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
-            :class="{ 'active': isActive({ textAlign: 'center' }) }" @click="handleFormat('align', 'center')">
+            :class="{ 'active': selectedAlign === 'center' }" @click="handleFormat('align', 'center')">
             <CIcon name="cil-align-center" size="sm" />
         </CButton>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
-            :class="{ 'active': isActive({ textAlign: 'right' }) }" @click="handleFormat('align', 'right')">
+            :class="{ 'active': selectedAlign === 'right' }" @click="handleFormat('align', 'right')">
             <CIcon name="cil-align-right" size="sm" />
         </CButton>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1"
-            :class="{ 'active': isActive({ textAlign: 'justify' }) }" @click="handleFormat('align', 'justify')">
+            :class="{ 'active': selectedAlign === 'justify' }" @click="handleFormat('align', 'justify')">
             <CIcon name="cil-justify-center" size="sm" />
         </CButton>
 
@@ -215,6 +215,7 @@ export default {
             fontSize: 16,
             tempFontSize: null,
             selectedFont: '',
+            selectedAlign: '',
             boldActive: false,
             italicActive: false,
             underlineActive: false,
@@ -244,6 +245,9 @@ export default {
         orderedListLabel() {
             return 'Ordered List'
         },
+        alignLabel() {
+            return this.selectedAlign || '-'
+        },
         localeFont() {
             return this.localeIsThai ? 'Noto Sans Thai' : 'Source Sans 3'
         },
@@ -261,6 +265,7 @@ export default {
             immediate: true,
             handler() {
                 this.selectedFont = ''
+                this.selectedAlign = ''
             }
         }
     },
@@ -300,6 +305,9 @@ export default {
             return false
         },
         handleFormat(type, value) {
+            if (type === 'align') {
+                this.selectedAlign = value;
+            }
             if (this.editor && this.editor.chain) {
                 const chain = this.editor.chain().focus();
                 if (type === 'bold') chain.toggleBold().run();

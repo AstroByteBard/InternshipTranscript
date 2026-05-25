@@ -2,9 +2,9 @@ import Konva from 'konva'
 
 export default function createStage() {
     const container = this.$refs.stageContainer
-    // Lock stage to A4 standard width (210mm) and height (297mm) in px at 96 PPI
-    const width = 794;
-    const height = 1123;
+    // Lock stage to the configured page size in px at 96 PPI.
+    const width = Number(this.pageWidth) || 794;
+    const height = Number(this.pageHeight) || 1123;
 
     this.stage = new Konva.Stage({
         container: container,
