@@ -1,75 +1,67 @@
 <template>
-  <CDropdown 
-    placement="bottom-end"
-    :caret="false"
-    in-nav
-    class="c-header-nav-item d-md-down-none mx-2"
-    add-menu-classes="pt-0"
-  >
+  <CDropdown placement="bottom-end" :caret="false" in-nav class="c-header-nav-item d-md-down-none mx-2"
+    add-menu-classes="pt-0">
     <template #toggler>
       <CHeaderNavLink>
-        <CIcon name="cil-bell"/>
-        <CBadge shape="pill" color="danger">{{itemsCount}}</CBadge>
+        <CIcon name="cil-bell" />
+        <CBadge shape="pill" color="danger">{{ itemsCount }}</CBadge>
       </CHeaderNavLink>
     </template>
-    <CDropdownHeader 
-      tag="div" 
-      class="text-center bg-light"
-    >
-      <strong>You have {{itemsCount}} notifications</strong>
-    </CDropdownHeader>
-    <CDropdownItem>
-      <CIcon name="cil-user-follow" class="text-success"/> New user registered
-    </CDropdownItem>
-    <CDropdownItem>
-      <CIcon name="cil-user-unfollow" class="text-danger"/> User deleted
-    </CDropdownItem>
-    <CDropdownItem>
-      <CIcon name="cil-chart-pie" class="text-info"/> Sales report is ready
-    </CDropdownItem>
-    <CDropdownItem>
-      <CIcon name="cil-basket" class="text-primary"/> New client
-    </CDropdownItem>
-    <CDropdownItem>
-      <CIcon name="cil-speedometer" class="text-warning"/> Server overloaded
-      </CDropdownItem>
     <CDropdownHeader tag="div" class="text-center bg-light">
-      <strong>Server</strong>
+      <strong>{{ $t('you_have_notifications', { count: itemsCount }) }}</strong>
+    </CDropdownHeader>
+    <CDropdownItem>
+      <CIcon name="cil-user-follow" class="text-success" /> {{ $t('new_user_registered') }}
+    </CDropdownItem>
+    <CDropdownItem>
+      <CIcon name="cil-user-unfollow" class="text-danger" /> {{ $t('user_deleted') }}
+    </CDropdownItem>
+    <CDropdownItem>
+      <CIcon name="cil-chart-pie" class="text-info" /> {{ $t('sales_report_ready') }}
+    </CDropdownItem>
+    <CDropdownItem>
+      <CIcon name="cil-basket" class="text-primary" /> {{ $t('new_client') }}
+    </CDropdownItem>
+    <CDropdownItem>
+      <CIcon name="cil-speedometer" class="text-warning" /> {{ $t('server_overloaded') }}
+    </CDropdownItem>
+    <CDropdownHeader tag="div" class="text-center bg-light">
+      <strong>{{ $t('server') }}</strong>
     </CDropdownHeader>
     <CDropdownItem class="d-block">
       <div class="text-uppercase mb-1">
-        <small><b>CPU Usage</b></small>
+        <small><b>{{ $t('cpu_usage') }}</b></small>
       </div>
-      <CProgress class="progress-xs" color="info" :value="25"/>
-      <small class="text-muted">348 Processes. 1/4 Cores.</small>
+      <CProgress class="progress-xs" color="info" :value="25" />
+      <small class="text-muted">{{ $t('cpu_processes_cores') }}</small>
     </CDropdownItem>
     <CDropdownItem class="d-block">
       <div class="text-uppercase mb-1">
-        <small><b>Memory Usage</b></small>
+        <small><b>{{ $t('memory_usage') }}</b></small>
       </div>
-      <CProgress class="progress-xs" color="warning" :value="70"/>
-      <small class="text-muted">11444GB/16384MB</small>
+      <CProgress class="progress-xs" color="warning" :value="70" />
+      <small class="text-muted">{{ $t('memory_values') }}</small>
     </CDropdownItem>
     <CDropdownItem class="d-block">
       <div class="text-uppercase mb-1">
-        <small><b>SSD 1 Usage</b></small>
+        <small><b>{{ $t('ssd_1_usage') }}</b></small>
       </div>
-      <CProgress class="progress-xs" color="danger" :value="90"/>
-      <small class="text-muted">243GB/256GB</small>
+      <CProgress class="progress-xs" color="danger" :value="90" />
+      <small class="text-muted">{{ $t('ssd_1_values') }}</small>
     </CDropdownItem>
   </CDropdown>
 </template>
 <script>
 export default {
   name: 'TheHeaderDropdownNotif',
-  data () {
+  data() {
     return { itemsCount: 5 }
   }
 }
 </script>
 
 <style scoped>
-  .c-icon {
-    margin-right: 0.3rem;
-  }
+.c-icon {
+  margin-right: 0.3rem;
+}
 </style>

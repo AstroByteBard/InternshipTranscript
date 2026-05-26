@@ -2,21 +2,15 @@
   <div class="documents-hero-container mb-4 shadow-lg animate-fade-in">
     <div class="hero-content d-flex justify-content-between align-items-center">
       <div class="hero-text-section px-4">
-        <h1 class="hero-title animate-slide-up">Document Management</h1>
-        <p class="hero-subtitle animate-slide-up-delay-1">Templates & Generated Records | Assessment Standards</p>
+        <h1 class="hero-title animate-slide-up">{{ $t('components.layout_documentsheader_vue_document_management') }}</h1>
+        <p class="hero-subtitle animate-slide-up-delay-1">{{ $t('components.layout_documentsheader_vue_templates_generated_records_asses') }}</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2 flex-wrap">
             <div class="hero-badge mr-3 mb-2">
-                <CIcon name="cil-file" class="mr-2 icon-gold" size="sm"/>
-                Templates
-            </div>
+                <CIcon name="cil-file" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_documentsheader_vue_templates') }}</div>
             <div class="hero-badge mr-3 mb-2">
-                <CIcon name="cil-description" class="mr-2 icon-gold" size="sm"/>
-                Certificates
-            </div>
+                <CIcon name="cil-description" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_documentsheader_vue_certificates') }}</div>
             <div class="hero-badge mb-2">
-                <CIcon name="cil-check-circle" class="mr-2 icon-gold" size="sm"/>
-                Verified
-            </div>
+                <CIcon name="cil-check-circle" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_documentsheader_vue_verified') }}</div>
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in d-flex align-items-center">
@@ -25,9 +19,7 @@
           class="btn-hero-action mr-3 px-4 py-3 font-weight-bold shadow create-btn" 
           @click="$emit('create-click')"
         >
-          <CIcon name="cil-plus" class="mr-2 text-danger"/>
-          Create New Document
-        </CButton>
+          <CIcon name="cil-plus" class="mr-2 text-danger"/>{{ $t('components.layout_documentsheader_vue_create_new_document') }}</CButton>
       </div>
     </div>
     <!-- Abstract decorative elements -->

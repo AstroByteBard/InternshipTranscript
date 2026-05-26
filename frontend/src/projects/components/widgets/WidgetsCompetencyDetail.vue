@@ -9,7 +9,7 @@
               <CIcon name="cil-list" height="24" style="color: #3b82f6;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total {{ itemName }}</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('total') }}{{ itemName }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ totalItems.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -24,7 +24,7 @@
               <CIcon name="cil-check-circle" height="24" style="color: #059669;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Active {{ itemName }}</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('active') }}{{ itemName }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ activeItems.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -39,7 +39,7 @@
               <CIcon name="cil-ban" height="24" style="color: #64748b;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Inactive {{ itemName }}</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('inactive') }}{{ itemName }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ inactiveItems.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -54,7 +54,7 @@
               <CIcon :name="questionIcon" height="24" style="color: #d97706;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total {{ questionName }}</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('total') }}{{ questionName }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ totalQuestions.toLocaleString() }}</div>
         </CCardBody>
       </CCard>

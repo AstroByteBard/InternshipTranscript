@@ -2,44 +2,45 @@
     <CModal :centered="true" :show.sync="visible" :close-on-backdrop="true" size="lg" @update:show="handleModalClose">
         <template #header>
             <h5 class="modal-title font-weight-bold" style="color: #111827;">
-                {{ isEditing ? 'EditEmailTemplate' : 'Create Email Template' }}
+                {{ isEditing ? $t('edit_email_template') : $t('create_email_template') }}
             </h5>
             <CButtonClose @click="visible = false" class="text-black" />
         </template>
         <div class="px-3 py-2">
             <div class="mb-4">
                 <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
-                    Template Name <span class="text-danger">*</span>
+                    {{ $t('template_name') }} <span class="text-danger">*</span>
                 </label>
-                <CInput v-model="form.title" placeholder="e.g. Acceptance Letter" class="custom-input shadow-sm" />
-            </div>
-
-            <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
-                    Subject <span class="text-danger">*</span>
-                </label>
-                <CInput v-model="form.subject" placeholder="e.g. Regarding your application"
+                <CInput v-model="form.title" :placeholder="$t('template_name_placeholder')"
                     class="custom-input shadow-sm" />
             </div>
 
             <div class="mb-4">
                 <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
-                    Insert Variables
+                    {{ $t('subject') }} <span class="text-danger">*</span>
+                </label>
+                <CInput v-model="form.subject" :placeholder="$t('subject_placeholder')"
+                    class="custom-input shadow-sm" />
+            </div>
+
+            <div class="mb-4">
+                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
+                    {{ $t('insert_variables') }}
                 </label>
                 <div class="d-flex flex-wrap" style="gap: 16px;">
-                    <CButton v-for="variable in availableVariables" :key="variable" class="variable-btn shadow-sm"
+                    <CButton v-for="variable in availableVariables" :key="variable.value" class="variable-btn shadow-sm"
                         size="sm" @click="insertVariable(variable)">
-                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ variable }}
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ t(variable.labelKey, variable.value) }}
                     </CButton>
                 </div>
             </div>
 
             <div>
                 <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">
-                    Content <span class="text-danger">*</span>
+                    {{ $t('content') }} <span class="text-danger">*</span>
                 </label>
                 <CTextarea v-model="form.template" :rows="8" class="custom-textarea shadow-sm"
-                    placeholder="Write your email content here..." style="border-color: #ef4444;" />
+                    :placeholder="$t('content_placeholder')" style="border-color: #ef4444;" />
             </div>
         </div>
 
@@ -47,12 +48,12 @@
             <div class="w-100 d-flex justify-content-end px-3 py-2">
                 <CButton color="light" class="mr-3 filter-card font-weight-bold"
                     style="color: #4b5563; padding: 8px 24px;" @click="visible = false">
-                    Cancel
+                    {{ $t('cancel') }}
                 </CButton>
                 <CButton color="danger" class="font-weight-bold px-4 d-flex align-items-center"
                     style="padding: 8px 24px; border-radius: 6px;" @click="submit">
                     <CIcon name="cil-save" class="mr-2" />
-                    {{ isEditing ? 'Update Template' : 'Save Template' }}
+                    {{ isEditing ? $t('update_template') : $t('save_template') }}
                 </CButton>
             </div>
         </template>
@@ -75,11 +76,11 @@ export default {
                 template: ''
             },
             availableVariables: [
-                'Student Name',
-                'Student ID',
-                'School',
-                'Program',
-                'Academic Year'
+                { value: 'Student Name', labelKey: 'student_name' },
+                { value: 'Student ID', labelKey: 'student_id' },
+                { value: 'School', labelKey: 'school' },
+                { value: 'Program', labelKey: 'program' },
+                { value: 'Academic Year', labelKey: 'academicYear' }
             ]
         }
     },
@@ -109,6 +110,9 @@ export default {
         }
     },
     methods: {
+        t(key, fallback) {
+            return this.$te(key) ? this.$t(key) : fallback
+        },
         resetForm() {
             if (!this.isEditing) {
                 this.form = {
@@ -118,8 +122,8 @@ export default {
                 };
             }
         },
-        insertVariable(variableName) {
-            const tag = `{{${variableName}}}`;
+        insertVariable(variable) {
+            const tag = `{{${variable.value}}}`;
             this.form.template = this.form.template ? this.form.template + ' ' + tag : tag;
         },
         handleModalClose(val) {
@@ -129,7 +133,7 @@ export default {
         },
         submit() {
             if (!this.form.title || !this.form.template) {
-                alert("Template Name and Content are required");
+                alert(this.$t('template_name_and_content_required'));
                 return;
             }
             this.$emit('submit', { ...this.form });

@@ -9,7 +9,7 @@
               <CIcon name="cil-school" height="24" style="color: #64748b;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Certificates</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscertificates_vue_total_certificates') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ total.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -24,7 +24,7 @@
               <CIcon name="cil-check-circle" height="24" style="color: #059669;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Issued</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscertificates_vue_issued') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ issued.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -39,7 +39,7 @@
               <CIcon name="cil-pencil" height="24" style="color: #d97706;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Draft</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscertificates_vue_draft') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ draft.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -54,7 +54,7 @@
               <CIcon name="cil-shield-alt" height="24" style="color: #dc2626;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Revoked</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscertificates_vue_revoked') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ revoked.toLocaleString() }}</div>
         </CCardBody>
       </CCard>

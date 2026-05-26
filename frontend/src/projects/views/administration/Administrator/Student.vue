@@ -1,33 +1,17 @@
 <template>
     <div class="administrator-view">
-        <AdministratorHeader 
-            @add-student="$refs.modalStudent.openAdd()"
-            @refresh="onInit" 
-        />
+        <AdministratorHeader @add-student="$refs.modalStudent.openAdd()" @refresh="onInit" />
 
-        <WidgetsAdministrator 
-            :studentCount="storedStudents ? storedStudents.length : 0"
-            :advisorCount="storedAdvisors ? storedAdvisors.length : 0"
-            :selectedSchool="selectedSchoolName"
-            :selectedMajor="selectedMajorName"
-            :selectedYear="selectedYearName"
-            activeTab="Student"
-        />
-        
+        <WidgetsAdministrator :studentCount="storedStudents ? storedStudents.length : 0"
+            :advisorCount="storedAdvisors ? storedAdvisors.length : 0" :selectedSchool="selectedSchoolName"
+            :selectedMajor="selectedMajorName" :selectedYear="selectedYearName" activeTab="Student" />
+
         <div>
-            <FilterStudent 
-                :search.sync="search" 
-                :school.sync="school" 
-                :program.sync="program" 
-                :academic.sync="academic" 
-                :semester.sync="semester" 
-            />
+            <FilterStudent :search.sync="search" :school.sync="school" :program.sync="program" :academic.sync="academic"
+                :semester.sync="semester" />
 
-            <TableAdministratorStudent 
-                :filteredStudents="filteredStudents"
-                @edit-student="$refs.modalStudent.openEdit($event)" 
-                @refresh="onInit" 
-            />
+            <TableAdministratorStudent :filteredStudents="filteredStudents"
+                @edit-student="$refs.modalStudent.openEdit($event)" @refresh="onInit" />
         </div>
 
         <ModalEditStudent ref="modalStudent" @refresh="onInit" />
@@ -80,22 +64,27 @@ export default {
         ...mapGetters('member/students', { storedStudents: 'students' }),
         ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
         selectedSchoolName() {
-            if (!this.school || !this.storedSchools) return 'ALL';
+            if (!this.school || !this.storedSchools) return this.$t('all');
+            const lang = this.$i18n.locale || 'en';
             const school = this.storedSchools.find(s => s._id === this.school);
-            if (!school) return 'ALL';
-            const enName = school.title?.find(t => t.key === 'en')?.value || '';
-            // If it's something like "School of Information Technology", might want "IT"
-            // For now, return the name or a shortened version if common
-            return enName;
+            if (!school) return this.$t('all');
+            const titleObj = Array.isArray(school.title)
+                ? (school.title.find(t => t.key === lang) || school.title.find(t => t.key === 'en') || school.title.find(t => t.key === 'th'))
+                : null;
+            return (titleObj && titleObj.value) ? titleObj.value : this.$t('all');
         },
         selectedMajorName() {
-            if (!this.program || !this.storedPrograms) return 'ALL';
+            if (!this.program || !this.storedPrograms) return this.$t('all');
+            const lang = this.$i18n.locale || 'en';
             const prog = this.storedPrograms.find(p => p._id === this.program);
-            if (!prog) return 'ALL';
-            return prog.title?.find(t => t.key === 'en')?.value || 'ALL';
+            if (!prog) return this.$t('all');
+            const titleObj = Array.isArray(prog.title)
+                ? (prog.title.find(t => t.key === lang) || prog.title.find(t => t.key === 'en') || prog.title.find(t => t.key === 'th'))
+                : null;
+            return (titleObj && titleObj.value) ? titleObj.value : this.$t('all');
         },
         selectedYearName() {
-            return this.academic || 'ALL';
+            return this.academic || this.$t('all');
         },
         studentFilters() {
             return {
@@ -107,6 +96,8 @@ export default {
         },
 
         formattedStudents() {
+            const lang = this.$i18n.locale || 'en';
+            const altLang = lang === 'th' ? 'en' : 'th';
             if (!this.storedStudents || !this.storedStudents.length) return [];
             return this.storedStudents.map(s => {
                 const getVal = (arr, k) => {
@@ -119,9 +110,15 @@ export default {
                     ...s,
                     nameThai: getVal(s.name, 'th'),
                     nameEnglish: getVal(s.name, 'en'),
-                    programName: s.info?.program ? getVal(s.info.program.title, 'en') : '',
-                    schoolName: s.info?.school ? getVal(s.info.school.title, 'en') : '',
-                    courseName: s.info?.course ? getVal(s.info.course.title, 'en') : '',
+                    primaryName: getVal(s.name, lang) || getVal(s.name, 'th'),
+                    secondaryName: getVal(s.name, altLang),
+                    primarySchoolName: s.info?.school ? (getVal(s.info.school.title, lang) || getVal(s.info.school.title, 'en') || getVal(s.info.school.title, 'th')) : '',
+                    secondarySchoolName: s.info?.school ? getVal(s.info.school.title, altLang) : '',
+                    primaryProgramName: s.info?.program ? (getVal(s.info.program.title, lang) || getVal(s.info.program.title, 'en') || getVal(s.info.program.title, 'th')) : '',
+                    secondaryProgramName: s.info?.program ? getVal(s.info.program.title, altLang) : '',
+                    programName: s.info?.program ? (getVal(s.info.program.title, lang) || getVal(s.info.program.title, 'en')) : '',
+                    schoolName: s.info?.school ? (getVal(s.info.school.title, lang) || getVal(s.info.school.title, 'en')) : '',
+                    courseName: s.info?.course ? (getVal(s.info.course.title, lang) || getVal(s.info.course.title, 'en')) : '',
                     semester: s.info?.semester,
                     year: s.info?.year
                 };
@@ -140,7 +137,7 @@ export default {
                 if (!matchesSearch) return false;
 
                 const info = student.info || {};
-                
+
                 if (this.studentFilters.school) {
                     const studentSchoolId = info.school?._id || info.school;
                     if (studentSchoolId !== this.studentFilters.school) return false;

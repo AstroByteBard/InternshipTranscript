@@ -2,51 +2,56 @@
     <div>
         <div v-if="!selectedProgram">
             <CTabs variant="tabs" class="custom-tabs mt-0">
-                <CTab title="Student Email List" active>
+                <CTab :title="$t('components.correspondence_studentemailsection_vue_student_email_list')" active>
                     <CRow class="mt-3">
                         <CCol>
                             <CCard class="table-card border-0 shadow-sm mb-4">
-                                <CDataTable class="custom-table mb-0" :items="programsTable" :fields="fields"
-                                    :items-per-page="itemsPerPage" :pagination="false" hover
-                                    :activePage.sync="activePage">
-                                    <template #under-table>
-                                        <div class="d-flex justify-content-between align-items-center px-4 py-3"
-                                            style="border-top: 1px solid #f3f4f6;">
-                                            <div class="text-muted" style="font-size: 13px;">
-                                                Showing {{ tableStartItem }} to {{ tableEndItem }} of {{
-                                                programsTable.length }} results
+                                <div class="table-scroll">
+                                    <CDataTable class="custom-table mb-0" :items="programsTable"
+                                        :fields="translatedFields" :items-per-page="itemsPerPage" :pagination="false"
+                                        hover :activePage.sync="activePage">
+                                        <template #under-table>
+                                            <div class="d-flex justify-content-between align-items-center px-4 py-3"
+                                                style="border-top: 1px solid #f3f4f6;">
+                                                <div class="text-muted" style="font-size: 13px;">
+                                                    {{ $t('showing_results', {
+                                                        start: tableStartItem, end: tableEndItem,
+                                                        total: programsTable.length
+                                                    }) }}
+                                                </div>
+                                                <CPagination :activePage.sync="activePage" :pages="totalPages"
+                                                    :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
                                             </div>
-                                            <CPagination :activePage.sync="activePage" :pages="totalPages"
-                                                :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
-                                        </div>
-                                    </template>
-                                    <template #sendStatus="{ item }">
-                                        <td class="text-center align-middle">
-                                            <div class="status-pill" :class="getStatusClass(item.sendStatus)">
-                                                <CIcon :name="getStatusIcon(item.sendStatus)" size="sm" class="mr-1" />
-                                                {{ formatSendStatus(item.sendStatus) }}
-                                            </div>
-                                        </td>
-                                    </template>
-                                    <template #actions="{ item }">
-                                        <td class="text-center align-middle">
-                                            <CButton class="btn-action-icon mr-2" @click="sendEmail(item._id)"
-                                                title="Send Email">
-                                                <CIcon name="cil-envelope-closed" />
-                                            </CButton>
-                                            <CButton class="btn-action-icon" @click="selectProgram(item)"
-                                                title="View Details">
-                                                <CIcon name="cil-options" />
-                                            </CButton>
-                                        </td>
-                                    </template>
-                                </CDataTable>
+                                        </template>
+                                        <template #sendStatus="{ item }">
+                                            <td class="text-center align-middle">
+                                                <div class="status-pill" :class="getStatusClass(item.sendStatus)">
+                                                    <CIcon :name="getStatusIcon(item.sendStatus)" size="sm"
+                                                        class="mr-1" />
+                                                    {{ formatSendStatus(item.sendStatus) }}
+                                                </div>
+                                            </td>
+                                        </template>
+                                        <template #actions="{ item }">
+                                            <td class="text-center align-middle">
+                                                <CButton class="btn-action-icon mr-2" @click="sendEmail(item._id)"
+                                                    :title="$t('send_email')">
+                                                    <CIcon name="cil-envelope-closed" />
+                                                </CButton>
+                                                <CButton class="btn-action-icon" @click="selectProgram(item)"
+                                                    :title="$t('view_details')">
+                                                    <CIcon name="cil-options" />
+                                                </CButton>
+                                            </td>
+                                        </template>
+                                    </CDataTable>
+                                </div>
                             </CCard>
                         </CCol>
                     </CRow>
                 </CTab>
 
-                <CTab title="Email">
+                <CTab :title="$t('email')">
                     <div v-if="emailsData.length === 0" class="mt-4">
                         <CCard class="text-center border-0 shadow-sm" style="border-radius: 8px;">
                             <CCardBody class="d-flex flex-column justify-content-center align-items-center"
@@ -63,7 +68,7 @@
                                 <CButton color="danger" class="font-weight-bold px-4"
                                     style="border-radius: 6px; padding-top: 8px; padding-bottom: 8px;"
                                     @click="$refs.modalTemplate.openAdd()">
-                                    Create New Template
+                                    {{ $t('create_new_template') }}
                                 </CButton>
                             </CCardBody>
                         </CCard>
@@ -72,10 +77,11 @@
                         <CCard class="table-card border-0 shadow-sm mt-4">
                             <CCardHeader
                                 class="d-flex justify-content-between align-items-center bg-white border-bottom-0 pt-4 pb-3 px-4">
-                                <h5 class="mb-0 font-weight-bold" style="color: #1e293b;">Available Templates</h5>
+                                <h5 class="mb-0 font-weight-bold" style="color: #1e293b;">{{ $t('available_templates')
+                                }}</h5>
                                 <CButton color="danger" size="sm" class="font-weight-bold px-3 py-2"
                                     style="border-radius: 6px;" @click="$refs.modalTemplate.openAdd()">
-                                    <CIcon name="cil-file" class="mr-2" /> Create New Template
+                                    <CIcon name="cil-file" class="mr-2" /> {{ $t('create_new_template') }}
                                 </CButton>
                             </CCardHeader>
                             <CCardBody class="p-0">
@@ -83,10 +89,12 @@
                                     <table class="table custom-template-table mb-0">
                                         <thead>
                                             <tr>
-                                                <th class="pl-4" style="width: 40%;">TEMPLATE DETAILS</th>
-                                                <th style="width: 20%;" class="text-center">CREATED DATE</th>
-                                                <th style="width: 20%;" class="text-center">ACTIVE STATUS</th>
-                                                <th style="width: 20%;" class="text-right pr-4">ACTIONS</th>
+                                                <th class="pl-4" style="width: 40%;">{{ $t('template_details') }}</th>
+                                                <th style="width: 20%;" class="text-center">{{ $t('created_date') }}
+                                                </th>
+                                                <th style="width: 20%;" class="text-center">{{ $t('active_status_label')
+                                                }}</th>
+                                                <th style="width: 20%;" class="text-right pr-4">{{ $t('actions') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -94,13 +102,13 @@
                                                 <td class="pl-4">
                                                     <div class="font-weight-bold"
                                                         style="color: #1e293b; font-size: 15px;">{{
-                                                        email.title }}</div>
+                                                            email.title }}</div>
                                                     <div class="text-muted mt-1" style="font-size: 13px;">{{
                                                         email.description }}</div>
                                                 </td>
                                                 <td class="text-center text-muted" style="font-size: 14px;">
                                                     <CIcon name="cil-clock" size="sm" class="mr-1" /> {{
-                                                    email.updatedAt.split(' ')[0]
+                                                        email.updatedAt.split(' ')[0]
                                                     }}
                                                 </td>
                                                 <td class="text-center">
@@ -109,26 +117,27 @@
                                                         style="color: #dc2626;">
                                                         <CIcon name="cil-check-circle" class="mr-1"
                                                             style="color: #dc2626; width: 16px; height: 16px;" />
-                                                        Active
+                                                        {{ $t('active') }}
                                                     </div>
                                                     <div v-else
                                                         class="d-inline-flex align-items-center text-muted cursor-pointer"
-                                                        @click="useTemplate(email._id)" title="Click to make active">
+                                                        @click="useTemplate(email._id)"
+                                                        :title="$t('click_to_make_active')">
                                                         <div class="mr-2"
                                                             style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;">
                                                         </div>
-                                                        Inactive
+                                                        {{ $t('inactive') }}
                                                     </div>
                                                 </td>
                                                 <td class="text-right pr-4">
                                                     <CButton variant="ghost" color="secondary" size="sm"
                                                         class="btn-action-icon mr-2" @click="openEditModal(email)"
-                                                        title="Edit">
+                                                        :title="$t('edit')">
                                                         <CIcon name="cil-pencil" />
                                                     </CButton>
                                                     <CButton variant="ghost" color="secondary" size="sm"
                                                         class="btn-action-icon" @click="removeEmail(email._id)"
-                                                        title="Delete">
+                                                        :title="$t('delete')">
                                                         <CIcon name="cil-trash" />
                                                     </CButton>
                                                 </td>
@@ -164,13 +173,12 @@ export default {
         return {
             selectedProgram: null,
             fields: [
-                { key: 'id', label: 'ID', _style: 'min-width: 100px' },
-                { key: 'student', label: 'STUDENT', _style: 'min-width: 100px' },
-                { key: 'schoolName', label: 'SCHOOL NAME', _style: 'min-width: 300px' },
-                { key: 'programName', label: 'PROGRAM NAME', _style: 'min-width: 300px' },
-                { key: 'academicYear', label: 'ACADEMIC YEAR', _style: 'min-width: 100px' },
-                { key: 'sendStatus', label: 'STATUS', _classes: 'text-center' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
+                { key: 'id', _style: 'min-width: 100px' },
+                { key: 'student', _style: 'min-width: 300px' },
+                { key: 'programName', _style: 'min-width: 300px' },
+                { key: 'academicYear', _style: 'min-width: 140px' },
+                { key: 'sendStatus', _classes: 'text-center' },
+                { key: 'actions', _classes: 'text-center', sorter: false, filter: false },
             ],
             activePage: 1,
             itemsPerPage: 5,
@@ -193,8 +201,9 @@ export default {
             return map[status] ?? 'cil-clock'
         },
         formatSendStatus(status) {
-            if (!status) return 'Pending'
-            return status.charAt(0) + status.slice(1).toLowerCase()
+            if (!status) return ''
+            const key = status.toLowerCase()
+            return this.$te(key) ? this.$t(key) : (status.charAt(0) + status.slice(1).toLowerCase())
         },
         selectProgram(program) { this.selectedProgram = program },
         openEditModal(email) { this.$refs.modalTemplate.openEdit(email) },
@@ -267,6 +276,49 @@ export default {
             })
         },
 
+        // translate fields similar to other table components
+        translatedFields() {
+            const lang = this.$i18n.locale || 'en'
+            const keyMap = {
+                schoolName: 'school',
+                programName: 'program',
+                id: 'id_label',
+                sendStatus: 'status',
+                actions: 'actions',
+                student: 'student',
+                academicYear: 'academicYear'
+            }
+            const thaiLabels = {
+                id: 'id_label',
+                student: 'student',
+                programName: 'program',
+                academicYear: 'academicYear'
+            }
+            return this.fields.map(f => {
+                if (lang === 'th' && thaiLabels[f.key]) {
+                    return Object.assign({}, f, { label: this.$t(thaiLabels[f.key]) })
+                }
+                if (f.key === 'id') return Object.assign({}, f, { label: 'ID' })
+                if (f.key === 'student') return Object.assign({}, f, { label: 'STUDENT' })
+                if (f.key === 'programName') return Object.assign({}, f, { label: 'PROGRAM' })
+                if (f.key === 'academicYear') return Object.assign({}, f, { label: 'ACADEMIC YEAR' })
+                const mapped = keyMap[f.key]
+                const candidates = [
+                    mapped && `table.fields.${mapped}`,
+                    mapped && `${mapped}_label`,
+                    `table.fields.${f.key}`,
+                    `${f.key}_label`,
+                    mapped,
+                    f.key,
+                ].filter(Boolean)
+                let label = f.key.toUpperCase()
+                for (const k of candidates) {
+                    if (this.$te(k)) { label = this.$t(k); break }
+                }
+                return Object.assign({}, f, { label })
+            })
+        },
+
         emailsData() {
             const lang = this.$i18n.locale
             if (!this.emailStudent) return []
@@ -334,6 +386,12 @@ export default {
 
 ::v-deep .custom-table table {
     margin-bottom: 0;
+    min-width: 980px;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 ::v-deep .custom-table thead th {
@@ -341,8 +399,11 @@ export default {
     color: #9ca3af !important;
     font-size: 11px !important;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em;
+    /* allow translations (Thai) to wrap and keep proper casing */
+    text-transform: none !important;
+    /* allow header text to wrap instead of forcing wide columns */
+    white-space: normal !important;
+    word-break: break-word;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
@@ -361,6 +422,10 @@ export default {
     border-bottom: 1px solid #f3f4f6 !important;
     padding: 16px 24px !important;
     vertical-align: middle;
+    /* truncate long content to avoid horizontal scroll */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 ::v-deep .custom-table tbody tr:hover td {

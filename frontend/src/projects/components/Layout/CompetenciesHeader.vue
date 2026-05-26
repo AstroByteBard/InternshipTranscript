@@ -2,21 +2,15 @@
   <div class="competencies-hero-container mb-4 shadow-lg animate-fade-in">
     <div class="hero-content d-flex justify-content-between align-items-center">
       <div class="hero-text-section px-4">
-        <h1 class="hero-title animate-slide-up">Competencies & Assessment</h1>
-        <p class="hero-subtitle animate-slide-up-delay-1">Mae Fah Luang University (MFU) | Assessment Standard</p>
+        <h1 class="hero-title animate-slide-up">{{ $t('components.layout_competenciesheader_vue_competencies_assessment') }}</h1>
+        <p class="hero-subtitle animate-slide-up-delay-1">{{ $t('components.layout_competenciesheader_vue_mae_fah_luang_university_mfu_a') }}</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2 flex-wrap">
             <div class="hero-badge mr-3 mb-2">
-                <CIcon name="cil-star" class="mr-2 icon-gold" size="sm"/>
-                General Competencies
-            </div>
+                <CIcon name="cil-star" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_competenciesheader_vue_general_competencies') }}</div>
             <div class="hero-badge mr-3 mb-2">
-                <CIcon name="cil-check-circle" class="mr-2 icon-gold" size="sm"/>
-                Specific Skills
-            </div>
+                <CIcon name="cil-check-circle" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_competenciesheader_vue_specific_skills') }}</div>
             <div class="hero-badge mb-2">
-                <CIcon name="cil-chat-bubble" class="mr-2 icon-gold" size="sm"/>
-                Propositions
-            </div>
+                <CIcon name="cil-chat-bubble" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_competenciesheader_vue_propositions') }}</div>
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in d-flex align-items-center">
@@ -25,9 +19,7 @@
           {{ createLabel }}
         </CButton>
         <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow" @click="goToPreview">
-          <CIcon name="cil-notes" class="mr-2 text-danger"/>
-          Assessment Form
-        </CButton>
+          <CIcon name="cil-notes" class="mr-2 text-danger"/>{{ $t('components.layout_competenciesheader_vue_assessment_form') }}</CButton>
       </div>
     </div>
     <!-- Abstract decorative elements from Dashboard -->

@@ -4,23 +4,17 @@
             <div class="custom-segmented-control">
                 <CButtonGroup class="w-100 h-100">
                     <CButton class="segment-btn font-weight-bold" :class="{ 'active': selected === 'StudentData' }"
-                        @click="$emit('update:selected', 'StudentData')">
-                        Student
-                    </CButton>
+                        @click="$emit('update:selected', 'StudentData')">{{ $t('components.correspondence_correspondenceheader_vue_student') }}</CButton>
                     <CButton class="segment-btn font-weight-bold" :class="{ 'active': selected === 'AdviserData' }"
-                        @click="$emit('update:selected', 'AdviserData')">
-                        Adviser
-                    </CButton>
+                        @click="$emit('update:selected', 'AdviserData')">{{ $t('components.correspondence_correspondenceheader_vue_adviser') }}</CButton>
                 </CButtonGroup>
             </div>
         </CCol>
         <CCol md="6" class="d-flex justify-content-end">
             <CButton class="btn-filter-action mr-2" @click="$emit('preview-form')">
-                <CIcon name="cil-file" class="mr-2" /> PreviewForm
-            </CButton>
+                <CIcon name="cil-file" class="mr-2" />{{ $t('components.correspondence_correspondenceheader_vue_previewform') }}</CButton>
             <CButton class="btn-filter-action btn-filter-red" @click="$emit('preview-email')">
-                <CIcon name="cil-envelope-open" class="mr-2" /> PreviewEmail
-            </CButton>
+                <CIcon name="cil-envelope-open" class="mr-2" />{{ $t('components.correspondence_correspondenceheader_vue_previewemail') }}</CButton>
         </CCol>
     </CRow>
 </template>

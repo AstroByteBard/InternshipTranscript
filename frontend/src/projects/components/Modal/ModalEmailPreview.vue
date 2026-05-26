@@ -1,7 +1,7 @@
 <template>
     <CModal :centered="true" :show.sync="show" :close-on-backdrop="true" size="lg">
         <template #header>
-            <h5 class="modal-title font-weight-bold" style="color: #111827;">Email Preview</h5>
+            <h5 class="modal-title font-weight-bold" style="color: #111827;">{{ $t('components.modal_modalemailpreview_vue_email_preview') }}</h5>
             <CButtonClose @click="close" class="text-black" />
         </template>
 

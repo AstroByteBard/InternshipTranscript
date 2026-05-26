@@ -4,56 +4,37 @@
       <CRow class="align-items-end">
         <!-- Search Bar -->
         <CCol lg="3" md="3" class="mb-3 mb-lg-0">
-          <label class="filter-mini-label">SEARCH</label>
+          <label class="filter-mini-label">{{ $t('components.filter_filterhardskill_vue_search') }}</label>
           <div class="search-input-wrapper">
             <CIcon name="cil-search" class="search-icon" />
-            <input
-              type="text"
-              class="form-control modern-search-input"
-              placeholder="Search Hardskill..."
-              :value="searchQuery"
-              @input="$emit('update:searchQuery', $event.target.value)"
-            />
+            <input type="text" class="form-control modern-search-input"
+              :placeholder="$t('components.filter_filterhardskill_vue_search_hardskill')" :value="searchQuery"
+              @input="$emit('update:searchQuery', $event.target.value)" />
           </div>
         </CCol>
 
         <!-- School Filter -->
         <CCol lg="3" md="3" class="mb-3 mb-lg-0">
-          <label class="filter-mini-label">SCHOOL</label>
-          <CSelect
-            custom
-            class="modern-select-filter mb-0"
-            :options="schoolOptions"
-            :value="selectionSchool"
+          <label class="filter-mini-label">{{ $t('components.filter_filterhardskill_vue_school') }}</label>
+          <CSelect custom class="modern-select-filter mb-0" :options="schoolOptions" :value="selectionSchool"
             @update:value="$emit('update:selectionSchool', $event)"
-            placeholder="All Schools"
-          />
+            :placeholder="$t('components.filter_filterhardskill_vue_all_schools')" />
         </CCol>
 
         <!-- Major/Program Filter -->
         <CCol lg="3" md="3" class="mb-3 mb-lg-0">
-          <label class="filter-mini-label">MAJOR / PROGRAM</label>
-          <CSelect
-            custom
-            class="modern-select-filter mb-0"
-            :options="majorOptions"
-            :value="selectionMajor"
+          <label class="filter-mini-label">{{ $t('components.filter_filterhardskill_vue_major_program') }}</label>
+          <CSelect custom class="modern-select-filter mb-0" :options="majorOptions" :value="selectionMajor"
             @update:value="$emit('update:selectionMajor', $event)"
-            placeholder="All Majors"
-          />
+            :placeholder="$t('components.filter_filterhardskill_vue_all_majors')" />
         </CCol>
 
         <!-- Academic Year Filter -->
         <CCol lg="3" md="3" class="mb-3 mb-lg-0">
-          <label class="filter-mini-label">ACADEMIC YEAR</label>
-          <CSelect
-            custom
-            class="modern-select-filter mb-0"
-            :options="yearOptions"
-            :value="selectionAcademicYear"
+          <label class="filter-mini-label">{{ $t('components.filter_filterhardskill_vue_academic_year') }}</label>
+          <CSelect custom class="modern-select-filter mb-0" :options="yearOptions" :value="selectionAcademicYear"
             @update:value="$emit('update:selectionAcademicYear', $event)"
-            placeholder="All Years"
-          />
+            :placeholder="$t('components.filter_filterhardskill_vue_all_years')" />
         </CCol>
       </CRow>
     </CCardBody>

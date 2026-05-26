@@ -2,66 +2,67 @@
     <CRow>
         <CCol>
             <CCard class="table-card border-0 shadow-sm mb-4">
-                <CDataTable class="custom-table mb-0" :items="filteredAdvisors" :fields="advisorFields"
-                    :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePageAdvisor">
+                <div class="table-scroll">
+                    <CDataTable class="custom-table mb-0" :items="filteredAdvisors" :fields="advisorFields"
+                        :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePageAdvisor">
 
-                    <!-- Name Combo -->
-                    <template #nameCombo="{ item }">
-                        <td class="align-middle">
-                            <div><strong>{{ item.nameThai || '-' }}</strong></div>
-                            <div class="text-muted small">{{ item.nameEnglish || '-' }}</div>
-                        </td>
-                    </template>
+                        <!-- Name Combo -->
+                        <template #nameCombo="{ item }">
+                            <td class="align-middle">
+                                <div><strong>{{ item.nameThai || '-' }}</strong></div>
+                                <div class="text-muted small">{{ item.nameEnglish || '-' }}</div>
+                            </td>
+                        </template>
 
-                    <!-- Organization Combo -->
-                    <template #province="{ item }">
-                        <td class="align-middle">
-                            {{ getProvinceName(item.province) }}
-                        </td>
-                    </template>
+                        <!-- Organization Combo -->
+                        <template #province="{ item }">
+                            <td class="align-middle">
+                                {{ getProvinceName(item.province) }}
+                            </td>
+                        </template>
 
-                    <template #organizationCombo="{ item }">
-                        <td class="align-middle">
-                            <div><strong>{{ item.organizationName || '-' }}</strong></div>
-                            <div class="text-muted small">{{ item.organizationAddress || '-' }}</div>
-                        </td>
-                    </template>
+                        <template #organizationCombo="{ item }">
+                            <td class="align-middle">
+                                <div><strong>{{ item.organizationName || '-' }}</strong></div>
+                                <div class="text-muted small">{{ item.organizationAddress || '-' }}</div>
+                            </td>
+                        </template>
 
-                    <!-- actions -->
-                    <template #actions="{ item }">
-                        <td class="text-center align-middle">
-                            <CButton class="btn-action-icon mr-2" @click="editAdvisor(item)" title="Edit">
-                                <CIcon name="cil-pencil" />
-                            </CButton>
-                            <CButton class="btn-action-icon" @click="deleteAdvisor(item)" title="Delete">
-                                <CIcon name="cil-trash" />
-                            </CButton>
-                        </td>
-                    </template>
+                        <!-- actions -->
+                        <template #actions="{ item }">
+                            <td class="text-center align-middle">
+                                <CButton class="btn-action-icon mr-2" @click="editAdvisor(item)" :title="$t('edit')">
+                                    <CIcon name="cil-pencil" />
+                                </CButton>
+                                <CButton class="btn-action-icon" @click="deleteAdvisor(item)" :title="$t('delete')">
+                                    <CIcon name="cil-trash" />
+                                </CButton>
+                            </td>
+                        </template>
 
-                    <!-- Student Combo -->
-                    <template #studentCombo="{ item }">
-                        <td class="align-middle">
-                            <div><strong>{{ item.studentName || '-' }}</strong></div>
-                            <div class="text-muted small">{{ item.studentID || '-' }}</div>
-                        </td>
-                    </template>
+                        <!-- Student Combo -->
+                        <template #studentCombo="{ item }">
+                            <td class="align-middle">
+                                <div><strong>{{ item.studentName || '-' }}</strong></div>
+                                <div class="text-muted small">{{ item.studentID || '-' }}</div>
+                            </td>
+                        </template>
 
-                    <!-- Under Table Pagination & Info -->
-                    <template #under-table>
-                        <div class="d-flex justify-content-between align-items-center px-4 py-3"
-                            style="border-top: 1px solid #f3f4f6;">
-                            <div class="text-muted" style="font-size: 13px;">
-                                Showing {{ tableStartItemAdvisor }} to {{ tableEndItemAdvisor }} of {{
-                                    filteredAdvisors.length }}
-                                results
-                            </div>
-                            <CPagination :activePage.sync="activePageAdvisor" :pages="totalPagesAdvisor"
-                                :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
-                        </div>
-                    </template>
+                    </CDataTable>
+                </div>
 
-                </CDataTable>
+                <!-- Footer: stay visible below scroll area -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 table-footer"
+                    style="border-top: 1px solid #f3f4f6;">
+                    <div class="text-muted" style="font-size: 13px;">
+                        {{ $t('showing_results', {
+                            start: tableStartItemAdvisor, end: tableEndItemAdvisor,
+                            total: filteredAdvisors.length
+                        }) }}
+                    </div>
+                    <CPagination :activePage.sync="activePageAdvisor" :pages="totalPagesAdvisor" :doubleArrows="false"
+                        align="end" class="mb-0 custom-pagination" />
+                </div>
             </CCard>
         </CCol>
     </CRow>
@@ -80,13 +81,6 @@ export default {
         return {
             activePageAdvisor: 1,
             itemsPerPage: 5,
-            advisorFields: [
-                { key: 'organizationCombo', label: 'ORGANISATION INFO' },
-                { key: 'province', label: 'PROVINCE' },
-                { key: 'email', label: 'EVALUATOR\'S EMAIL' },
-                { key: 'studentCombo', label: 'STUDENT NAME / ID' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
-            ],
         }
     },
     methods: {
@@ -94,13 +88,13 @@ export default {
             this.$emit('edit-advisor', advisor);
         },
         deleteAdvisor(item) {
-            if (confirm(`Are you sure you want to delete advisor ${item.email}?`)) {
+            if (confirm(this.$t('confirm_delete_advisor', { email: item.email }))) {
                 this.$store.dispatch("member/advisors/deleteAdvisors", { _id: item._id }).then(() => {
                     this.$emit('refresh');
-                    alert(`Advisor deleted successfully!`);
+                    alert(this.$t('advisor_deleted_successfully'));
                 }).catch(err => {
                     console.error("Failed to delete advisor:", err);
-                    alert("Failed to delete advisor.");
+                    alert(this.$t('failed_to_delete_advisor'));
                 });
             }
         },
@@ -116,6 +110,15 @@ export default {
         },
     },
     computed: {
+        advisorFields() {
+            return [
+                { key: 'organizationCombo', label: this.$t('organisation_info') },
+                { key: 'province', label: this.$t('province') },
+                { key: 'email', label: this.$t('evaluator_email') },
+                { key: 'studentCombo', label: this.$t('student_name_id') },
+                { key: 'actions', label: this.$t('actions'), _classes: 'text-center', sorter: false, filter: false },
+            ];
+        },
         totalPagesAdvisor() {
             return Math.ceil(this.filteredAdvisors.length / this.itemsPerPage) || 1;
         },
@@ -139,8 +142,59 @@ export default {
     padding-bottom: 8px;
 }
 
+
 ::v-deep .custom-table table {
     margin-bottom: 0;
+    min-width: 980px;
+}
+
+/* Keep cells single-line and truncate with ellipsis like Correspondence table */
+::v-deep .custom-table tbody td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+
+    ::v-deep .custom-table thead th:nth-child(1),
+    ::v-deep .custom-table tbody td:nth-child(1) {
+        width: 50%;
+    }
+
+    ::v-deep .custom-table thead th:nth-child(3),
+    ::v-deep .custom-table tbody td:nth-child(3) {
+        width: 30%;
+    }
+
+    ::v-deep .custom-table thead th:nth-child(4),
+    ::v-deep .custom-table tbody td:nth-child(4) {
+        width: 30%;
+    }
+}
+
+.table-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 10px;
+    /* reserve space so scrollbar doesn't overlap content */
+    scrollbar-gutter: stable;
+    /* keep layout stable when scrollbar appears */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* show a thin scrollbar on WebKit browsers for better visibility */
+::v-deep .table-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+::v-deep .table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(107, 114, 128, 0.25);
+    border-radius: 9999px;
+}
+
+.table-footer {
+    background: white;
 }
 
 ::v-deep .custom-table thead th {

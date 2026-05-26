@@ -1,31 +1,41 @@
 <template>
-    <CModal :title="isEditing ? 'Edit Advisor' : 'Add New Advisor'" :show.sync="show" color="danger" size="lg">
+    <CModal :title="$t('components.modal_modaleditadvisor_vue_isediting_edit_advisor_add_new_ad')" :show.sync="show"
+        color="danger" size="lg">
         <CRow>
             <CCol sm="6">
-                <CInput label="Evaluator's Email *" placeholder="Enter Evaluator Email" type="email"
+                <CInput :label="$t('components.modal_modaleditadvisor_vue_enter_evaluator_email') + ' *'"
+                    :placeholder="$t('components.modal_modaleditadvisor_vue_enter_evaluator_email')" type="email"
                     v-model="formAdvisor.email" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Student ID Linked" placeholder="Enter Student ID" v-model="formAdvisor.studentID" />
+                <CInput :label="$t('components.modal_modaleditadvisor_vue_enter_student_id')"
+                    :placeholder="$t('components.modal_modaleditadvisor_vue_enter_student_id')"
+                    v-model="formAdvisor.studentID" />
             </CCol>
             <CCol sm="12">
-                <CInput label="Organisation Name" placeholder="Organization Name"
+                <CInput :label="$t('components.modal_modaleditadvisor_vue_organization_name')"
+                    :placeholder="$t('components.modal_modaleditadvisor_vue_organization_name')"
                     v-model="formAdvisor.organizationName" />
             </CCol>
             <CCol sm="12">
-                <CInput label="Organisation Address" placeholder="Organization Address"
+                <CInput :label="$t('components.modal_modaleditadvisor_vue_organization_address')"
+                    :placeholder="$t('components.modal_modaleditadvisor_vue_organization_address')"
                     v-model="formAdvisor.organizationAddress" />
             </CCol>
             <CCol sm="6">
-                <CSelect label="Province" :options="provinceOptions" :value="formAdvisor.province" @update:value="formAdvisor.province = $event" />
+                <CSelect :label="$t('components.filter_adminstrator_filteradvisor_vue_province')"
+                    :options="provinceOptions" :value="formAdvisor.province"
+                    @update:value="formAdvisor.province = $event" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Academic Year" placeholder="Year" v-model="formAdvisor.year" />
+                <CInput :label="$t('components.modal_modaleditadvisor_vue_year')"
+                    :placeholder="$t('components.modal_modaleditadvisor_vue_year')" v-model="formAdvisor.year" />
             </CCol>
         </CRow>
         <template #footer>
-            <CButton color="secondary" @click="show = false">Cancel</CButton>
-            <CButton color="danger" @click="submit">{{ isEditing ? 'Update' : 'Save' }}</CButton>
+            <CButton color="secondary" @click="show = false">{{ $t('components.modal_modaleditadvisor_vue_cancel') }}
+            </CButton>
+            <CButton color="danger" @click="submit">{{ isEditing ? $t('update') : $t('save') }}</CButton>
         </template>
     </CModal>
 </template>

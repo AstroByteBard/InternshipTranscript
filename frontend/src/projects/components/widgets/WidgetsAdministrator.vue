@@ -9,7 +9,7 @@
               <CIcon name="cil-bank" height="24" class="text-primary" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">School</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsadministrator_vue_school') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark text-truncate" :title="selectedSchool">{{ selectedSchool }}</div>
         </CCardBody>
       </CCard>
@@ -24,7 +24,7 @@
               <CIcon name="cil-school" height="24" class="text-success" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Major</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsadministrator_vue_major') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark text-truncate" :title="selectedMajor">{{ selectedMajor }}</div>
         </CCardBody>
       </CCard>
@@ -39,7 +39,7 @@
               <CIcon name="cil-calendar" height="24" style="color: #d97706;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">ACADEMIC YEAR</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsadministrator_vue_academic_year') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark text-truncate" :title="selectedYear">{{ selectedYear }}</div>
         </CCardBody>
       </CCard>
@@ -56,7 +56,7 @@
             </div>
           </div>
           <div class="text-muted small text-uppercase font-weight-bold mb-1">
-            {{ activeTab === 'Student' ? 'Total Students' : 'Total adviser' }}
+            {{ activeTab === 'Student' ? $t('components.widgets_widgetsadministrator_vue_total_students') : $t('components.widgets_widgetsadministrator_vue_total_advisors') }}
           </div>
           <div class="h2 font-weight-bold mb-0 text-dark">
             {{ activeTab === 'Student' ? studentCount.toLocaleString() : advisorCount.toLocaleString() }}

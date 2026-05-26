@@ -2,30 +2,21 @@
   <div class="certificates-hero-container mb-4 shadow-lg animate-fade-in">
     <div class="hero-content d-flex justify-content-between align-items-center">
       <div class="hero-text-section px-4">
-        <h1 class="hero-title animate-slide-up">Certificate Management</h1>
-        <p class="hero-subtitle animate-slide-up-delay-1">Official Verification & Student Awards | Internship
-          Achievement</p>
+        <h1 class="hero-title animate-slide-up">{{ $t('components.layout_certificatesheader_vue_certificate_management') }}</h1>
+        <p class="hero-subtitle animate-slide-up-delay-1">{{ $t('components.layout_certificatesheader_vue_official_verification_student_') }}</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2 flex-wrap">
           <div class="hero-badge mr-3 mb-2">
-            <CIcon name="cil-star" class="mr-2 icon-gold" size="sm" />
-            Official
-          </div>
+            <CIcon name="cil-star" class="mr-2 icon-gold" size="sm" />{{ $t('components.layout_certificatesheader_vue_official') }}</div>
           <div class="hero-badge mr-3 mb-2">
-            <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm" />
-            Authenticated
-          </div>
+            <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm" />{{ $t('components.layout_certificatesheader_vue_authenticated') }}</div>
           <div class="hero-badge mb-2">
-            <CIcon name="cil-school" class="mr-2 icon-gold" size="sm" />
-            Transcript Ready
-          </div>
+            <CIcon name="cil-school" class="mr-2 icon-gold" size="sm" />{{ $t('components.layout_certificatesheader_vue_transcript_ready') }}</div>
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in d-flex align-items-center">
         <CButton color="light" class="btn-hero-action mr-3 px-4 py-3 font-weight-bold shadow create-btn"
           @click="$emit('create-click')">
-          <CIcon name="cil-plus" class="mr-2 text-danger" />
-          Create New Certificate
-        </CButton>
+          <CIcon name="cil-plus" class="mr-2 text-danger" />{{ $t('components.layout_certificatesheader_vue_create_new_certificate') }}</CButton>
       </div>
     </div>
     <!-- Abstract decorative elements -->

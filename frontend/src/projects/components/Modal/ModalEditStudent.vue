@@ -1,41 +1,49 @@
 <template>
-    <CModal :title="isEditing ? 'Edit Student' : 'Add New Student'" :show.sync="show" color="danger" size="lg">
+    <CModal :title="$t('components.modal_modaleditstudent_vue_isediting_edit_student_add_new_st')" :show.sync="show"
+        color="danger" size="lg">
         <CRow>
             <CCol sm="6">
-                <CInput label="Student ID" placeholder="Enter ID" v-model="formStudent.studentID" />
+                <CInput :label="studentIdLabel" :placeholder="$t('components.modal_modaleditstudent_vue_enter_id')"
+                    v-model="formStudent.studentID" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Email" placeholder="Enter Email" type="email" v-model="formStudent.email" />
+                <CInput :label="emailLabel" :placeholder="$t('components.modal_modaleditstudent_vue_enter_email')"
+                    type="email" v-model="formStudent.email" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Name (Thai)" placeholder="ชื่อ-นามสกุล" v-model="formStudent.nameThai" />
+                <CInput :label="nameThaiLabel" :placeholder="$t('components.modal_modaleditstudent_vue')"
+                    v-model="formStudent.nameThai" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Name (English)" placeholder="First Last" v-model="formStudent.nameEnglish" />
+                <CInput :label="nameEnglishLabel" :placeholder="$t('components.modal_modaleditstudent_vue_first_last')"
+                    v-model="formStudent.nameEnglish" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Company" placeholder="Organization" v-model="formStudent.company" />
+                <CInput :label="companyLabel" :placeholder="$t('components.modal_modaleditstudent_vue_organization')"
+                    v-model="formStudent.company" />
             </CCol>
             <CCol sm="6">
-                <CSelect label="School" :options="schoolOptions" :value.sync="formStudent.school" />
+                <CSelect :label="schoolLabel" :options="schoolOptions" :value.sync="formStudent.school" />
             </CCol>
             <CCol sm="6">
-                <CSelect label="Program" :options="formProgramOptions" :value.sync="formStudent.program" />
+                <CSelect :label="programLabel" :options="formProgramOptions" :value.sync="formStudent.program" />
             </CCol>
             <CCol sm="6">
-                <CSelect label="Course" :options="courseOptions" :value.sync="formStudent.course" />
+                <CSelect :label="courseLabel" :options="courseOptions" :value.sync="formStudent.course" />
             </CCol>
             <CCol sm="6">
-                <CSelect label="Semester" :options="semesterOptions" :value.sync="formStudent.semester" />
+                <CSelect :label="semesterLabel" :options="semesterOptions" :value.sync="formStudent.semester" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Academic Year" placeholder="Year" v-model="formStudent.year" />
+                <CInput :label="academicYearLabel" :placeholder="$t('components.modal_modaleditstudent_vue_year')"
+                    v-model="formStudent.year" />
             </CCol>
         </CRow>
 
         <template #footer>
-            <CButton color="secondary" @click="show = false">Cancel</CButton>
-            <CButton color="danger" @click="submit">{{ isEditing ? 'Update' : 'Save' }}</CButton>
+            <CButton color="secondary" @click="show = false">{{ $t('components.modal_modaleditstudent_vue_cancel') }}
+            </CButton>
+            <CButton color="danger" @click="submit">{{ submitLabel }}</CButton>
         </template>
     </CModal>
 </template>
@@ -62,8 +70,57 @@ export default {
         ...mapGetters('academic/course', { storedCourses: 'course' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
 
+        isThaiLocale() {
+            return (this.$i18n.locale || 'en').startsWith('th');
+        },
+        studentIdLabel() {
+            return this.$t('student_id');
+        },
+        emailLabel() {
+            return this.$t('email');
+        },
+        nameThaiLabel() {
+            return this.isThaiLocale ? 'ชื่อ (ไทย)' : 'Name (Thai)';
+        },
+        nameEnglishLabel() {
+            return this.isThaiLocale ? 'ชื่อ (อังกฤษ)' : 'Name (English)';
+        },
+        companyLabel() {
+            return this.$t('components.administrator_studentmodal_vue_organization');
+        },
+        schoolLabel() {
+            return this.$t('school');
+        },
+        programLabel() {
+            return this.$t('program');
+        },
+        courseLabel() {
+            return this.isThaiLocale ? 'รายวิชา' : 'Course';
+        },
+        semesterLabel() {
+            return this.$t('semester');
+        },
+        academicYearLabel() {
+            return this.$t('academicYear');
+        },
+        selectSchoolLabel() {
+            return this.$t('components.administrator_studentfiltercard_vue_select_school');
+        },
+        selectProgramLabel() {
+            return this.$t('components.administrator_studentfiltercard_vue_select_program');
+        },
+        selectCourseLabel() {
+            return this.$t('course');
+        },
+        selectSemesterLabel() {
+            return this.$t('components.administrator_studentfiltercard_vue_select_semester');
+        },
+        submitLabel() {
+            return this.isEditing ? this.$t('update') : this.$t('save');
+        },
+
         formProgramOptions() {
-            const lang = this.$i18n.locale;
+            const lang = this.$i18n.locale || 'en';
             let source = this.storedPrograms || [];
 
             if (this.formStudent.school) {
@@ -71,9 +128,11 @@ export default {
             }
 
             return [
-                { value: '', label: 'Select Program' },
+                { value: '', label: this.selectProgramLabel },
                 ...source.map(item => {
-                    const titleObj = item.title.find(t => t.key === lang);
+                    const titleObj = item.title?.find(t => t.key === lang)
+                        || item.title?.find(t => t.key === 'en')
+                        || item.title?.find(t => t.key === 'th');
                     return {
                         value: item._id,
                         label: titleObj ? titleObj.value : ''
@@ -83,37 +142,50 @@ export default {
         },
         schoolOptions() {
             if (!this.storedSchools) return [];
+            const lang = this.$i18n.locale || 'en';
             return [
-                { value: '', label: 'Select School' },
+                { value: '', label: this.selectSchoolLabel },
                 ...this.storedSchools.map(s => ({
                     value: s._id,
-                    label: s.title.find(t => t.key === 'en')?.value || s.title.find(t => t.key === 'th')?.value || s._id
+                    label: s.title?.find(t => t.key === lang)?.value
+                        || s.title?.find(t => t.key === 'en')?.value
+                        || s.title?.find(t => t.key === 'th')?.value
+                        || s._id
                 }))
             ];
         },
         courseOptions() {
             if (!this.storedCourses) return [];
+            const lang = this.$i18n.locale || 'en';
             return [
-                { value: '', label: 'Select Course' },
+                { value: '', label: this.selectCourseLabel },
                 ...this.storedCourses.map(c => ({
                     value: c._id,
-                    label: c.title.find(t => t.key === 'en')?.value || c.title.find(t => t.key === 'th')?.value || c._id
+                    label: c.title?.find(t => t.key === lang)?.value
+                        || c.title?.find(t => t.key === 'en')?.value
+                        || c.title?.find(t => t.key === 'th')?.value
+                        || c._id
                 }))
             ];
         },
         semesterOptions() {
             const lang = this.$i18n.locale || 'en';
             const statuses = this.$store.getters['setting/status/item'] || [];
-            
-            // If statuses are loaded, use them. Otherwise, fallback to an empty list or a default.
-            // Note: Ideally we filter by group ID, but for now we list all statuses.
+
+            // Return numeric semester options when possible (e.g., "Semester 1" -> 1)
             return [
-                { value: '', label: 'Select Semester' },
-                ...statuses.map(s => {
-                    const titleObj = s.title.find(t => t.key === lang) || s.title[0];
+                { value: '', label: this.selectSemesterLabel },
+                ...statuses.map((s, idx) => {
+                    const titleObj = s.title?.find(t => t.key === lang)
+                        || s.title?.find(t => t.key === 'en')
+                        || s.title?.find(t => t.key === 'th')
+                        || s.title?.[0];
+                    const raw = titleObj ? titleObj.value : (s.value || s._id || String(idx + 1));
+                    const m = String(raw).match(/(\d+)/);
+                    const numeric = m ? Number(m[1]) : (idx + 1);
                     return {
-                        value: titleObj ? titleObj.value : s._id, // Using value string as it's a String in Model
-                        label: titleObj ? titleObj.value : s._id
+                        value: numeric,
+                        label: String(numeric)
                     };
                 })
             ];
@@ -155,7 +227,7 @@ export default {
         },
         submit() {
             if (!this.formStudent.studentID || !this.formStudent.email) {
-                alert("Student ID and Email are required");
+                alert(this.isThaiLocale ? 'กรุณากรอกรหัสนักศึกษาและอีเมลให้ครบ' : 'Student ID and Email are required');
                 return;
             }
             const studentData = {
@@ -180,19 +252,19 @@ export default {
                 this.$store.dispatch("member/students/updateStudents", studentData).then(() => {
                     this.$emit('refresh');
                     this.show = false;
-                    alert(`Student ${studentData.studentID} updated successfully!`);
+                    alert(this.isThaiLocale ? `อัปเดตนักศึกษา ${studentData.studentID} สำเร็จ` : `Student ${studentData.studentID} updated successfully!`);
                 }).catch(err => {
                     console.error("Failed to update student:", err);
-                    alert("Failed to update student.");
+                    alert(this.isThaiLocale ? 'อัปเดตนักศึกษาไม่สำเร็จ' : 'Failed to update student.');
                 });
             } else {
                 this.$store.dispatch("member/students/createStudents", [studentData]).then(() => {
                     this.$emit('refresh');
                     this.show = false;
-                    alert(`Student ${studentData.studentID} added successfully!`);
+                    alert(this.isThaiLocale ? `เพิ่มนักศึกษา ${studentData.studentID} สำเร็จ` : `Student ${studentData.studentID} added successfully!`);
                 }).catch(err => {
                     console.error("Failed to add student:", err);
-                    alert("Failed to add student.");
+                    alert(this.isThaiLocale ? 'เพิ่มนักศึกษาไม่สำเร็จ' : 'Failed to add student.');
                 });
             }
         }

@@ -1,6 +1,6 @@
 <template>
     <CTabs variant="tabs" class="custom-tabs mt-4">
-        <CTab title="StudentData" active>
+        <CTab :title="$t('components.correspondence_emailtemplatessection_vue_studentdata')" active>
             <CRow class="mt-3">
                 <CCol>
                     <slot name="student-table"></slot>
@@ -8,19 +8,20 @@
             </CRow>
         </CTab>
 
-        <CTab title="Email">
+        <CTab :title="$t('components.correspondence_emailtemplatessection_vue_email')">
             <!-- Empty State -->
             <div v-if="emailsData.length === 0" class="mt-4">
                 <CCard class="text-center border-0 shadow-sm" style="border-radius: 8px;">
                     <CCardBody class="d-flex flex-column justify-content-center align-items-center"
                         style="padding: 3rem 2rem;">
                         <CIcon name="cil-envelope-open" size="4xl" style="color: #e5e7eb;" class="mb-3" />
-                        <h4 class="font-weight-bold mb-2" style="color: #6b7280;">No Email Templates</h4>
-                        <p class="text-muted mb-4" style="max-width: 400px;">
-                            Create your first email template to start sending correspondence to students
-                        </p>
+                        <h4 class="font-weight-bold mb-2" style="color: #6b7280;">{{
+                            $t('components.correspondence_emailtemplatessection_vue_no_email_templates') }}</h4>
+                        <p class="text-muted mb-4" style="max-width: 400px;">{{
+                            $t('components.correspondence_emailtemplatessection_vue_create_your_first_e') }}</p>
                         <CButton color="danger" class="font-weight-bold px-4" @click="$emit('add-template')">
-                            <CIcon name="cil-plus" class="mr-2" /> Create Email Template
+                            <CIcon name="cil-plus" class="mr-2" />{{
+                                $t('components.correspondence_emailtemplatessection_vue_create_email_templa') }}
                         </CButton>
                     </CCardBody>
                 </CCard>
@@ -31,19 +32,25 @@
                 <CCard class="table-card border-0 shadow-sm mt-4">
                     <CCardHeader class="bg-white border-bottom d-flex justify-content-between align-items-center"
                         style="padding: 1.25rem 1.5rem;">
-                        <h5 class="mb-0 font-weight-bold" style="color: #374151;">Email Templates</h5>
+                        <h5 class="mb-0 font-weight-bold" style="color: #374151;">{{
+                            $t('components.correspondence_emailtemplatessection_vue_email_templates') }}</h5>
                         <CButton color="danger" size="sm" class="font-weight-bold" @click="$emit('add-template')">
-                            <CIcon name="cil-plus" size="sm" class="mr-1" /> Add Template
+                            <CIcon name="cil-plus" size="sm" class="mr-1" />{{
+                                $t('components.correspondence_emailtemplatessection_vue_add_template') }}
                         </CButton>
                     </CCardHeader>
                     <CCardBody class="p-0">
                         <table class="table table-borderless custom-template-table mb-0">
                             <thead>
                                 <tr>
-                                    <th width="35%">Template</th>
-                                    <th width="20%">Status</th>
-                                    <th width="25%">Last Updated</th>
-                                    <th width="20%" class="text-center">Actions</th>
+                                    <th width="35%">{{
+                                        $t('components.correspondence_emailtemplatessection_vue_template') }}</th>
+                                    <th width="20%">{{ $t('components.correspondence_emailtemplatessection_vue_status')
+                                        }}</th>
+                                    <th width="25%">{{
+                                        $t('components.correspondence_emailtemplatessection_vue_last_updated') }}</th>
+                                    <th width="20%" class="text-center">{{
+                                        $t('components.correspondence_emailtemplatessection_vue_actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -60,27 +67,32 @@
                                     <td>
                                         <span v-if="email.active"
                                             class="badge badge-success bg-success text-white font-weight-bold px-3 py-2"
-                                            style="border-radius: 12px;">Active</span>
+                                            style="border-radius: 12px;">{{
+                                                $t('components.correspondence_emailtemplatessection_vue_active') }}</span>
                                         <span v-else
                                             class="badge badge-light bg-light text-muted font-weight-bold px-3 py-2"
-                                            style="border-radius: 12px; border: 1px solid #e5e7eb;">Draft</span>
+                                            style="border-radius: 12px; border: 1px solid #e5e7eb;">{{
+                                                $t('components.correspondence_emailtemplatessection_vue_draft') }}</span>
                                     </td>
                                     <td class="text-muted">{{ email.updatedAt }}</td>
                                     <td class="text-center">
                                         <CButton v-if="!email.active" size="sm" color="success" class="mr-1"
-                                            @click="$emit('use-template', email._id)" title="Use Template">
+                                            @click="$emit('use-template', email._id)"
+                                            :title="$t('components.correspondence_emailtemplatessection_vue_use_template')">
                                             <CIcon name="cil-check" />
                                         </CButton>
                                         <CButton size="sm" color="light" class="mr-1"
-                                            @click="$emit('edit-template', email)" title="Edit">
+                                            @click="$emit('edit-template', email)"
+                                            :title="$t('components.correspondence_emailtemplatessection_vue_edit')">
                                             <CIcon name="cil-pencil" />
                                         </CButton>
                                         <CButton size="sm" color="light" class="mr-1"
-                                            @click="$emit('duplicate', email._id)" title="Duplicate">
+                                            @click="$emit('duplicate', email._id)"
+                                            :title="$t('components.correspondence_emailtemplatessection_vue_duplicate')">
                                             <CIcon name="cil-copy" />
                                         </CButton>
                                         <CButton size="sm" color="danger" @click="$emit('delete-template', email._id)"
-                                            title="Delete">
+                                            :title="$t('components.correspondence_emailtemplatessection_vue_delete')">
                                             <CIcon name="cil-trash" />
                                         </CButton>
                                     </td>

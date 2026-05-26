@@ -6,12 +6,14 @@
                     <div class="search-input-wrapper">
                         <CIcon name="cil-search" class="search-icon" />
                         <input type="text" class="form-control search-input"
-                            placeholder="Search by name, ID, or email..." v-model="internalSearch" />
+                            :placeholder="$t('components.filter_adminstrator_filterstudent_vue_search_by_name_id_or_e')"
+                            v-model="internalSearch" />
                     </div>
                 </CCol>
                 <CCol lg="6" md="4" class="d-flex justify-content-end align-items-center">
                     <CButton class="btn-filter-action btn-filter-red" @click="showFilters = !showFilters">
-                        <CIcon name="cil-filter" class="mr-2" /> Filters
+                        <CIcon name="cil-filter" class="mr-2" />{{
+                            $t('components.filter_adminstrator_filterstudent_vue_filters') }}
                     </CButton>
                 </CCol>
             </CRow>
@@ -21,24 +23,31 @@
                     <hr class="filter-divider" />
                     <CRow>
                         <CCol md="3">
-                            <label class="filter-label">SCHOOL</label>
+                            <label class="filter-label">{{ $t('components.filter_adminstrator_filterstudent_vue_school')
+                                }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="schoolOptions" :value.sync="internalSchool"
-                                placeholder="Select School" />
+                                :placeholder="$t('components.filter_adminstrator_filterstudent_vue_select_school')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">PROGRAM</label>
+                            <label class="filter-label">{{
+                                $t('components.filter_adminstrator_filterstudent_vue_program') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="programOptions"
-                                :value.sync="internalProgram" placeholder="Select Program" />
+                                :value.sync="internalProgram"
+                                :placeholder="$t('components.filter_adminstrator_filterstudent_vue_select_program')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">ACADEMIC YEAR</label>
+                            <label class="filter-label">{{
+                                $t('components.filter_adminstrator_filterstudent_vue_academic_year') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="academicOptions"
-                                :value.sync="internalAcademic" placeholder="Select Academic" />
+                                :value.sync="internalAcademic"
+                                :placeholder="$t('components.filter_adminstrator_filterstudent_vue_select_academic')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">SEMESTER</label>
+                            <label class="filter-label">{{
+                                $t('components.filter_adminstrator_filterstudent_vue_semester') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="semesterOptions"
-                                :value.sync="internalSemester" placeholder="Select Semester" />
+                                :value.sync="internalSemester"
+                                :placeholder="$t('components.filter_adminstrator_filterstudent_vue_select_semester')" />
                         </CCol>
                     </CRow>
                 </div>
@@ -70,17 +79,18 @@ export default {
         ...mapGetters('member/students', { storedStudents: 'students' }),
 
         schoolOptions() {
+            const lang = this.$i18n.locale || 'en';
             if (!this.storedSchools) return [];
             return [
-                { value: '', label: 'Select School' },
+                { value: '', label: this.$t('components.filter_adminstrator_filterstudent_vue_select_school') },
                 ...this.storedSchools.map(s => ({
                     value: s._id,
-                    label: s.title.find(t => t.key === 'en')?.value || s.title.find(t => t.key === 'th')?.value || s._id
+                    label: s.title.find(t => t.key === lang)?.value || s.title.find(t => t.key === 'en')?.value || s.title.find(t => t.key === 'th')?.value || s._id
                 }))
             ];
         },
         programOptions() {
-            const lang = this.$i18n.locale;
+            const lang = this.$i18n.locale || 'en';
             let source = this.storedPrograms || [];
 
             if (this.internalSchool) {
@@ -88,9 +98,9 @@ export default {
             }
 
             return [
-                { value: '', label: 'Select Program' },
+                { value: '', label: this.$t('components.filter_adminstrator_filterstudent_vue_select_program') },
                 ...source.map(item => {
-                    const titleObj = item.title.find(t => t.key === lang);
+                    const titleObj = item.title.find(t => t.key === lang) || item.title.find(t => t.key === 'en');
                     return {
                         value: item._id,
                         label: titleObj ? titleObj.value : ''
@@ -102,22 +112,27 @@ export default {
             if (!this.storedStudents) return [];
             const years = new Set(this.storedStudents.map(s => s.info?.year).filter(y => y));
             return [
-                { value: '', label: 'Select Academic' },
+                { value: '', label: this.$t('components.filter_adminstrator_filterstudent_vue_select_academic') },
                 ...Array.from(years).sort().map(y => ({ value: y, label: y }))
             ];
         },
         semesterOptions() {
             const lang = this.$i18n.locale || 'en';
             const statuses = this.$store.getters['setting/status/item'] || [];
-            
+
+            // Convert localized semester strings (e.g. "Semester 1", "เทอมที่ 1") to numeric options
             return [
-                { value: '', label: 'Select Semester' },
-                ...statuses.map(s => {
-                    const titleObj = (Array.isArray(s.title) ? s.title.find(t => t.key === lang) : null) || (Array.isArray(s.title) ? s.title[0] : null);
-                    const val = titleObj ? titleObj.value : s.title || s._id;
+                { value: '', label: this.$t('components.filter_adminstrator_filterstudent_vue_select_semester') },
+                ...statuses.map((s, idx) => {
+                    const titleObj = Array.isArray(s.title)
+                        ? (s.title.find(t => t.key === lang) || s.title.find(t => t.key === 'en') || s.title.find(t => t.key === 'th'))
+                        : s.title;
+                    const raw = titleObj ? (titleObj.value || titleObj) : (s.value || s._id || String(idx + 1));
+                    const m = String(raw).match(/(\d+)/);
+                    const numeric = m ? Number(m[1]) : (idx + 1);
                     return {
-                        value: val,
-                        label: val
+                        value: numeric,
+                        label: String(numeric)
                     };
                 })
             ];

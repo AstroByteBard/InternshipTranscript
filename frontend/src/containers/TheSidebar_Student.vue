@@ -8,7 +8,7 @@
             <img class="pt-2 pb-2" src="@/assets/logo.svg" height="60px">
             <CCol class="text-white">
               <p class="font-weight-bold mb-0 mt-2 h5">MFU</p>
-              <p class="font-weight-bold">Internship Transcript System</p>
+              <p class="font-weight-bold">{{ $t('components.layout_heroheader_vue_internship_transcript_system') }}</p>
             </CCol>
           </CRow>
         </a>
@@ -30,22 +30,19 @@ export default {
     },
     minimize() {
       return this.$store.state.sidebarMinimize
-    }
-  },
-  data: function () {
-    return {
-      nav: [{
+    },
+    nav() {
+      return [{
         _name: 'CSidebarNav',
         _children: [
-
           {
             _name: 'CSidebarNavItem',
-            name: 'Dashboard',
+            name: this.$t('dashboard'),
             to: '/student/dashboard',
             icon: 'cil-window-restore'
           }
         ]
-      }],
+      }]
     }
   }
 }
@@ -54,8 +51,8 @@ export default {
 <style scoped>
 .bg-student-style {
   background: linear-gradient(30deg,
-    #FEC260 0%,
-    #8c1515 60%);
+      #FEC260 0%,
+      #8c1515 60%);
 }
 
 ::v-deep .c-sidebar-brand {

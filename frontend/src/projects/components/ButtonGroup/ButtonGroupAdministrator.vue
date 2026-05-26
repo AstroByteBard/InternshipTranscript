@@ -4,13 +4,9 @@
             <div class="custom-segmented-control">
                 <CButtonGroup class="w-100 h-100">
                     <CButton class="segment-btn font-weight-bold" :class="{ 'active': value === 'Student' }"
-                        @click="$emit('input', 'Student')">
-                        Student
-                    </CButton>
+                        @click="$emit('input', 'Student')">{{ $t('components.buttongroup_buttongroupadministrator_vue_student') }}</CButton>
                     <CButton class="segment-btn font-weight-bold" :class="{ 'active': value === 'Advisor' }"
-                        @click="$emit('input', 'Advisor')">
-                        Advisor
-                    </CButton>
+                        @click="$emit('input', 'Advisor')">{{ $t('components.buttongroup_buttongroupadministrator_vue_advisor') }}</CButton>
                 </CButtonGroup>
             </div>
         </CCol>
@@ -21,11 +17,9 @@
                     <input type="file" ref="fileInput" @change="onFileChangeStudent" accept=".xlsx, .xls, .csv"
                         style="display: none;" />
                     <CButton class="btn-import mr-2" @click="$refs.fileInput.click()">
-                        <CIcon name="cil-cloud-upload" class="mr-2" /> Import
-                    </CButton>
+                        <CIcon name="cil-cloud-upload" class="mr-2" />{{ $t('components.buttongroup_buttongroupadministrator_vue_import') }}</CButton>
                     <CButton class="btn-filter-action btn-filter-red" @click="$emit('add-student')">
-                        <CIcon name="cil-plus" class="mr-2" /> Add Student
-                    </CButton>
+                        <CIcon name="cil-plus" class="mr-2" />{{ $t('components.buttongroup_buttongroupadministrator_vue_add_student') }}</CButton>
                 </template>
                 <template v-if="value === 'Advisor'">
                     <input type="file" ref="fileInputAdvisor" @change="onFileChangeAdviser" accept=".xlsx, .xls, .csv"

@@ -5,20 +5,20 @@
       <div v-if="pageLoading" class="page-loading-overlay">
         <div class="loader-content">
           <div class="modern-spinner mb-4"></div>
-          <h4 class="font-weight-bold text-dark mb-2">Preparing Assessment</h4>
-          <p class="text-muted">Please wait while we load the student data and criteria...</p>
+          <h4 class="font-weight-bold text-dark mb-2">{{ $t('preparing_assessment') }}</h4>
+          <p class="text-muted">{{ $t('please_wait_loading') }}</p>
         </div>
       </div>
     </transition>
 
     <CWrapper v-if="!pageLoading">
       <!-- Sticky Navigation -->
-      <FormNavbar :studentName="displayName" :studentID="studentID || 'Student'" />
+      <FormNavbar :studentName="displayName" :studentID="studentIdDisplay || 'Student'" />
       <div class="c-body">
         <main class="c-main">
           <CContainer fluid class="px-4 content-body animate-fade-in">
 
-            <StudentAssessmentHeader v-if="studentDoc" :studentName="displayName" :studentID="studentID"
+            <StudentAssessmentHeader v-if="studentDoc" :studentName="displayName" :studentID="studentIdDisplay"
               :schoolName="schoolInfo" :programName="programInfo" :academicYear="yearInfo" :semester="semesterInfo" />
             <!-- Case 1: Assessment Already Completed (Locked State) -->
             <transition name="fade">
@@ -28,10 +28,10 @@
                     <div class="locked-icon-wrapper mb-4">
                       <CIcon name="cil-check-circle" size="xl" class="text-success success-icon-animate" />
                     </div>
-                    <h1 class="display-4 font-weight-bold mb-3" style="color: #1e293b;">Assessment Completed</h1>
+                    <h1 class="display-4 font-weight-bold mb-3" style="color: #1e293b;">{{ $t('assessment_completed') }}
+                    </h1>
                     <h4 class="text-muted mb-4 px-lg-5">
-                      The evaluation for <strong class="text-dark">{{ displayName }}</strong> <br>
-                      has already been recorded in our system.
+                      {{ $t('please_rate_student') }}
                     </h4>
                   </CCardBody>
                 </CCard>
@@ -46,9 +46,8 @@
                     <CIcon name="cil-info" size="xl" class="text-danger" />
                   </div>
                   <div>
-                    <h5 class="font-weight-bold mb-1">Assessment Instructions</h5>
-                    <p class="text-muted mb-0 small">Please rate the student's performance based on the criteria below.
-                      Your feedback helps us improve our academic programs.</p>
+                    <h5 class="font-weight-bold mb-1">{{ $t('assessment_instructions') }}</h5>
+                    <p class="text-muted mb-0 small">{{ $t('please_rate_student') }}</p>
                   </div>
                 </div>
 
@@ -58,22 +57,23 @@
                     class="preview-filters-card mb-5 border-0 shadow-sm rounded-xl overflow-hidden">
                     <CCardHeader class="bg-light-info border-0 py-3 d-flex align-items-center">
                       <CIcon name="cil-filter" class="mr-2 text-info" />
-                      <span class="font-weight-bold text-uppercase small letter-spacing-1 text-info">Assessment Preview
-                        Configuration</span>
+                      <span class="font-weight-bold text-uppercase small letter-spacing-1 text-info">{{
+                        $t('assessment_preview_configuration') }}</span>
                     </CCardHeader>
                     <CCardBody class="bg-white p-4">
                       <p class="text-muted small mb-4">Select a School and Major to preview its specific hardskill
                         assessment criteria.</p>
                       <CRow>
                         <CCol md="6" class="mb-3 mb-md-0">
-                          <label class="small font-weight-bold text-muted mb-2">Academic School</label>
+                          <label class="small font-weight-bold text-muted mb-2">{{ $t('select_a_school') }}</label>
                           <CSelect :options="schoolOptions" :value.sync="previewSchool"
-                            placeholder="Please select a school" class="modern-select-input" />
+                            :placeholder="$t('please_select_a_school')" class="modern-select-input" />
                         </CCol>
                         <CCol md="6">
-                          <label class="small font-weight-bold text-muted mb-2">Major / Program</label>
-                          <CSelect :options="majorOptions" :value.sync="previewMajor" placeholder="Select a major first"
-                            :disabled="!previewSchool" class="modern-select-input" />
+                          <label class="small font-weight-bold text-muted mb-2">{{ $t('major_program') }}</label>
+                          <CSelect :options="majorOptions" :value.sync="previewMajor"
+                            :placeholder="$t('select_a_major_first')" :disabled="!previewSchool"
+                            class="modern-select-input" />
                         </CCol>
                       </CRow>
                     </CCardBody>
@@ -82,8 +82,8 @@
 
                 <!-- Softskills Section -->
                 <div class="section-title-wrapper mb-3 d-flex align-items-center">
-                  <div class="section-badge text-danger mr-3">SECTION 01</div>
-                  <h3 class="section-main-title">General Competencies (Softskills)</h3>
+                  <div class="section-badge text-danger mr-3">{{ $t('section_01') }}</div>
+                  <h3 class="section-main-title">{{ $t('general_competencies_softskills') }}</h3>
                 </div>
 
                 <div class="competency-list mb-5">
@@ -123,8 +123,8 @@
 
                 <!-- Hardskills Section -->
                 <div class="section-title-wrapper mb-3 d-flex align-items-center">
-                  <div class="section-badge text-success mr-3">SECTION 02</div>
-                  <h3 class="section-main-title">Program-Specific Skills (Hardskills)</h3>
+                  <div class="section-badge text-success mr-3">{{ $t('section_02') }}</div>
+                  <h3 class="section-main-title">{{ $t('program_specific_hardskills') }}</h3>
                 </div>
 
                 <div class="competency-list mb-5">
@@ -168,8 +168,8 @@
 
                 <!-- Suggestions Section -->
                 <div class="section-title-wrapper mb-3 d-flex align-items-center">
-                  <div class="section-badge text-info mr-3">SECTION 03</div>
-                  <h3 class="section-main-title">Continuous Improvement & Suggestions</h3>
+                  <div class="section-badge text-info mr-3">{{ $t('section_03') }}</div>
+                  <h3 class="section-main-title">{{ $t('continuous_improvement_suggestions') }}</h3>
                 </div>
 
                 <div class="suggestions-list mb-5">
@@ -194,7 +194,8 @@
                                 <div class="q-text">{{ translate(q.question) }}</div>
                               </div>
                             </div>
-                            <CInput rows="4" class="form-control-modern" placeholder="Write your suggestions here..."
+                            <CInput rows="4" class="form-control-modern"
+                              :placeholder="$t('write_your_suggestions_here')"
                               v-model="evaluation.suggestions[item._id + '_' + qIdx]"
                               :disabled="isAlreadySubmitted || isPreview" />
                           </div>
@@ -213,12 +214,12 @@
                       <CIcon v-if="isSubmitting" name="cil-reload" class="mr-2 spin-icon" />
                       <CIcon v-else-if="isAlreadySubmitted" name="cil-lock-locked" class="mr-2" />
                       <CIcon v-else name="cil-check-circle" class="mr-2" />
-                      {{ isSubmitting ? 'Submitting...' : (isAlreadySubmitted ? 'Evaluation Submitted' : (isPreview ?
-                        'Form Preview Mode' : 'Submit Evaluation')) }}
+                      {{ isSubmitting ? $t('submitting') : (isAlreadySubmitted ? $t('evaluation_submitted') : (isPreview
+                        ?
+                        $t('form_preview_mode') : $t('submit_evaluation'))) }}
                     </CButton>
                   </div>
-                  <p class="text-muted small">By clicking submit, you confirm that all ratings provided are accurate.
-                  </p>
+                  <p class="text-muted small">{{ $t('by_clicking_submit_confirm') }}</p>
                 </div>
               </div>
             </transition>
@@ -363,11 +364,17 @@ export default {
     },
     suggestionItems() { return this.proposition ? this.proposition.filter(i => i.active) : [] },
     translate() {
-      return (data, key = 'th') => {
+      return (data, key) => {
         if (!data || !Array.isArray(data)) return data
-        const found = data.find(i => i.key === key)
+        const lang = key || this.$store.getters['setting/lang'] || this.$i18n?.locale || 'th'
+        const found = data.find(i => i.key === lang)
         return found ? found.value : (data[0] ? data[0].value : '')
       }
+    },
+
+    studentIdDisplay() {
+      // Prefer human-readable studentID (student.studentID) over route/_id
+      return this.studentDoc?.studentID || this.studentID || ''
     },
     schoolOptions() {
       return [

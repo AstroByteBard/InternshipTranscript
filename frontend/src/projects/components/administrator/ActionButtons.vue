@@ -5,11 +5,9 @@
                 @change="$emit('file-change', $event)" />
 
             <CButton class="btn-import mr-2" @click="$refs.fileInput.click()">
-                <CIcon name="cil-cloud-upload" class="mr-2" /> Import
-            </CButton>
+                <CIcon name="cil-cloud-upload" class="mr-2" />{{ $t('components.administrator_actionbuttons_vue_import') }}</CButton>
             <CButton class="btn-add-student" @click="$emit('add-student')">
-                <CIcon name="cil-user" class="mr-2" /> Add Student
-            </CButton>
+                <CIcon name="cil-user" class="mr-2" />{{ $t('components.administrator_actionbuttons_vue_add_student') }}</CButton>
         </div>
 
         <div v-if="selectedType === 'Advisor'">
@@ -17,11 +15,9 @@
                 @change="$emit('file-change', $event)" />
 
             <CButton class="btn-import mr-2" @click="$refs.fileInputAdvisor.click()">
-                <CIcon name="cil-cloud-upload" class="mr-2" /> Import
-            </CButton>
+                <CIcon name="cil-cloud-upload" class="mr-2" />{{ $t('components.administrator_actionbuttons_vue_import') }}</CButton>
             <CButton class="btn-add-student" @click="$emit('add-advisor')">
-                <CIcon name="cil-user" class="mr-2" /> Add Advisor
-            </CButton>
+                <CIcon name="cil-user" class="mr-2" />{{ $t('components.administrator_actionbuttons_vue_add_advisor') }}</CButton>
         </div>
     </div>
 </template>

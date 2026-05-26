@@ -1,50 +1,22 @@
 <template>
     <div>
-        <CompetenciesHeader 
-            :show-create="true" 
-            create-label="Create Suggestions" 
-            @create-click="showCreateModal = true"
-            @export-assessment="exportAssessment" 
-        />
-        <WidgetsCompetencyDetail 
-            :totalItems="suggestionItems.length"
-            :activeItems="activeSuggestionsCount"
-            :inactiveItems="inactiveSuggestionsCount"
-            :totalQuestions="totalSuggestionsCount"
-            itemName="Categories"
-            questionName="Suggestions"
-            questionIcon="cil-chat-bubble"
-        />
-        <FilterSuggestions 
-            :searchQuery.sync="searchQuerySuggestions"
-            :selectionAcademicYear.sync="selectionAcademicYearSuggestions"
-            :yearOptions="yearOptions"
-        />
-        
-        <TableSuggestions 
-            :items="filteredSuggestionItems"
-            :fields="suggestionFields"
-            :itemsPerPage="itemsPerPage"
-            :activePage.sync="activePageSuggestions"
-            :totalPages="suggestionTotalPages"
-            :tableStart="suggestionTableStart"
-            :tableEnd="suggestionTableEnd"
-            :totalItems="filteredSuggestionItems.length"
-            :translate="translate"
-            @toggle-status="toggleStatus"
-            @edit="editItem"
-            @delete="deleteItem"
-        />
+        <CompetenciesHeader :show-create="true" :create-label="$t('create_suggestions')"
+            @create-click="showCreateModal = true" @export-assessment="exportAssessment" />
+        <WidgetsCompetencyDetail :totalItems="suggestionItems.length" :activeItems="activeSuggestionsCount"
+            :inactiveItems="inactiveSuggestionsCount" :totalQuestions="totalSuggestionsCount"
+            :itemName="$t('categories')" :questionName="$t('suggestions')" questionIcon="cil-chat-bubble" />
+        <FilterSuggestions :searchQuery.sync="searchQuerySuggestions"
+            :selectionAcademicYear.sync="selectionAcademicYearSuggestions" :yearOptions="yearOptions" />
 
-        <ModalSuggestions 
-            :show.sync="showCreateModal"
-            :isEdit="isEdit"
-            :form="form"
-            @update:show="handleCreateModalClose"
-            @add-question="addQuestion"
-            @remove-question="removeQuestion"
-            @save="onSave"
-        />           
+        <TableSuggestions :items="filteredSuggestionItems" :fields="suggestionFields" :itemsPerPage="itemsPerPage"
+            :activePage.sync="activePageSuggestions" :totalPages="suggestionTotalPages"
+            :tableStart="suggestionTableStart" :tableEnd="suggestionTableEnd"
+            :totalItems="filteredSuggestionItems.length" :translate="translate" @toggle-status="toggleStatus"
+            @edit="editItem" @delete="deleteItem" />
+
+        <ModalSuggestions :show.sync="showCreateModal" :isEdit="isEdit" :form="form"
+            @update:show="handleCreateModalClose" @add-question="addQuestion" @remove-question="removeQuestion"
+            @save="onSave" />
     </div>
 </template>
 
@@ -84,19 +56,21 @@ export default {
                 descriptionEn: '',
                 questions: [],
             },
-            suggestionFields: [
-                { key: 'year', label: 'YEAR', _classes: 'text-center', _style: 'min-width: 100px' },
-                { key: 'title', label: 'TITLE', _classes: 'text-left', _style: 'min-width: 200px' },
-                { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center' },
-                { key: 'suggestionContent', label: 'SUGGESTION CONTENT', _classes: 'text-center', _style: 'min-width: 300px' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
-            ],
         }
     },
     created() {
         this.fetchSuggestions()
     },
     computed: {
+        suggestionFields() {
+            return [
+                { key: 'year', label: this.$t('year_short'), _classes: 'text-center', _style: 'width:120px;min-width:100px' },
+                { key: 'title', label: this.$t('title_short'), _classes: 'text-left', _style: 'min-width:420px;white-space:normal' },
+                { key: 'status', label: this.$t('active_status_short'), _classes: 'text-center', _style: 'width:160px;min-width:120px' },
+                { key: 'suggestionContent', label: this.$t('suggestion_content'), _classes: 'text-center', _style: 'width:300px;min-width:240px' },
+                { key: 'actions', label: this.$t('actions_short'), _classes: 'text-center', _style: 'width:120px;min-width:100px', sorter: false, filter: false },
+            ]
+        },
         ...mapState('competencies/proposition', ['proposition']),
         suggestionItems() {
             return this.proposition || []
@@ -122,9 +96,9 @@ export default {
                 .map(item => item.year)
                 .filter(year => year && year !== '')
             const uniqueYears = [...new Set(years)].sort((a, b) => b.localeCompare(a))
-            
+
             return [
-                { value: '', label: 'All Years' },
+                { value: '', label: this.$t('all_years_label') },
                 ...uniqueYears.map(year => ({ value: year, label: year }))
             ]
         },
@@ -233,11 +207,11 @@ export default {
             try {
                 let items = this.suggestionItems
                 const target = items.find(i => i._id === id)
-                if(!target) return
-                
+                if (!target) return
+
                 await this.updateSuggestion({ _id: id, active: !target.active })
                 this.fetchSuggestions()
-            } catch(e) {
+            } catch (e) {
                 console.error(e)
             }
         },
@@ -258,18 +232,18 @@ export default {
             this.showCreateModal = true
         },
         async deleteItem(id) {
-            if(confirm('Are you sure you want to delete this Suggestion?')) {
+            if (confirm(this.$t('delete_suggestion_confirm'))) {
                 await this.deleteSuggestion(id)
                 this.fetchSuggestions()
             }
         },
         async onSave() {
-            if(!this.form.titleTh || !this.form.titleEn || !this.form.year) {
-                alert('Please fill out all required basic information (*)')
+            if (!this.form.titleTh || !this.form.titleEn || !this.form.year) {
+                alert(this.$t('please_fill_required_basic_info'))
                 return
             }
-            if(this.form.questions.some(q => !q.th || !q.en)) {
-                alert('Please fill out all required question fields (*)')
+            if (this.form.questions.some(q => !q.th || !q.en)) {
+                alert(this.$t('please_fill_required_question_fields'))
                 return
             }
 
@@ -295,7 +269,7 @@ export default {
                 }))
             }
 
-            if(this.isEdit) {
+            if (this.isEdit) {
                 payload._id = this.editingId
                 await this.updateSuggestion(payload)
             } else {

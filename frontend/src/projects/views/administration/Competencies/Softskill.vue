@@ -1,10 +1,10 @@
 <template>
     <div>
-        <CompetenciesHeader :show-create="true" create-label="Create Softskill" @create-click="showCreateModal = true"
-            @export-assessment="exportAssessment" />
+        <CompetenciesHeader :show-create="true" :create-label="$t('create_softskill')"
+            @create-click="showCreateModal = true" @export-assessment="exportAssessment" />
         <WidgetsCompetencyDetail :totalItems="softskillItems.length" :activeItems="activeSoftskillsCount"
-            :inactiveItems="inactiveSoftskillsCount" :totalQuestions="totalSoftskillQuestions" itemName="Softskills"
-            questionName="Questions" questionIcon="cil-comment-bubble" />
+            :inactiveItems="inactiveSoftskillsCount" :totalQuestions="totalSoftskillQuestions"
+            :itemName="$t('softskills')" :questionName="$t('questions')" questionIcon="cil-comment-bubble" />
 
         <FilterSoftskill :searchQuery.sync="searchQuery" :selectionAcademicYear.sync="selectionAcademicYear"
             :yearOptions="yearOptions" />
@@ -55,19 +55,22 @@ export default {
                 descriptionEn: '',
                 questions: [],
             },
-            softskillFields: [
-                { key: 'year', label: 'YEAR', _classes: 'text-center', _style: 'min-width: 100px' },
-                { key: 'title', label: 'TITLE', _classes: 'text-left', _style: 'min-width: 200px' },
-                { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center' },
-                { key: 'assessmentQuestion', label: 'ASSESSMENT QUESTION', _classes: 'text-center', _style: 'min-width: 180px' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
-            ],
+            // fields moved to computed so labels react to locale changes
         }
     },
     created() {
         this.fetchSoftskills()
     },
     computed: {
+        softskillFields() {
+            return [
+                { key: 'year', label: this.$t('year_short'), _classes: 'text-center', _style: 'width:120px;min-width:100px' },
+                { key: 'title', label: this.$t('title_short'), _classes: 'text-left', _style: 'min-width:420px;white-space:normal' },
+                { key: 'status', label: this.$t('active_status_short'), _classes: 'text-center', _style: 'width:160px;min-width:120px' },
+                { key: 'assessmentQuestion', label: this.$t('assessment_question_short'), _classes: 'text-center', _style: 'width:160px;min-width:200px' },
+                { key: 'actions', label: this.$t('actions_short'), _classes: 'text-center', _style: 'width:120px;min-width:100px', sorter: false, filter: false },
+            ];
+        },
         ...mapState('competencies/general', ['general']),
         softskillItems() {
             return this.general || []
@@ -95,7 +98,7 @@ export default {
             const uniqueYears = [...new Set(years)].sort((a, b) => b.localeCompare(a))
 
             return [
-                { value: '', label: 'All Years' },
+                { value: '', label: this.$t('all_years_label') },
                 ...uniqueYears.map(year => ({ value: year, label: year }))
             ]
         },
@@ -232,18 +235,18 @@ export default {
             this.showCreateModal = true
         },
         async deleteItem(id) {
-            if (confirm('Are you sure you want to delete this Softskill?')) {
+            if (confirm(this.$t('delete_softskill_confirm'))) {
                 await this.deleteSoftskill(id)
                 this.fetchSoftskills()
             }
         },
         async onSave() {
             if (!this.form.titleTh || !this.form.titleEn || !this.form.year) {
-                alert('Please fill out all required basic information (*)')
+                alert(this.$t('please_fill_required_basic_info'))
                 return
             }
             if (this.form.questions.some(q => !q.th || !q.en)) {
-                alert('Please fill out all required question fields (*)')
+                alert(this.$t('please_fill_required_question_fields'))
                 return
             }
 

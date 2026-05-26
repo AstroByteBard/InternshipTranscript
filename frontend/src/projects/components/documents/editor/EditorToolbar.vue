@@ -9,15 +9,15 @@
             <CIcon name="cil-action-redo" size="sm" />
         </CButton>
 
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" title="Zoom Out" @click="$emit('zoom-out')">
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" :title="$t('components.documents_editor_editortoolbar_vue_zoom_out')" @click="$emit('zoom-out')">
             <CIcon name="cil-zoom-out" size="sm" />
         </CButton>
         <span class="zoom-percentage-text px-1 font-weight-bold"
             style="font-size: 11px; min-width: 36px; text-align: center; display: inline-block; color: #4b5563; user-select: none; cursor: pointer;"
-            title="Double click to Fit" @dblclick="$emit('zoom-reset')">
+            :title="$t('components.documents_editor_editortoolbar_vue_double_click_to_fit')" @dblclick="$emit('zoom-reset')">
             {{ Math.round(scale * 100) }}%
         </span>
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" title="Zoom In"
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" :title="$t('components.documents_editor_editortoolbar_vue_zoom_in')"
             @click="$emit('zoom-in')">
             <CIcon name="cil-zoom-in" size="sm" />
         </CButton>
@@ -36,15 +36,15 @@
 
         <!-- Font Size Stepper -->
         <div class="font-size-stepper mr-1">
-            <button class="size-btn" @click="changeFontSize(-1)" title="Decrease font size">−</button>
+            <button class="size-btn" @click="changeFontSize(-1)" :title="$t('components.documents_editor_editortoolbar_vue_decrease_font_size')">-</button>
             <input type="number" class="size-input text-center font-weight-bold" :value="fontSize"
                 @input="handleFontSizeInput" @change="handleFontSizeChange" @blur="handleFontSizeChange"
                 @keydown.enter="handleFontSizeEnter"
                 style="width: 32px; border: none; padding: 0; font-size: 12px; height: 26px; outline: none; margin: 0; background: transparent; text-align: center; font-weight: 600; color: #374151;" />
-            <button class="size-btn" @click="changeFontSize(1)" title="Increase font size">+</button>
+            <button class="size-btn" @click="changeFontSize(1)" :title="$t('components.documents_editor_editortoolbar_vue_increase_font_size')">+</button>
         </div>
 
-        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" title="Edit selected"
+        <CButton color="light" size="sm" class="toolbar-btn px-2 border-0 mr-1" :title="$t('components.documents_editor_editortoolbar_vue_edit_selected')"
             @click="$emit('multi-edit')">
             <CIcon name="cil-pencil" size="sm" />
         </CButton>
@@ -73,15 +73,15 @@
 
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
             :class="{ 'active': (boldActive || isActive('bold')) }" @click="handleFormat('bold')">
-            <strong>B</strong>
+            <strong>{{ $t('components.documents_editor_editortoolbar_vue_b') }}</strong>
         </CButton>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0" style="font-style: italic;"
             :class="{ 'active': (italicActive || isActive('italic')) }" @click="handleFormat('italic')">
-            <em>I</em>
+            <em>{{ $t('components.documents_editor_editortoolbar_vue_i') }}</em>
         </CButton>
         <CButton color="light" size="sm" class="toolbar-btn px-2 border-0"
             :class="{ 'active': (underlineActive || isActive('underline')) }" @click="handleFormat('underline')">
-            <u>U</u>
+            <u>{{ $t('components.documents_editor_editortoolbar_vue_u') }}</u>
         </CButton>
 
         <CDropdown color="light" class="toolbar-dropdown mr-1" placement="bottom-start">
@@ -120,11 +120,11 @@
 
         <div class="toolbar-divider"></div>
 
-        <CDropdown color="light" class="toolbar-dropdown mr-1 border-0" toggler-text="Layer">
+        <CDropdown color="light" class="toolbar-dropdown mr-1 border-0" :toggler-text="$t('layer') || 'Layer'">
             <CDropdownItem @click="$emit('bring-forward')">
                 <div class="d-flex justify-content-between align-items-center w-100" style="min-width: 180px;">
                     <span>
-                        <CIcon name="cil-level-up" class="mr-2" />Bring forward
+                        <CIcon name="cil-level-up" class="mr-2" />{{ $t('bring_forward') || 'Bring forward' }}
                     </span>
                     <span class="text-muted ml-3" style="font-size: 12px;">Ctrl+]</span>
                 </div>
@@ -132,7 +132,7 @@
             <CDropdownItem @click="$emit('bring-to-front')">
                 <div class="d-flex justify-content-between align-items-center w-100">
                     <span>
-                        <CIcon name="cil-arrow-thick-to-top" class="mr-2" />Bring to front
+                        <CIcon name="cil-arrow-thick-to-top" class="mr-2" />{{ $t('bring_to_front') || 'Bring to front' }}
                     </span>
                     <span class="text-muted ml-3" style="font-size: 12px;">Ctrl+Alt+]</span>
                 </div>
@@ -141,7 +141,7 @@
             <CDropdownItem @click="$emit('send-backward')">
                 <div class="d-flex justify-content-between align-items-center w-100">
                     <span>
-                        <CIcon name="cil-level-down" class="mr-2" />Send backward
+                        <CIcon name="cil-level-down" class="mr-2" />{{ $t('send_backward') || 'Send backward' }}
                     </span>
                     <span class="text-muted ml-3" style="font-size: 12px;">Ctrl+[</span>
                 </div>
@@ -149,7 +149,7 @@
             <CDropdownItem @click="$emit('send-to-back')">
                 <div class="d-flex justify-content-between align-items-center w-100">
                     <span>
-                        <CIcon name="cil-arrow-thick-to-bottom" class="mr-2" />Send to back
+                        <CIcon name="cil-arrow-thick-to-bottom" class="mr-2" />{{ $t('send_to_back') || 'Send to back' }}
                     </span>
                     <span class="text-muted ml-3" style="font-size: 12px;">Ctrl+Alt+[</span>
                 </div>
@@ -158,16 +158,16 @@
 
         <div class="toolbar-divider"></div>
 
-        <CDropdown color="light" class="toolbar-dropdown mr-1 border-0" toggler-text="+ Add">
+        <CDropdown color="light" class="toolbar-dropdown mr-1 border-0" :toggler-text="'+ ' + ($t('add') || 'Add')">
             <CDropdownItem @click="$emit('toggle-data-sidebar')">
-                <CIcon name="cil-code" class="mr-2" />Data Variable
+                <CIcon name="cil-code" class="mr-2" />{{ $t('data_variable') || 'Data Variable' }}
             </CDropdownItem>
             <CDropdownItem @click="$emit('toggle-graph-sidebar')">
-                <CIcon name="cil-chart-pie" class="mr-2" />Graph (Chart)
+                <CIcon name="cil-chart-pie" class="mr-2" />{{ $t('graph_chart') || 'Graph (Chart)' }}
             </CDropdownItem>
             <CDropdownDivider />
             <CDropdownItem @click="triggerFileInput">
-                <CIcon name="cil-image1" class="mr-2" />Image (Upload)
+                <CIcon name="cil-image1" class="mr-2" />{{ $t('image_upload') || 'Image (Upload)' }}
             </CDropdownItem>
         </CDropdown>
         <input type="file" ref="imageUpload" accept="image/*" class="d-none" @change="handleImageUpload">
@@ -226,24 +226,24 @@ export default {
             return String(this.templateLocale || 'th').toLowerCase().startsWith('th')
         },
         headingDropdownLabel() {
-            return 'H'
+            return this.$t('heading') || 'Heading'
         },
         listDropdownLabel() {
-            return 'List'
+            return this.$t('list') || 'List'
         },
         headingDropdownItems() {
             return [
-                { label: 'Heading 1', value: 'h1' },
-                { label: 'Heading 2', value: 'h2' },
-                { label: 'Heading 3', value: 'h3' },
-                { label: 'Paragraph', value: 'paragraph' },
+                { label: this.$t('heading_1') || 'Heading 1', value: 'h1' },
+                { label: this.$t('heading_2') || 'Heading 2', value: 'h2' },
+                { label: this.$t('heading_3') || 'Heading 3', value: 'h3' },
+                { label: this.$t('paragraph') || 'Paragraph', value: 'paragraph' },
             ]
         },
         bulletListLabel() {
-            return 'Bullet List'
+            return this.$t('bullet_list') || 'Bullet List'
         },
         orderedListLabel() {
-            return 'Ordered List'
+            return this.$t('ordered_list') || 'Ordered List'
         },
         alignLabel() {
             return this.selectedAlign || '-'

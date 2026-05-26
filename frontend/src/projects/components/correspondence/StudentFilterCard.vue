@@ -6,19 +6,22 @@
                     <div class="search-input-wrapper">
                         <CIcon name="cil-search" class="search-icon" />
                         <input type="text" class="form-control search-input"
-                            placeholder="Search by student name or ID..." :value="searchQuery"
-                            @input="updateSearchQuery($event.target.value)" />
+                            :placeholder="$t('components.correspondence_studentfiltercard_vue_search_by_student_name_')"
+                            :value="searchQuery" @input="updateSearchQuery($event.target.value)" />
                     </div>
                 </CCol>
                 <CCol md="7" class="d-flex justify-content-end align-items-center">
                     <CButton class="btn-filter-action mr-2" @click="$emit('send-email-school')">
-                        <CIcon name="cil-envelope-closed" class="mr-2" /> Send Email School
+                        <CIcon name="cil-envelope-closed" class="mr-2" />{{
+                            $t('components.correspondence_studentfiltercard_vue_send_email_school') }}
                     </CButton>
                     <CButton class="btn-filter-action mr-2" @click="$emit('send-email-program')">
-                        <CIcon name="cil-envelope-closed" class="mr-2" /> Send Email Program
+                        <CIcon name="cil-envelope-closed" class="mr-2" />{{
+                            $t('components.correspondence_studentfiltercard_vue_send_email_program') }}
                     </CButton>
                     <CButton class="btn-filter-action btn-filter-red" @click="toggleFilters">
-                        <CIcon name="cil-filter" class="mr-2" /> Filters
+                        <CIcon name="cil-filter" class="mr-2" />{{
+                            $t('components.correspondence_studentfiltercard_vue_filters') }}
                     </CButton>
                 </CCol>
             </CRow>
@@ -28,25 +31,32 @@
                     <hr class="filter-divider" />
                     <CRow>
                         <CCol md="3">
-                            <label class="filter-label">SCHOOL</label>
+                            <label class="filter-label">{{ $t('components.correspondence_studentfiltercard_vue_school')
+                            }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="schoolOptions" :value="filters.school"
-                                @update:value="updateFilter('school', $event)" placeholder="Select School" />
+                                @update:value="updateFilter('school', $event)"
+                                :placeholder="$t('components.correspondence_studentfiltercard_vue_select_school')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">PROGRAM</label>
+                            <label class="filter-label">{{ $t('components.correspondence_studentfiltercard_vue_program')
+                            }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="programOptions" :value="filters.program"
-                                @update:value="updateFilter('program', $event)" placeholder="Select Program" />
+                                @update:value="updateFilter('program', $event)"
+                                :placeholder="$t('components.correspondence_studentfiltercard_vue_select_program')" />
                         </CCol>
-                        <CCol md="3">
-                            <label class="filter-label">ACADEMIC YEAR</label>
+                        <CCol md="2">
+                            <label class="filter-label">{{
+                                $t('components.correspondence_studentfiltercard_vue_academic_year') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="academicYearOptions"
                                 :value="filters.academicYear" @update:value="updateFilter('academicYear', $event)"
-                                placeholder="Select Academic Year" />
+                                :placeholder="$t('components.correspondence_studentfiltercard_vue_select_academic_year')" />
                         </CCol>
-                        <CCol md="3">
-                            <label class="filter-label">STATUS</label>
+                        <CCol md="2">
+                            <label class="filter-label">{{ $t('components.correspondence_studentfiltercard_vue_status')
+                            }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="statusOptions" :value="filters.status"
-                                @update:value="updateFilter('status', $event)" placeholder="Select Status" />
+                                @update:value="updateFilter('status', $event)"
+                                :placeholder="$t('components.correspondence_studentfiltercard_vue_select_status')" />
                         </CCol>
                     </CRow>
                 </div>
@@ -56,124 +66,43 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
 export default {
     name: 'StudentFilterCard',
     props: {
-        // เก็บเฉพาะ props ที่จำเป็นจริงๆ
+        searchQuery: String,
+        filters: Object,
+        schoolOptions: Array,
+        programOptions: Array,
+        academicYearOptions: Array,
+        statusOptions: Array
     },
     data() {
         return {
-            showFilters: false,
-            searchQuery: '',
-            filters: {
-                school: null,
-                program: null,
-                academicYear: null,
-                status: null
-            }
-        }
-    },
-    computed: {
-        ...mapGetters('academic/schools', { storedSchools: 'schools' }),
-        ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
-        ...mapGetters('member/students', { storedStudents: 'students' }),
-
-        schoolOptions() {
-            const lang = this.$i18n.locale
-            return [
-                { value: null, label: 'All Schools' },
-                ...this.storedSchools.map(item => ({
-                    value: item._id,
-                    label: item.title.find(t => t.key === lang).value
-                }))
-            ]
-        },
-
-        programOptions() {
-            const lang = this.$i18n.locale
-            let progs = this.storedPrograms
-
-            // Filter programs by selected school
-            if (this.filters.school) {
-                progs = progs.filter(p => p.school === this.filters.school)
-            }
-
-            return [
-                { value: null, label: 'All Programs' },
-                ...progs.map(item => ({
-                    value: item._id,
-                    label: item.title.find(t => t.key === lang).value
-                }))
-            ]
-        },
-
-        academicYearOptions() {
-            if (!this.storedStudents || this.storedStudents.length === 0) {
-                const current = new Date().getFullYear() + 543
-                return [{ value: null, label: 'All Years' }, { value: current, label: current.toString() }]
-            }
-
-            // Extract all distinct, non-empty years from the student data
-            const years = this.storedStudents
-                .map(s => s.info && s.info.year ? parseInt(s.info.year) : null)
-                .filter(y => y !== null && !isNaN(y))
-
-            // Deduplicate and Sort descending (newest first)
-            const uniqueYears = [...new Set(years)].sort((a, b) => b - a)
-
-            return [
-                { value: null, label: 'All Years' },
-                ...uniqueYears.map(y => ({ value: y, label: y.toString() }))
-            ]
-        },
-
-        statusOptions() {
-            return [
-                { value: null, label: 'All Status' },
-                { value: 'PENDING', label: 'Pending' },
-                { value: 'SENT', label: 'Replied' },
-                { value: 'FAILED', label: 'Closed' }
-            ]
+            showFilters: false
         }
     },
     methods: {
         toggleFilters() {
-            this.showFilters = !this.showFilters;
-            this.$emit('update:show-filters', this.showFilters);
-        },
-        updateFilter(key, value) {
-            this.filters[key] = value;
-
-            // Reset program when school changes
-            if (key === 'school') {
-                this.filters.program = null;
-            }
-
-            // Emit updated filters to parent
-            this.$emit('filters-changed', { ...this.filters });
+            this.showFilters = !this.showFilters
         },
         updateSearchQuery(value) {
-            this.searchQuery = value;
-            this.$emit('search-changed', value);
+            this.$emit('update:search-query', value)
+        },
+        updateFilter(key, value) {
+            this.$emit('update:filters', {
+                ...this.filters,
+                [key]: value
+            })
         }
-    },
-    created() {
-        // Load necessary data
-        this.$store.dispatch("academic/schools/schools")
-        this.$store.dispatch("academic/programs/programs")
-        this.$store.dispatch("member/students/students")
     }
 }
 </script>
 
 <style scoped>
 .filter-card {
+    border: none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    background-color: #ffffff;
 }
 
 .search-input-wrapper {
@@ -187,22 +116,26 @@ export default {
     left: 12px;
     color: #9ca3af;
     width: 16px;
-    height: 16px;
 }
 
 .search-input {
-    padding-left: 36px !important;
+    padding-left: 40px;
+    height: 42px;
     border-radius: 6px;
-    background-color: #f9fafb;
-    border: 1px solid #f3f4f6;
-    color: #4b5563;
+    border: 1px solid #e5e7eb;
     font-size: 14px;
 }
 
 .search-input:focus {
-    background-color: #ffffff;
-    border-color: #d1d5db;
-    box-shadow: 0 0 0 2px rgba(229, 231, 235, 0.5);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-select-ui {
+    height: 38px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
 }
 
 .btn-filter-action {
@@ -247,26 +180,10 @@ export default {
     text-transform: uppercase;
 }
 
-.custom-select-ui select {
-    background-color: #f9fafb !important;
-    border: 1px solid #f3f4f6 !important;
-    border-radius: 6px !important;
-    color: #4b5563 !important;
-    font-size: 14px !important;
-}
-
-.custom-select-ui select:focus {
-    background-color: #ffffff !important;
-    border-color: #d1d5db !important;
-    box-shadow: none !important;
-}
-
-/* Slide Transition Animations */
 .slide-enter-active,
 .slide-leave-active {
-    transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease;
     max-height: 200px;
-    opacity: 1;
     overflow: hidden;
 }
 
@@ -274,7 +191,6 @@ export default {
 .slide-leave-to {
     max-height: 0;
     opacity: 0;
-    margin-top: 0;
     padding-top: 0;
     padding-bottom: 0;
 }

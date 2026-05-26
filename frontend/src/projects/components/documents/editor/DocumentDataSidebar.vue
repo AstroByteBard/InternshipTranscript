@@ -1,7 +1,7 @@
 <template>
     <CCard class="border-0 shadow-sm h-100">
         <CCardBody class="p-3 d-flex flex-column h-100">
-            <h6 class="mb-3 font-weight-bold">Data</h6>
+            <h6 class="mb-3 font-weight-bold">{{ $t('components.documents_editor_documentdatasidebar_vue_data') }}</h6>
             <SharedVariableList @select="onSelect" class="flex-grow-1" />
         </CCardBody>
     </CCard>

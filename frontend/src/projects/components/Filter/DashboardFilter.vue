@@ -9,7 +9,7 @@
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-bank" class="filter-icon school-icon" />
-                  <span class="filter-label">School</span>
+                  <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_school') }}</span>
                 </div>
                 <slot name="school">
                   <CSelect 
@@ -28,7 +28,7 @@
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-list-rich" class="filter-icon program-icon" />
-                  <span class="filter-label">Program</span>
+                  <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_program') }}</span>
                 </div>
                 <slot name="program">
                   <CSelect 
@@ -47,7 +47,7 @@
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-calendar" class="filter-icon year-icon" />
-                  <span class="filter-label">Academic Year</span>
+                  <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_academic_year') }}</span>
                 </div>
                 <slot name="year">
                   <CSelect 
@@ -66,7 +66,7 @@
               <div class="filter-item">
                 <div class="filter-header">
                   <CIcon name="cil-chart-pie" class="filter-icon evaluated-icon" />
-                  <span class="filter-label">Status</span>
+                  <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_status') }}</span>
                 </div>
                 <slot name="evaluated">
                   <CSelect 

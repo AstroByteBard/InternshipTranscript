@@ -33,11 +33,6 @@ export default {
     },
     data() {
         return {
-            documentFields: [
-                { key: 'nameContent', label: 'NAME' },
-                { key: 'status', label: 'STATUS' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-right pe-4', sorter: false, filter: false },
-            ],
             certificatesData: []
         }
     },
@@ -71,7 +66,7 @@ export default {
             this.$router.push(`/documents/certificate/edit/${item._id}`);
         },
         onCopy(item) {
-            if (!confirm(`Copy "${item.title}"?`)) return;
+            if (!confirm(this.$t('copy_confirm', { title: item.title }))) return;
             const payload = {
                 title: item.title + ' (Copy)',
                 type: 'certificate',
@@ -84,7 +79,7 @@ export default {
                 .catch(err => console.error('Copy failed', err));
         },
         async onDelete(item) {
-            if (!confirm(`Delete "${item.title}"? This cannot be undone.`)) return;
+            if (!confirm(this.$t('delete_confirm', { title: item.title }))) return;
             try {
                 await this.$api.documents('delete', { _id: item._id });
                 this.loadCertificates();
@@ -94,6 +89,13 @@ export default {
         }
     },
     computed: {
+        documentFields() {
+            return [
+                { key: 'nameContent', label: this.$t('name_label') },
+                { key: 'status', label: this.$t('status_label') },
+                { key: 'actions', label: this.$t('actions_short'), _classes: 'text-right pe-4', sorter: false, filter: false },
+            ]
+        },
         issuedCount() {
             return this.certificatesData.filter(d => d.status === 'Active' || d.status === 'Published').length;
         },

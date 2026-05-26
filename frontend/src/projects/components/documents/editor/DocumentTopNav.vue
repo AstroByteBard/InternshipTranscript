@@ -1,10 +1,10 @@
 <template>
   <CRow class="top-nav m-0 py-3 bg-white border-bottom shadow-sm mb-4 align-items-center">
     <CCol sm="4" class="d-flex align-items-center">
-      <CButton size="sm" variant="ghost" class="btn-back mr-3" @click="$router.push('/documents')">
+      <CButton size="sm" variant="ghost" class="btn-back mr-3" @click="$emit('back')">
         <CIcon name="cil-chevron-left" />
       </CButton>
-      <h5 class="mb-0 font-weight-bold">Compose Document</h5>
+      <h5 class="mb-0 font-weight-bold">{{ $t('components.documents_editor_documenttopnav_vue_compose_document') }}</h5>
     </CCol>
 
     <CCol sm="8" class="d-flex align-items-center justify-content-end">
@@ -13,30 +13,23 @@
         <CButtonGroup class="w-100">
           <CButton size="sm" class="segment-btn" :class="{ 'active': !isPreview, 'text-muted': isPreview }"
             @click="$emit('update:isPreview', false)">
-            <CIcon name="cil-pencil" class="mr-2" size="sm" /> Write
-          </CButton>
+            <CIcon name="cil-pencil" class="mr-2" size="sm" />{{ $t('components.documents_editor_documenttopnav_vue_write') }}</CButton>
           <CButton size="sm" class="segment-btn" :class="{ 'active': isPreview, 'text-muted': !isPreview }"
             @click="$emit('update:isPreview', true)">
-            <CIcon name="cil-eye" class="mr-2" size="sm" /> Preview
-          </CButton>
+            <CIcon name="cil-eye" class="mr-2" size="sm" />{{ $t('components.documents_editor_documenttopnav_vue_preview') }}</CButton>
           <CButton size="sm" class="segment-btn" :class="{ 'active': showSettings, 'text-muted': !showSettings }"
             @click="$emit('update:showSettings', !showSettings)">
-            <CIcon name="cil-settings" class="mr-2" size="sm" /> Setting
-          </CButton>
+            <CIcon name="cil-settings" class="mr-2" size="sm" />{{ $t('components.documents_editor_documenttopnav_vue_setting') }}</CButton>
           <CButton size="sm" class="segment-btn"
             :class="{ 'active': showHistorySidebar, 'text-muted': !showHistorySidebar }"
             @click="$emit('toggle-history-sidebar')">
-            <CIcon name="cil-history" class="mr-2" size="sm" /> History
-          </CButton>
+            <CIcon name="cil-history" class="mr-2" size="sm" />{{ $t('components.documents_editor_documenttopnav_vue_history') }}</CButton>
         </CButtonGroup>
       </div>
 
-      <CButton size="sm" variant="ghost" class="text-muted font-weight-bold mr-3" @click="$emit('cancel')">
-        Cancel
-      </CButton>
+      <CButton size="sm" variant="ghost" class="text-muted font-weight-bold mr-3" @click="$emit('cancel')">{{ $t('components.documents_editor_documenttopnav_vue_cancel') }}</CButton>
       <CButton size="sm" color="danger" class="btn-save font-weight-bold text-white px-3" @click="$emit('save')">
-        <CIcon name="cil-save" class="mr-2" /> Save Document
-      </CButton>
+        <CIcon name="cil-save" class="mr-2" />{{ $t('components.documents_editor_documenttopnav_vue_save_document') }}</CButton>
     </CCol>
   </CRow>
 </template>

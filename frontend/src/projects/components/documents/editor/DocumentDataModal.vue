@@ -1,8 +1,8 @@
 <template>
-    <CModal :show.sync="show" title="Database Variables" @update:show="$emit('update:show', $event)" size="sm">
+    <CModal :show.sync="show" title=":title='$t("components.documents_editor_documentdatamodal_vue_database_variables")'" @update:show="$emit('update:show', $event)" size="sm">
         <SharedVariableList maxHeight="400px" :showIcon="true" @select="onSelect" />
         <template #footer>
-            <CButton color="secondary" @click="$emit('update:show', false)">Close</CButton>
+            <CButton color="secondary" @click="$emit('update:show', false)">{{ $t('components.documents_editor_documentdatamodal_vue_close') }}</CButton>
         </template>
     </CModal>
 </template>

@@ -1,58 +1,25 @@
 <template>
     <div>
-        <CompetenciesHeader 
-            :show-create="true" 
-            create-label="Create Hardskill" 
-            @create-click="showCreateModal = true"
-            @export-assessment="exportAssessment" 
-        />
-        <WidgetsCompetencyDetail 
-            :totalItems="hardskillItems.length"
-            :activeItems="activeHardskillsCount"
-            :inactiveItems="inactiveHardskillsCount"
-            :totalQuestions="totalHardskillQuestions"
-            itemName="Hardskills"
-            questionName="Questions"
-            questionIcon="cil-task"
-        />
+        <CompetenciesHeader :show-create="true" :create-label="$t('create_hardskill')"
+            @create-click="showCreateModal = true" @export-assessment="exportAssessment" />
+        <WidgetsCompetencyDetail :totalItems="hardskillItems.length" :activeItems="activeHardskillsCount"
+            :inactiveItems="inactiveHardskillsCount" :totalQuestions="totalHardskillQuestions"
+            :itemName="$t('hardskills')" :questionName="$t('questions')" questionIcon="cil-task" />
         <!-- Navigation & Management Bar -->
-        <FilterHardskill 
-            :searchQuery.sync="searchQueryHardskill"
-            :selectionSchool.sync="selectionSchoolHardskill"
-            :selectionMajor.sync="selectionMajorHardskill"
-            :selectionAcademicYear.sync="selectionAcademicYearHardskill"
-            :schoolOptions="hardskillSchoolOptions"
-            :majorOptions="hardskillMajorOptions"
-            :yearOptions="yearOptions"
-        />
-        
-        <TableHardskill 
-            :items="filteredHardskillItems"
-            :fields="hardskillFields"
-            :itemsPerPage="itemsPerPage"
-            :activePage.sync="activePageHardskill"
-            :totalPages="hardskillTotalPages"
-            :tableStart="hardskillTableStart"
-            :tableEnd="hardskillTableEnd"
-            :totalItems="filteredHardskillItems.length"
-            :translate="translate"
-            @toggle-status="toggleStatus"
-            @edit="editItem"
-            @delete="deleteItem"
-        />
-        
+        <FilterHardskill :searchQuery.sync="searchQueryHardskill" :selectionSchool.sync="selectionSchoolHardskill"
+            :selectionMajor.sync="selectionMajorHardskill" :selectionAcademicYear.sync="selectionAcademicYearHardskill"
+            :schoolOptions="hardskillSchoolOptions" :majorOptions="hardskillMajorOptions" :yearOptions="yearOptions" />
+
+        <TableHardskill :items="filteredHardskillItems" :fields="hardskillFields" :itemsPerPage="itemsPerPage"
+            :activePage.sync="activePageHardskill" :totalPages="hardskillTotalPages" :tableStart="hardskillTableStart"
+            :tableEnd="hardskillTableEnd" :totalItems="filteredHardskillItems.length" :translate="translate"
+            @toggle-status="toggleStatus" @edit="editItem" @delete="deleteItem" />
+
         <!-- Create Modal -->
-        <ModalHardskill 
-            :show.sync="showCreateModal"
-            :isEdit="isEdit"
-            :form="form"
-            :schoolOptions="hardskillSchoolOptionsCreate"
-            :majorOptions="hardskillMajorOptionsCreate"
-            @update:show="handleCreateModalClose"
-            @add-question="addQuestion"
-            @remove-question="removeQuestion"
-            @save="onSave"
-        />
+        <ModalHardskill :show.sync="showCreateModal" :isEdit="isEdit" :form="form"
+            :schoolOptions="hardskillSchoolOptionsCreate" :majorOptions="hardskillMajorOptionsCreate"
+            @update:show="handleCreateModalClose" @add-question="addQuestion" @remove-question="removeQuestion"
+            @save="onSave" />
     </div>
 </template>
 
@@ -97,14 +64,6 @@ export default {
                 major: '',
                 questions: [],
             },
-            hardskillFields: [
-                { key: 'year', label: 'YEAR', _classes: 'text-center', _style: 'min-width: 100px' },
-                { key: 'major', label: 'SCHOOL & PROGRAM', _classes: 'text-left', _style: 'min-width: 350px' },
-                { key: 'title', label: 'COURSE / SUBJECT', _classes: 'text-left', _style: 'min-width: 150px' },
-                { key: 'status', label: 'ACTIVE STATUS', _classes: 'text-center', _style: 'min-width: 150px' },
-                { key: 'assessmentQuestion', label: 'ASSESSMENT QUESTION', _classes: 'text-center', _style: 'min-width: 220px' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', _style: 'min-width: 120px', sorter: false, filter: false },
-            ],
             schools: [],
             programs: [],
         }
@@ -115,6 +74,16 @@ export default {
         this.fetchPrograms()
     },
     computed: {
+        hardskillFields() {
+            return [
+                { key: 'year', label: this.$t('year_short'), _classes: 'text-center', _style: 'min-width: 100px' },
+                { key: 'major', label: this.$t('school_and_program'), _classes: 'text-left', _style: 'min-width: 350px' },
+                { key: 'title', label: this.$t('course_subject'), _classes: 'text-left', _style: 'min-width: 150px' },
+                { key: 'status', label: this.$t('active_status_short'), _classes: 'text-center', _style: 'min-width: 150px' },
+                { key: 'assessmentQuestion', label: this.$t('assessment_question_short'), _classes: 'text-center', _style: 'min-width: 220px' },
+                { key: 'actions', label: this.$t('actions_short'), _classes: 'text-center', _style: 'min-width: 120px', sorter: false, filter: false },
+            ]
+        },
         ...mapState('competencies/specific', ['specific']),
         hardskillItems() {
             return this.specific || []
@@ -140,15 +109,15 @@ export default {
                 .map(item => item.year)
                 .filter(year => year && year !== '')
             const uniqueYears = [...new Set(years)].sort((a, b) => b.localeCompare(a))
-            
+
             return [
-                { value: '', label: 'All Years' },
+                { value: '', label: this.$t('all_years_label') },
                 ...uniqueYears.map(year => ({ value: year, label: year }))
             ]
         },
         hardskillSchoolOptions() {
             return [
-                { value: '', label: 'All Schools' },
+                { value: '', label: this.$t('all_schools_label') },
                 ...this.schools.map(s => ({
                     value: s._id,
                     label: this.translate(s.title)
@@ -167,7 +136,7 @@ export default {
                 filtered = filtered.filter(p => p.school === this.selectionSchoolHardskill)
             }
             return [
-                { value: '', label: 'All Majors' },
+                { value: '', label: this.$t('all_programs_label') },
                 ...filtered.map(p => ({
                     value: p._id,
                     label: this.translate(p.title)
@@ -234,7 +203,7 @@ export default {
             }).catch(e => console.error(e));
         },
         async fetchPrograms() {
-             this.$store.dispatch('academic/programs/programs').then(() => {
+            this.$store.dispatch('academic/programs/programs').then(() => {
                 this.programs = this.$store.state.academic.programs.programs || [];
             }).catch(e => console.error(e));
         },
@@ -322,11 +291,11 @@ export default {
             try {
                 let items = this.hardskillItems
                 const target = items.find(i => i._id === id)
-                if(!target) return
-                
+                if (!target) return
+
                 await this.updateHardskill({ _id: id, active: !target.active })
                 this.fetchHardskills()
-            } catch(e) {
+            } catch (e) {
                 console.error(e)
             }
         },
@@ -349,18 +318,18 @@ export default {
             this.showCreateModal = true
         },
         async deleteItem(id) {
-            if(confirm('Are you sure you want to delete this Hardskill?')) {
+            if (confirm(this.$t('delete_hardskill_confirm'))) {
                 await this.deleteHardskill(id)
                 this.fetchHardskills()
             }
         },
         async onSave() {
-            if(!this.form.titleTh || !this.form.titleEn || !this.form.year || !this.form.major) {
-                alert('Please fill out all required basic information (*)')
+            if (!this.form.titleTh || !this.form.titleEn || !this.form.year || !this.form.major) {
+                alert(this.$t('please_fill_required_basic_info'))
                 return
             }
-            if(this.form.questions.some(q => !q.th || !q.en)) {
-                alert('Please fill out all required question fields (*)')
+            if (this.form.questions.some(q => !q.th || !q.en)) {
+                alert(this.$t('please_fill_required_question_fields'))
                 return
             }
 
@@ -387,7 +356,7 @@ export default {
                 }))
             }
 
-            if(this.isEdit) {
+            if (this.isEdit) {
                 payload._id = this.editingId
                 await this.updateHardskill(payload)
             } else {
@@ -693,4 +662,3 @@ export default {
     color: #475569;
 }
 </style>
-

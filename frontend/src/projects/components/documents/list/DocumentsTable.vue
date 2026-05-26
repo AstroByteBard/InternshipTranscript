@@ -11,12 +11,12 @@
               <div>
                 <div class="font-weight-bold" style="color: #1f2937; font-size: 14px;">{{ item.title }}</div>
                 <div class="d-flex align-items-center flex-wrap text-muted small mt-1">
-                  <span class="mr-2">Document Template</span>
+                  <span class="mr-2">{{ $t('components.documents_list_documentstable_vue_document_template') }}</span>
                   <CBadge class="locale-badge mr-2" :color="getLocaleValue(item) === 'th' ? 'warning' : 'info'">
                     {{ getLocaleValue(item) }}
                   </CBadge>
                   <span>&bull; {{ (item.update && item.update.datetime) ? moment(item.update.datetime).fromNow() : '-'
-                    }}</span>
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -27,7 +27,7 @@
           <td class="align-middle">
             <CBadge :color="item.status === 'Active' ? 'success' : (item.status === 'Published' ? 'info' : 'secondary')"
               class="custom-badge">
-              {{ item.status }}
+              {{ item.status ? $t('status_' + item.status.toLowerCase()) : '' }}
             </CBadge>
           </td>
         </template>
@@ -45,7 +45,7 @@
 
             <!-- Options Button with Dropdown -->
             <div class="dropdown-wrapper d-inline-block" :ref="'dropdown_' + item._id">
-              <CButton class="btn-action-icon" title="Options" @click.stop="toggleDropdown(item._id)">
+              <CButton class="btn-action-icon" :title="$t('options')" @click.stop="toggleDropdown(item._id)">
                 <CIcon name="cil-options" />
               </CButton>
 
@@ -53,20 +53,20 @@
                 <div v-if="openDropdownId === item._id" class="action-dropdown shadow">
                   <button class="dropdown-item-btn" @click.stop="handleAction('download', item)">
                     <CIcon name="cil-cloud-download" class="mr-2" />
-                    Download
+                    {{ $t('download') }}
                   </button>
                   <button class="dropdown-item-btn" @click.stop="handleAction('edit', item)">
                     <CIcon name="cil-pencil" class="mr-2" />
-                    Edit
+                    {{ $t('edit') }}
                   </button>
                   <button class="dropdown-item-btn" @click.stop="handleAction('copy', item)">
                     <CIcon name="cil-copy" class="mr-2" />
-                    Copy
+                    {{ $t('copy') }}
                   </button>
                   <div class="dropdown-divider" />
                   <button class="dropdown-item-btn text-danger" @click.stop="handleAction('delete', item)">
                     <CIcon name="cil-trash" class="mr-2" />
-                    Delete
+                    {{ $t('delete') }}
                   </button>
                 </div>
               </transition>

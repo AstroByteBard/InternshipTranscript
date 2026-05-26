@@ -9,8 +9,8 @@
               <CIcon :name="emailReady ? 'cil-check-circle' : 'cil-x-circle'" height="24" :style="emailReady ? 'color: #15803d;' : 'color: #b91c1c;'" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Email Status</div>
-          <div class="h2 font-weight-bold mb-0 text-dark">{{ emailReady ? 'Ready' : 'Not Ready' }}</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscorrespondence_vue_email_status') }}</div>
+          <div class="h2 font-weight-bold mb-0 text-dark">{{ emailReady ? $t('ready') : $t('not_ready') }}</div>
         </CCardBody>
       </CCard>
     </CCol>
@@ -24,7 +24,7 @@
               <CIcon name="cil-clock" height="24" style="color: #d97706;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Pending</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscorrespondence_vue_pending') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ pending.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -39,7 +39,7 @@
               <CIcon name="cil-check-circle" height="24" style="color: #059669;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Sent / Replied</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscorrespondence_vue_sent_replied') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ sent.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -54,7 +54,7 @@
               <CIcon name="cil-warning" height="24" style="color: #dc2626;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Failed / Closed</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetscorrespondence_vue_failed_closed') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ failed.toLocaleString() }}</div>
         </CCardBody>
       </CCard>

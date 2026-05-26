@@ -9,8 +9,8 @@
               <CIcon name="cil-bank" height="24" style="color: #0369a1;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Selected School</div>
-          <div class="h5 font-weight-bold mb-0 text-dark text-truncate" :title="schoolName">
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdashboard_vue_selected_school') }}</div>
+          <div class="h5 font-weight-bold mb-0 text-dark text-truncate" :title="$t('components.widgets_widgetsdashboard_vue_schoolname')">
             {{ schoolName }}
           </div>
         </CCardBody>
@@ -26,7 +26,7 @@
               <CIcon name="cilPeople" height="24" style="color: #b91c1c;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Student</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdashboard_vue_total_student') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ total.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -41,7 +41,7 @@
               <CIcon name="cil-check-circle" height="24" style="color: #15803d;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Evaluated</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdashboard_vue_total_evaluated') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ evaluated.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -56,7 +56,7 @@
               <CIcon name="cil-x-circle" height="24" style="color: #b91c1c;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Not Evaluated</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdashboard_vue_total_not_evaluated') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ notEvaluated.toLocaleString() }}</div>
         </CCardBody>
       </CCard>

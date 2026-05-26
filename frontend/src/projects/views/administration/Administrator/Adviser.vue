@@ -1,33 +1,17 @@
 <template>
     <div class="administrator-view">
-        <AdministratorHeader 
-            @add-advisor="$refs.modalAdvisor.openAdd()"
-            @refresh="onInit" 
-        />
+        <AdministratorHeader @add-advisor="$refs.modalAdvisor.openAdd()" @refresh="onInit" />
 
-        <WidgetsAdministrator 
-            :studentCount="storedStudents ? storedStudents.length : 0"
-            :advisorCount="storedAdvisors ? storedAdvisors.length : 0"
-            :selectedSchool="selectedSchoolName"
-            :selectedMajor="selectedMajorName"
-            :selectedYear="selectedYearName"
-            activeTab="Advisor"
-        />
-        
+        <WidgetsAdministrator :studentCount="storedStudents ? storedStudents.length : 0"
+            :advisorCount="storedAdvisors ? storedAdvisors.length : 0" :selectedSchool="selectedSchoolName"
+            :selectedMajor="selectedMajorName" :selectedYear="selectedYearName" activeTab="Advisor" />
+
         <div>
-            <FilterAdvisor 
-                :search.sync="searchAdvisor" 
-                :school.sync="school" 
-                :program.sync="program"
-                :academic.sync="academic" 
-                :province.sync="province" 
-            />
+            <FilterAdvisor :search.sync="searchAdvisor" :school.sync="school" :program.sync="program"
+                :academic.sync="academic" :province.sync="province" />
 
-            <TableAdminstratorAdviser 
-                :filteredAdvisors="filteredAdvisors"
-                @edit-advisor="$refs.modalAdvisor.openEdit($event)" 
-                @refresh="onInit" 
-            />
+            <TableAdminstratorAdviser :filteredAdvisors="filteredAdvisors"
+                @edit-advisor="$refs.modalAdvisor.openEdit($event)" @refresh="onInit" />
         </div>
 
         <ModalEditAdvisor ref="modalAdvisor" @refresh="onInit" />
@@ -80,19 +64,27 @@ export default {
         ...mapGetters('member/students', { storedStudents: 'students' }),
         ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
         selectedSchoolName() {
-            if (!this.school || !this.storedSchools) return 'ALL';
+            if (!this.school || !this.storedSchools) return this.$t('all');
+            const lang = this.$i18n.locale || 'en';
             const school = this.storedSchools.find(s => s._id === this.school);
-            if (!school) return 'ALL';
-            return school.title?.find(t => t.key === 'en')?.value || 'ALL';
+            if (!school) return this.$t('all');
+            const titleObj = Array.isArray(school.title)
+                ? (school.title.find(t => t.key === lang) || school.title.find(t => t.key === 'en') || school.title.find(t => t.key === 'th'))
+                : null;
+            return (titleObj && titleObj.value) ? titleObj.value : this.$t('all');
         },
         selectedMajorName() {
-            if (!this.program || !this.storedPrograms) return 'ALL';
+            if (!this.program || !this.storedPrograms) return this.$t('all');
+            const lang = this.$i18n.locale || 'en';
             const prog = this.storedPrograms.find(p => p._id === this.program);
-            if (!prog) return 'ALL';
-            return prog.title?.find(t => t.key === 'en')?.value || 'ALL';
+            if (!prog) return this.$t('all');
+            const titleObj = Array.isArray(prog.title)
+                ? (prog.title.find(t => t.key === lang) || prog.title.find(t => t.key === 'en') || prog.title.find(t => t.key === 'th'))
+                : null;
+            return (titleObj && titleObj.value) ? titleObj.value : this.$t('all');
         },
         selectedYearName() {
-            return this.academic || 'ALL';
+            return this.academic || this.$t('all');
         },
         formattedAdvisors() {
             if (!this.storedAdvisors || !this.storedAdvisors.length) return [];
@@ -125,7 +117,7 @@ export default {
                             studentName = nameThai || nameEnglish || '-';
                         } else {
                             // Case 3: Fallback if not found in store
-                            studentID = adv.student; 
+                            studentID = adv.student;
                         }
                     }
                 }
@@ -153,7 +145,7 @@ export default {
                     (adv.studentID && adv.studentID.toLowerCase().includes(searchLower));
 
                 if (!matches) return false;
-                
+
                 if (this.province) {
                     const studentProvinceId = adv.province?._id || adv.province;
                     if (studentProvinceId !== this.province) return false;

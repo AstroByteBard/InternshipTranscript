@@ -4,9 +4,8 @@
             <CCardBody class="p-4">
                 <CRow class="mb-4">
                     <CCol sm="12">
-                        <h4 class="card-title mb-1" style="font-weight: bold; color: #111827; font-size: 1.25rem;">
-                            Evaluation Status</h4>
-                        <div class="small text-muted" style="font-size: 0.9rem; color: #6b7280;">Completion ratio</div>
+                        <h4 class="card-title mb-1" style="font-weight: bold; color: #111827; font-size: 1.25rem;">{{ $t('components.charts_cchartpie_vue_evaluation_status') }}</h4>
+                        <div class="small text-muted" style="font-size: 0.9rem; color: #6b7280;">{{ $t('components.charts_cchartpie_vue_completion_ratio') }}</div>
                     </CCol>
                 </CRow>
                 <div class="position-relative d-flex justify-content-center align-items-center"

@@ -2,54 +2,61 @@
     <CRow>
         <CCol>
             <CCard class="table-card border-0 shadow-sm mb-4">
-                <CDataTable class="custom-table mb-0" :items="filteredStudents" :fields="fields"
-                    :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePage">
+                <div class="table-scroll">
+                    <CDataTable class="custom-table mb-0" :items="filteredStudents" :fields="fields"
+                        :items-per-page="itemsPerPage" :pagination="false" hover :activePage.sync="activePage">
 
-                    <template #under-table>
-                        <div class="d-flex justify-content-between align-items-center px-4 py-3"
-                            style="border-top: 1px solid #f3f4f6;">
-                            <div class="text-muted" style="font-size: 13px;">
-                                Showing {{ tableStartItem }} to {{ tableEndItem }} of {{ filteredStudents.length
-                                }} results
-                            </div>
-                            <CPagination :activePage.sync="activePage" :pages="totalPages" :doubleArrows="false"
-                                align="end" class="mb-0 custom-pagination" />
-                        </div>
-                    </template>
+                        <template #nameCombo="{ item }">
+                            <td class="align-middle">
+                                <div><strong>{{ item.primaryName || item.nameThai || item.nameEnglish || '-' }}</strong>
+                                </div>
+                                <div class="text-muted small">{{ item.secondaryName || item.nameEnglish || item.nameThai
+                                    ||
+                                    '-' }}</div>
+                            </td>
+                        </template>
 
-                    <template #nameCombo="{ item }">
-                        <td class="align-middle">
-                            <div><strong>{{ item.nameThai || '-' }}</strong></div>
-                            <div class="text-muted small">{{ item.nameEnglish || '-' }}</div>
-                        </td>
-                    </template>
+                        <template #emailCompanyCombo="{ item }">
+                            <td class="align-middle">
+                                <div><strong>{{ item.email || '-' }}</strong></div>
+                                <div class="text-muted small">{{ item.company || '-' }}</div>
+                            </td>
+                        </template>
 
-                    <template #emailCompanyCombo="{ item }">
-                        <td class="align-middle">
-                            <div><strong>{{ item.email || '-' }}</strong></div>
-                            <div class="text-muted small">{{ item.company || '-' }}</div>
-                        </td>
-                    </template>
+                        <template #schoolProgram="{ item }">
+                            <td class="align-middle">
+                                <div><strong>{{ item.primarySchoolName || item.schoolName || '-' }}</strong></div>
+                                <div class="text-muted small">{{ item.primaryProgramName || item.programName || '-' }}
+                                </div>
+                            </td>
+                        </template>
 
-                    <template #schoolProgram="{ item }">
-                        <td class="align-middle">
-                            <div><strong>{{ item.schoolName || '-' }}</strong></div>
-                            <div class="text-muted small">{{ item.programName || '-' }}</div>
-                        </td>
-                    </template>
+                        <template #actions="{ item }">
+                            <td class="text-center align-middle">
+                                <CButton class="btn-action-icon mr-2" @click="editStudent(item)" :title="$t('edit')">
+                                    <CIcon name="cil-pencil" />
+                                </CButton>
+                                <CButton class="btn-action-icon" @click="deleteStudent(item)" :title="$t('delete')">
+                                    <CIcon name="cil-trash" />
+                                </CButton>
+                            </td>
+                        </template>
 
-                    <template #actions="{ item }">
-                        <td class="text-center align-middle">
-                            <CButton class="btn-action-icon mr-2" @click="editStudent(item)" title="Edit">
-                                <CIcon name="cil-pencil" />
-                            </CButton>
-                            <CButton class="btn-action-icon" @click="deleteStudent(item)" title="Delete">
-                                <CIcon name="cil-trash" />
-                            </CButton>
-                        </td>
-                    </template>
+                    </CDataTable>
+                </div>
 
-                </CDataTable>
+                <!-- Footer: stay visible below scroll area -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 table-footer"
+                    style="border-top: 1px solid #f3f4f6;">
+                    <div class="text-muted" style="font-size: 13px;">
+                        {{ $t('showing_results', {
+                            start: tableStartItem, end: tableEndItem,
+                            total: filteredStudents.length
+                        }) }}
+                    </div>
+                    <CPagination :activePage.sync="activePage" :pages="totalPages" :doubleArrows="false" align="end"
+                        class="mb-0 custom-pagination" />
+                </div>
             </CCard>
         </CCol>
     </CRow>
@@ -68,16 +75,6 @@ export default {
         return {
             activePage: 1,
             itemsPerPage: 5,
-            fields: [
-                { key: 'studentID', label: 'studentID' },
-                { key: 'nameCombo', label: 'NAME' },
-                { key: 'emailCompanyCombo', label: 'EMAIL / COMPANY' },
-                { key: 'schoolProgram', label: 'SCHOOL / PROGRAM' },
-                { key: 'courseName', label: 'COURSE' },
-                { key: 'semester', label: 'SEMESTER' },
-                { key: 'year', label: 'Year' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
-            ],
         }
     },
     methods: {
@@ -85,18 +82,30 @@ export default {
             this.$emit('edit-student', student);
         },
         deleteStudent(student) {
-            const displayName = student.nameThai || student.nameEnglish || student.studentID || 'this student';
-            if (confirm(`Are you sure you want to delete ${displayName}?`)) {
+            const displayName = student.primaryName || student.nameThai || student.nameEnglish || student.studentID || this.$t('student');
+            if (confirm(this.$t('confirm_delete_student', { name: displayName }))) {
                 this.$store.dispatch("member/students/deleteStudents", { _id: student._id }).then(() => {
                     this.$emit('refresh');
                 }).catch(err => {
                     console.error("Failed to delete student:", err);
-                    alert("Failed to delete student. Please try again.");
+                    alert(this.$t('failed_to_delete_student'));
                 });
             }
         }
     },
     computed: {
+        fields() {
+            return [
+                { key: 'studentID', label: this.$t('id_label') },
+                { key: 'nameCombo', label: this.$t('name_label') },
+                { key: 'emailCompanyCombo', label: this.$t('email_company') },
+                { key: 'schoolProgram', label: this.$t('school_and_program') },
+                { key: 'courseName', label: this.$t('course') },
+                { key: 'semester', label: this.$t('semester') },
+                { key: 'year', label: this.$t('year_short') },
+                { key: 'actions', label: this.$t('actions'), _classes: 'text-center', sorter: false, filter: false },
+            ];
+        },
 
         totalPages() {
             return Math.ceil(this.filteredStudents.length / this.itemsPerPage) || 1;
@@ -122,8 +131,41 @@ export default {
     padding-bottom: 8px;
 }
 
+
 ::v-deep .custom-table table {
     margin-bottom: 0;
+    min-width: 980px;
+}
+
+/* Keep cells single-line and truncate with ellipsis like Correspondence table */
+::v-deep .custom-table tbody td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 10px;
+    /* reserve space so scrollbar doesn't overlap content */
+    scrollbar-gutter: stable;
+    /* keep layout stable when scrollbar appears */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* show a thin scrollbar on WebKit browsers for better visibility */
+::v-deep .table-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+::v-deep .table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(107, 114, 128, 0.25);
+    border-radius: 9999px;
+}
+
+.table-footer {
+    background: white;
 }
 
 ::v-deep .custom-table thead th {

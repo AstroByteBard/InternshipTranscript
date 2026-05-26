@@ -9,7 +9,7 @@
               <CIcon name="cil-library" height="24" style="color: #4b5563;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Total Documents</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdocuments_vue_total_documents') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ total.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -24,7 +24,7 @@
               <CIcon name="cil-check-circle" height="24" style="color: #059669;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Published</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdocuments_vue_published') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ published.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -39,7 +39,7 @@
               <CIcon name="cil-pencil" height="24" style="color: #d97706;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Draft</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdocuments_vue_draft') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ draft.toLocaleString() }}</div>
         </CCardBody>
       </CCard>
@@ -54,7 +54,7 @@
               <CIcon name="cil-history" height="24" style="color: #dc2626;" />
             </div>
           </div>
-          <div class="text-muted small text-uppercase font-weight-bold mb-1">Archived</div>
+          <div class="text-muted small text-uppercase font-weight-bold mb-1">{{ $t('components.widgets_widgetsdocuments_vue_archived') }}</div>
           <div class="h2 font-weight-bold mb-0 text-dark">{{ archived.toLocaleString() }}</div>
         </CCardBody>
       </CCard>

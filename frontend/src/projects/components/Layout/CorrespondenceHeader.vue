@@ -2,24 +2,18 @@
   <div class="hero-header-container mb-4 shadow-lg animate-fade-in">
     <div class="hero-content d-flex justify-content-between align-items-center">
       <div class="hero-text-section px-4">
-        <h1 class="hero-title animate-slide-up">Correspondence Center</h1>
-        <p class="hero-subtitle animate-slide-up-delay-1">Communication Hub for Students & Advisers</p>
+        <h1 class="hero-title animate-slide-up">{{ $t('components.layout_correspondenceheader_vue_correspondence_center') }}</h1>
+        <p class="hero-subtitle animate-slide-up-delay-1">{{ $t('components.layout_correspondenceheader_vue_communication_hub_for_studen') }}</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2">
             <div class="hero-badge mr-3">
-                <CIcon name="cil-check-circle" class="mr-2 text-success" size="sm"/>
-                System Active
-            </div>
+                <CIcon name="cil-check-circle" class="mr-2 text-success" size="sm"/>{{ $t('components.layout_correspondenceheader_vue_system_active') }}</div>
             <div class="hero-badge">
-                <CIcon name="cil-user" class="mr-2 icon-gold" size="sm"/>
-                System Administrator
-            </div>
+                <CIcon name="cil-user" class="mr-2 icon-gold" size="sm"/>{{ $t('components.layout_correspondenceheader_vue_system_administrator') }}</div>
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in">
         <CButton color="light" class="btn-hero-action px-4 py-3 font-weight-bold shadow" @click="$emit('preview')">
-          <CIcon name="cil-envelope-open" class="mr-2 text-danger"/>
-          Preview
-        </CButton>
+          <CIcon name="cil-envelope-open" class="mr-2 text-danger"/>{{ $t('components.layout_correspondenceheader_vue_preview') }}</CButton>
       </div>
     </div>
     <!-- Decorative elements matching Dashboard -->

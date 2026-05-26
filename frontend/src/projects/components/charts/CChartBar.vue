@@ -5,9 +5,8 @@
                 <CRow class="mb-4">
                     <CCol sm="12">
                         <h4 id="traffic" class="card-title mb-1"
-                            style="font-weight: bold; color: #111827; font-size: 1.25rem;">Performance Overview</h4>
-                        <div class="small text-muted" style="font-size: 0.9rem; color: #6b7280;">Evaluation metrics by
-                            school</div>
+                            style="font-weight: bold; color: #111827; font-size: 1.25rem;">{{ $t('components.charts_cchartbar_vue_performance_overview') }}</h4>
+                        <div class="small text-muted" style="font-size: 0.9rem; color: #6b7280;">{{ $t('components.charts_cchartbar_vue_evaluation_metrics_by_school') }}</div>
                     </CCol>
                 </CRow>
                 <div style="height: 400px; margin-top: 10px;">

@@ -16,14 +16,14 @@
             <button @click="loginAsAdmin"
               class="google-signin-btn btn w-100 d-flex align-items-center justify-content-center">
               <img src="@/assets/icons/logo-google.png" alt="Google Logo" class="mr-3" width="24px">
-              <span class="font-weight-bold">Continue with Admin Lamduan Mail</span>
+              <span class="font-weight-bold">{{ $t('continue_admin_lamduan_mail') }}</span>
             </button>
           </div>
           <div class="google-login-btn-container w-100 mt-4">
             <button @click="loginAsStudent"
               class="google-signin-btn btn w-100 d-flex align-items-center justify-content-center">
               <img src="@/assets/icons/logo-google.png" alt="Google Logo" class="mr-3" width="24px">
-              <span class="font-weight-bold">Continue with Student Lamduan Mail</span>
+              <span class="font-weight-bold">{{ $t('continue_student_lamduan_mail') }}</span>
             </button>
           </div>
         </div>
@@ -32,9 +32,10 @@
       <!-- Footer Note -->
       <div class="login-footer mt-5 pt-4 text-center w-100">
         <p class="text-muted mb-0" style="font-size: 14px; opacity: 0.8;">
-          * Note: You can contact the Student Employment and Internship Division at Email:
-          <a href="mailto:Internship@mfu.ac.th" class="font-weight-bold text-dark">Internship@mfu.ac.th</a>
-          Tel. <span class="font-weight-bold text-dark">053-916366</span>
+          {{ $t('contact_note_prefix') }}
+          <a :href="`mailto:${$t('internship_email')}`" class="font-weight-bold text-dark">{{ $t('internship_email')
+            }}</a>
+          <span class="ml-2">{{ $t('internship_phone') }}</span>
         </p>
       </div>
     </div>

@@ -7,13 +7,13 @@
           <CCardBody class="p-4 d-flex align-items-center justify-content-between flex-wrap">
             <div class="d-flex align-items-center">
               <div class="avatar-wrapper mr-4">
-                <img :src="avatarSrc" class="hero-avatar shadow-lg" alt="Student Profile" @error="onAvatarError">
+                <img :src="avatarSrc" class="hero-avatar shadow-lg" :alt="$t('student')" @error="onAvatarError">
               </div>
               <div class="hero-info">
                 <h1 class="font-weight-bold mb-1 text-primary-dark">{{ studentData.name }}</h1>
                 <p class="text-muted mb-2">
                   <CIcon name="cil-fingerprint" size="sm" class="mr-1" />
-                  ID: {{ studentData.studentID }}
+                  {{ $t('id_label') }}: {{ studentData.studentID }}
                 </p>
                 <div class="d-flex flex-wrap">
                   <CBadge color="light" class="badge-custom mr-2 mb-2">
@@ -30,7 +30,7 @@
             <div class="action-hub mt-3 mt-lg-0">
               <CButton color="primary" class="download-btn px-4 py-2 shadow-sm font-weight-bold"
                 @click="openDownloadModal">
-                <CIcon name="cil-cloud-download" class="mr-2" /> Download Performance Report
+                <CIcon name="cil-cloud-download" class="mr-2" /> {{ $t('download_performance_report') }}
               </CButton>
             </div>
           </CCardBody>
@@ -44,8 +44,8 @@
       <CCol lg="6" class="mb-4">
         <CCard class="h-100 border-0 shadow-sm glass-card">
           <CCardHeader class="border-0 bg-transparent pt-4 px-4">
-            <h4 class="mb-0 text-secondary-dark font-weight-bold">Soft Skills</h4>
-            <p class="small text-muted mb-0">General Competencies Behavioral Analysis</p>
+            <h4 class="mb-0 text-secondary-dark font-weight-bold">{{ $t('soft_skill') }}</h4>
+            <p class="small text-muted mb-0">{{ $t('general_competencies_behavioural_analysis') }}</p>
           </CCardHeader>
           <CCardBody class="px-4 pb-4">
             <div class="chart-container mb-4 d-flex justify-content-center"
@@ -70,8 +70,8 @@
       <CCol lg="6" class="mb-4">
         <CCard class="h-100 border-0 shadow-sm glass-card">
           <CCardHeader class="border-0 bg-transparent pt-4 px-4">
-            <h4 class="mb-0 text-secondary-dark font-weight-bold">Hard Skills</h4>
-            <p class="small text-muted mb-0">Specific Technical Competencies Analysis</p>
+            <h4 class="mb-0 text-secondary-dark font-weight-bold">{{ $t('hard_skill') }}</h4>
+            <p class="small text-muted mb-0">{{ $t('specific_technical_competencies_analysis') }}</p>
           </CCardHeader>
           <CCardBody class="px-4 pb-4">
             <div class="chart-container mb-4 d-flex justify-content-center"
@@ -104,7 +104,7 @@
                   <div class="icon-circle bg-light-success mr-3">
                     <CIcon name="cil-star" size="xl" />
                   </div>
-                  <h5 class="mb-0 font-weight-bold">Outstanding Performance</h5>
+                  <h5 class="mb-0 font-weight-bold">{{ $t('outstanding_performance') }}</h5>
                 </div>
                 <div v-if="Outstanding.length > 0">
                   <div v-for="feedback in Outstanding" :key="feedback.id" class="feedback-card p-3 mb-3">
@@ -132,7 +132,7 @@
                   </div>
                 </div>
                 <div v-else class="empty-state text-center py-4">
-                  <p class="text-muted font-italic">Analytical feedback is being processed...</p>
+                  <p class="text-muted font-italic">{{ $t('analytical_feedback_processing') }}</p>
                 </div>
               </CCol>
               <CCol md="6">
@@ -140,7 +140,7 @@
                   <div class="icon-circle bg-light-info mr-3">
                     <CIcon name="cil-chart-line" size="xl" />
                   </div>
-                  <h5 class="mb-0 font-weight-bold">Growth Opportunities</h5>
+                  <h5 class="mb-0 font-weight-bold">{{ $t('growth_opportunities') }}</h5>
                 </div>
                 <div v-if="Opportunities.length > 0">
                   <div v-for="feedback in Opportunities" :key="feedback.id" class="feedback-card p-3 mb-3">
@@ -154,7 +154,7 @@
                   </div>
                 </div>
                 <div v-else class="empty-state text-center py-4">
-                  <p class="text-muted font-italic">Continue your excellent progress in all domains!</p>
+                  <p class="text-muted font-italic">{{ $t('continue_excellent_progress') }}</p>
                 </div>
               </CCol>
             </CRow>
@@ -164,24 +164,24 @@
     </CRow>
 
     <!-- Download Modal -->
-    <CModal title="Download Documentation" :show.sync="showDownloadModal" centered color="primary" size="lg"
+    <CModal :title="$t('download_documentation')" :show.sync="showDownloadModal" centered color="primary" size="lg"
       class="download-modal-dialog">
       <div class="download-modal-body py-3 px-1 text-center">
         <CIcon name="cil-cloud-download" size="xl" class="text-primary mb-3" style="font-size: 3rem" />
-        <h5 class="font-weight-bold mb-2">Ready to download?</h5>
-        <p class="text-muted small mb-4">Select a report template to generate your personalized document for the current
-          locale.</p>
+        <h5 class="font-weight-bold mb-2">{{ $t('ready_to_download') }}</h5>
+        <p class="text-muted small mb-4">{{ $t('select_report_template') }}</p>
         <div class="text-left px-2">
-          <label class="font-weight-bold small text-uppercase text-muted mb-2">Report Template</label>
-          <CSelect :options="publicDocumentOptions" :value.sync="selectedDocumentId" placeholder="Select a template..."
-            class="custom-select-modern" />
+          <label class="font-weight-bold small text-uppercase text-muted mb-2">{{ $t('report_template') }}</label>
+          <CSelect :options="publicDocumentOptions" :value.sync="selectedDocumentId"
+            :placeholder="$t('select_a_template')" class="custom-select-modern" />
         </div>
       </div>
       <template #footer>
-        <CButton @click="showDownloadModal = false" color="light" class="px-4 font-weight-bold">Cancel</CButton>
+        <CButton @click="showDownloadModal = false" color="light" class="px-4 font-weight-bold">{{ $t('cancel') }}
+        </CButton>
         <CButton @click="handleDownload" color="primary" class="px-4 font-weight-bold download-action-btn"
           :disabled="!selectedDocumentId">
-          Generate PDF
+          {{ $t('generate_pdf') }}
         </CButton>
       </template>
     </CModal>
@@ -751,28 +751,29 @@ export default {
 
           if (student) {
             console.log('Hydrating studentData with:', student);
-            const nameEn = Array.isArray(student.name)
-              ? (student.name.find(n => n?.key === 'en')?.value || student.name.find(n => n?.value)?.value)
+            const lang = this.selectedLanguage || 'en';
+            const nameLoc = Array.isArray(student.name)
+              ? (student.name.find(n => n?.key === lang)?.value || student.name.find(n => n?.value)?.value)
               : '';
-            const schoolEn = Array.isArray(student.info?.school?.title)
-              ? (student.info.school.title.find(t => t?.key === 'en')?.value || student.info.school.title.find(t => t?.value)?.value)
+            const schoolLoc = Array.isArray(student.info?.school?.title)
+              ? (student.info.school.title.find(t => t?.key === lang)?.value || student.info.school.title.find(t => t?.value)?.value)
               : '';
-            const programEn = Array.isArray(student.info?.program?.title)
-              ? (student.info.program.title.find(t => t?.key === 'en')?.value || student.info.program.title.find(t => t?.value)?.value)
+            const programLoc = Array.isArray(student.info?.program?.title)
+              ? (student.info.program.title.find(t => t?.key === lang)?.value || student.info.program.title.find(t => t?.value)?.value)
               : '';
 
             this.studentData = {
               ...this.studentData,
-              name: nameEn || this.studentData.name,
+              name: nameLoc || this.studentData.name,
               studentID: student.studentID || this.studentData.studentID,
-              school: schoolEn || this.studentData.school,
-              program: programEn || this.studentData.program
+              school: schoolLoc || this.studentData.school,
+              program: programLoc || this.studentData.program
             };
 
             if (this.$store?.commit) {
               this.$store.commit('auth/setUser', {
                 ...user,
-                name: nameEn || user.name,
+                name: nameLoc || user.name,
                 email: student.email || user.email,
                 studentID: student.studentID || user.studentID
               });
@@ -1100,6 +1101,7 @@ export default {
   watch: {
     selectedLanguage() {
       // Re-map evaluation lists and charts when the app locale changes.
+      this.loadStudentData();
       this.loadEvaluationData();
     }
   },

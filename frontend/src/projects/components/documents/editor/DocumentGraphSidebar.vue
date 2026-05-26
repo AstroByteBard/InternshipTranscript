@@ -1,18 +1,10 @@
 <template>
     <CCard class="border-0 shadow-sm h-100">
         <CCardBody class="p-3 d-flex flex-column h-100">
-            <h6 class="mb-3 font-weight-bold">Graph</h6>
-            
-            <CInput
-                placeholder="Search..."
-                v-model="searchQuery"
-                size="sm"
-                class="mb-3"
-            />
-
+            <h6 class="mb-3 font-weight-bold">{{ $t('components.documents_editor_documentgraphsidebar_vue_graph') }}</h6>
             <div class="graph-items-container flex-grow-1 custom-scrollbar" style="overflow-y: auto;">
                 <div 
-                    v-for="item in filteredItems" 
+                    v-for="item in items" 
                     :key="item.value"
                     class="mb-4"
                 >
@@ -40,7 +32,7 @@
                                 <div v-for="i in 3" :key="i" class="mb-2">
                                     <div class="d-flex justify-content-between mb-1" style="font-size: 6px; font-weight: bold;">
                                         <span>Skill {{i}}</span>
-                                        <span>xx%</span>
+                                        <span>{{ $t('components.documents_editor_documentgraphsidebar_vue_xx') }}</span>
                                     </div>
                                     <div class="progress-bg" style="height: 3px; background: #f1f5f9; border-radius: 2px; overflow: hidden;">
                                         <div class="progress-fill" :style="{width: (70 + (i*5)) + '%', height: '100%', background: '#dc2626'}"></div>
@@ -60,41 +52,36 @@
 export default {
     name: 'DocumentGraphSidebar',
     data() {
-        return {
-            searchQuery: '',
-            items: [
+        return {}
+    },
+    computed: {
+        items() {
+            return [
                 { 
-                    label: 'General Competencies (Radar)', 
+                    label: this.$t('var_graph_general_radar') || 'General Competencies (Radar)', 
                     value: '{GraphGeneralRadar}',
                     type: 'radar',
                     colorClass: 'text-primary'
                 },
                 { 
-                    label: 'Specific Competencies (Radar)', 
+                    label: this.$t('var_graph_specific_radar') || 'Specific Competencies (Radar)', 
                     value: '{GraphSpecificRadar}',
                     type: 'radar',
                     colorClass: 'text-success'
                 },
                 { 
-                    label: 'General Competencies (Bar)', 
+                    label: this.$t('var_graph_general_bar') || 'General Competencies (Bar)', 
                     value: '{GraphGeneralBar}',
                     type: 'bar',
                     colorClass: 'text-primary'
                 },
                 { 
-                    label: 'Specific Competencies (Bar)', 
+                    label: this.$t('var_graph_specific_bar') || 'Specific Competencies (Bar)', 
                     value: '{GraphSpecificBar}',
                     type: 'bar',
                     colorClass: 'text-success'
                 }
             ]
-        }
-    },
-    computed: {
-        filteredItems() {
-            if (!this.searchQuery) return this.items;
-            const q = this.searchQuery.toLowerCase();
-            return this.items.filter(item => item.label.toLowerCase().includes(q));
         }
     },
     methods: {

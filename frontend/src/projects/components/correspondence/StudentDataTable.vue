@@ -1,6 +1,7 @@
 <template>
     <CCard class="table-card border-0 shadow-sm mb-4">
-        <CDataTable class="custom-table mb-0" :items="paginatedItems" :fields="fields" :pagination="false" hover>
+        <CDataTable class="custom-table mb-0" :items="paginatedItems" :fields="translatedFields" :pagination="false"
+            hover>
 
             <!-- Status Column -->
             <template #sendStatus="{ item }">
@@ -22,10 +23,10 @@
             <!-- Actions Column -->
             <template #actions="{ item }">
                 <td class="text-center">
-                    <CButton class="btn-action-icon mr-2" @click="$emit('send-email', item)" title="Send Email">
+                    <CButton class="btn-action-icon mr-2" @click="$emit('send-email', item)" :title="$t('send_email')">
                         <CIcon name="cil-envelope-closed" />
                     </CButton>
-                    <CButton class="btn-action-icon" @click="$emit('view-details', item)" title="View Details">
+                    <CButton class="btn-action-icon" @click="$emit('view-details', item)" :title="$t('view_details')">
                         <CIcon name="cil-eye" />
                     </CButton>
                 </td>
@@ -35,7 +36,7 @@
         <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center px-4 py-3" style="border-top: 1px solid #f3f4f6;">
             <div class="text-muted" style="font-size: 13px;">
-                Showing {{ tableStartItem }} to {{ tableEndItem }} of {{ totalItems }} results
+                {{ $t('showing_results', { start: tableStartItem, end: tableEndItem, total: totalItems }) }}
             </div>
             <CPagination :activePage.sync="currentPage" :pages="totalPages" :doubleArrows="false" align="end"
                 class="mb-0 custom-pagination" />
@@ -53,18 +54,48 @@ export default {
     },
     data() {
         return {
+            // baseFields are used to construct translatedFields in computed
             fields: [
-                { key: 'id', label: 'ID', _style: 'min-width: 100px' },
-                { key: 'student', label: 'STUDENT', _style: 'min-width: 100px' },
-                { key: 'schoolName', label: 'SCHOOL NAME', _style: 'min-width: 300px' },
-                { key: 'programName', label: 'PROGRAM NAME', _style: 'min-width: 300px' },
-                { key: 'academicYear', label: 'ACADEMIC YEAR', _style: 'min-width: 100px' },
-                { key: 'sendStatus', label: 'STATUS', _classes: 'text-center' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-center', sorter: false, filter: false },
+                { key: 'id', _style: 'min-width: 100px' },
+                { key: 'student', _style: 'min-width: 100px' },
+                { key: 'schoolName', _style: 'min-width: 300px' },
+                { key: 'programName', _style: 'min-width: 300px' },
+                { key: 'academicYear', _style: 'min-width: 100px' },
+                { key: 'sendStatus', _classes: 'text-center' },
+                { key: 'actions', _classes: 'text-center', sorter: false, filter: false },
             ]
         }
     },
     computed: {
+        // provide translated field labels so the table respects the current locale
+        translatedFields() {
+            const keyMap = {
+                schoolName: 'school',
+                programName: 'program',
+                id: 'id_label',
+                sendStatus: 'status',
+                actions: 'actions',
+                student: 'student',
+                academicYear: 'academicYear'
+            };
+            return this.fields.map(f => {
+                const mapped = keyMap[f.key];
+                const candidates = [
+                    mapped && `table.fields.${mapped}`,
+                    mapped && `${mapped}_label`,
+                    `table.fields.${f.key}`,
+                    `${f.key}_label`,
+                    mapped,
+                    f.key,
+                ].filter(Boolean);
+                let label = f.key.toUpperCase();
+                for (const k of candidates) {
+                    if (this.$te(k)) { label = this.$t(k); break }
+                }
+                return Object.assign({}, f, { label });
+            });
+        },
+
         currentPage: {
             get() { return this.activePage },
             set(value) { this.$emit('update:active-page', value) }
@@ -99,7 +130,9 @@ export default {
             }
         },
         formatSendStatus(status) {
-            return status.charAt(0) + status.slice(1).toLowerCase()
+            if (!status) return '';
+            const key = status.toLowerCase();
+            return this.$te(key) ? this.$t(key) : (status.charAt(0) + status.slice(1).toLowerCase());
         }
     }
 }
@@ -122,8 +155,11 @@ export default {
     color: #9ca3af !important;
     font-size: 11px !important;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em;
+    /* allow translations (Thai) to wrap and keep proper casing */
+    text-transform: none !important;
+    /* allow header text to wrap instead of forcing wide columns */
+    white-space: normal !important;
+    word-break: break-word;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
@@ -142,6 +178,10 @@ export default {
     border-bottom: 1px solid #f3f4f6 !important;
     padding: 16px 24px !important;
     vertical-align: middle;
+    /* prevent rows from forcing horizontal scroll; show ellipsis for long text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 ::v-deep .custom-table tbody tr:hover td {

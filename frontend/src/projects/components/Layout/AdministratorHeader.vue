@@ -2,16 +2,18 @@
   <div class="administrator-header-container mb-4 shadow-lg animate-fade-in">
     <div class="hero-content d-flex justify-content-between align-items-center">
       <div class="hero-text-section px-4">
-        <h1 class="hero-title animate-slide-up">System Administration</h1>
-        <p class="hero-subtitle animate-slide-up-delay-1">Student & Advisor Control Center</p>
+        <h1 class="hero-title animate-slide-up">{{ $t('components.layout_administratorheader_vue_system_administration')
+          }}</h1>
+        <p class="hero-subtitle animate-slide-up-delay-1">{{
+          $t('components.layout_administratorheader_vue_student_advisor_control_cente') }}</p>
         <div class="hero-meta mt-3 d-flex align-items-center animate-slide-up-delay-2">
           <div class="hero-badge mr-3">
             <CIcon name="cil-calendar" class="mr-2 icon-gold" size="sm" />
             Term {{ currentTerm }}
           </div>
           <div class="hero-badge">
-            <CIcon name="cil-shield-check" class="mr-2 icon-gold" size="sm" />
-            Admin Access
+            <CIcon name="cil-shield-alt" class="mr-2 icon-gold" size="sm" />{{
+              $t('components.layout_administratorheader_vue_admin_access') }}
           </div>
         </div>
       </div>
@@ -23,29 +25,31 @@
 
         <CButton color="light" class="btn-hero-action px-4 py-2 font-weight-bold shadow-sm d-flex align-items-center"
           @click="showImportModal = true">
-          <CIcon name="cil-cloud-upload" class="mr-2 text-primary" size="lg" />
-          IMPORT
+          <CIcon name="cil-cloud-upload" class="mr-2 text-primary" size="lg" />{{
+            $t('components.layout_administratorheader_vue_import') }}
         </CButton>
       </div>
     </div>
 
     <!-- Import Selection Modal -->
-    <CModal title="Import Selection" :show.sync="showImportModal" centered size="lg" class="import-modal">
+    <CModal :title="$t('components.layout_administratorheader_vue_import_selection')" :show.sync="showImportModal"
+      centered size="lg" class="import-modal">
       <div class="p-4 text-center">
-        <h4 class="mb-4 text-dark font-weight-bold">What would you like to import?</h4>
+        <h4 class="mb-4 text-dark font-weight-bold">{{
+          $t('components.layout_administratorheader_vue_what_would_you_like_to_import') }}</h4>
         <div class="d-flex justify-content-center mb-5">
           <div class="selection-card mr-4" :class="{ 'active': importType === 'Student' }"
             @click="importType = 'Student'">
             <div class="icon-box bg-soft-red mb-3">
               <CIcon name="cil-people" height="40" class="text-danger" />
             </div>
-            <div class="selection-label">Student</div>
+            <div class="selection-label">{{ $t('components.layout_administratorheader_vue_student') }}</div>
           </div>
           <div class="selection-card" :class="{ 'active': importType === 'Advisor' }" @click="importType = 'Advisor'">
             <div class="icon-box bg-soft-orange mb-3">
               <CIcon name="cil-briefcase" height="40" class="text-warning" />
             </div>
-            <div class="selection-label">Advisor</div>
+            <div class="selection-label">{{ $t('components.layout_administratorheader_vue_advisor') }}</div>
           </div>
         </div>
 
@@ -56,16 +60,19 @@
                 <CButton color="info" variant="outline" class="btn-option p-4 w-100 shadow-sm"
                   @click="triggerStudentFile">
                   <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">Upload Excel/CSV</span>
-                  <small class="d-block mt-1 text-muted">Import multiple students from file</small>
+                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_upload_excel_csv')
+                    }}</span>
+                  <small class="d-block mt-1 text-muted">{{
+                    $t('components.layout_administratorheader_vue_import_multiple_students_from') }}</small>
                 </CButton>
               </CCol>
               <CCol md="6">
                 <CButton color="danger" variant="outline" class="btn-option p-4 w-100 shadow-sm"
                   @click="triggerStudentManual">
                   <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">Enter Text</span>
-                  <small class="d-block mt-1 text-muted">Add a single student manually</small>
+                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_enter_text') }}</span>
+                  <small class="d-block mt-1 text-muted">{{
+                    $t('components.layout_administratorheader_vue_add_a_single_student_manually') }}</small>
                 </CButton>
               </CCol>
             </CRow>
@@ -76,16 +83,19 @@
                 <CButton color="warning" variant="outline" class="btn-option p-4 w-100 shadow-sm"
                   @click="triggerAdvisorFile">
                   <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">Upload Excel/CSV</span>
-                  <small class="d-block mt-1 text-muted">Import multiple advisors from file</small>
+                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_upload_excel_csv')
+                    }}</span>
+                  <small class="d-block mt-1 text-muted">{{
+                    $t('components.layout_administratorheader_vue_import_multiple_advisors_from') }}</small>
                 </CButton>
               </CCol>
               <CCol md="6">
                 <CButton color="warning" variant="outline" class="btn-option p-4 w-100 shadow-sm"
                   @click="triggerAdvisorManual">
                   <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">Enter Text</span>
-                  <small class="d-block mt-1 text-muted">Add a single advisor manually</small>
+                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_enter_text') }}</span>
+                  <small class="d-block mt-1 text-muted">{{
+                    $t('components.layout_administratorheader_vue_add_a_single_advisor_manually') }}</small>
                 </CButton>
               </CCol>
             </CRow>
@@ -93,9 +103,11 @@
         </div>
       </div>
       <template #footer>
-        <CButton color="secondary" @click="showImportModal = false">Close</CButton>
+        <CButton color="secondary" @click="showImportModal = false">{{
+          $t('components.layout_administratorheader_vue_close') }}</CButton>
         <CButton color="info" variant="link" class="ml-auto" @click="$emit('refresh'); showImportModal = false">
-          <CIcon name="cil-reload" class="mr-1" size="sm" /> Sync Data
+          <CIcon name="cil-reload" class="mr-1" size="sm" />{{ $t('components.layout_administratorheader_vue_sync_data')
+          }}
         </CButton>
       </template>
     </CModal>

@@ -1,20 +1,26 @@
 <template>
-    <CModal :title="isEditing ? 'Edit Student' : 'Add New Student'" :show.sync="visible" color="danger" size="lg">
+    <CModal :title="$t('components.administrator_studentmodal_vue_isediting_edit_student_add_ne')" :show.sync="visible"
+        color="danger" size="lg">
         <CRow>
             <CCol sm="6">
-                <CInput label="Student ID" placeholder="Enter ID" v-model="form.studentID" />
+                <CInput label="Student ID" :placeholder="$t('components.administrator_studentmodal_vue_enter_id')"
+                    v-model="form.studentID" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Email" placeholder="Enter Email" type="email" v-model="form.email" />
+                <CInput label="Email" :placeholder="$t('components.administrator_studentmodal_vue_enter_email')"
+                    type="email" v-model="form.email" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Name (Thai)" placeholder="ชื่อ-นามสกุล" v-model="form.nameThai" />
+                <CInput label="Name (Thai)" :placeholder="$t('components.administrator_studentmodal_vue')"
+                    v-model="form.nameThai" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Name (English)" placeholder="First Last" v-model="form.nameEnglish" />
+                <CInput label="Name (English)" :placeholder="$t('components.administrator_studentmodal_vue_first_last')"
+                    v-model="form.nameEnglish" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Company" placeholder="Organization" v-model="form.company" />
+                <CInput label="Company" :placeholder="$t('components.administrator_studentmodal_vue_organization')"
+                    v-model="form.company" />
             </CCol>
             <CCol sm="6">
                 <CSelect label="School" :options="schoolOptions" :value.sync="form.school" />
@@ -29,12 +35,14 @@
                 <CSelect label="Semester" :options="semesterOptions" :value.sync="form.semester" />
             </CCol>
             <CCol sm="6">
-                <CInput label="Academic Year" placeholder="Year" v-model="form.year" />
+                <CInput label="Academic Year" :placeholder="$t('components.administrator_studentmodal_vue_year')"
+                    v-model="form.year" />
             </CCol>
         </CRow>
 
         <template #footer>
-            <CButton color="secondary" @click="visible = false">Cancel</CButton>
+            <CButton color="secondary" @click="visible = false">{{
+                $t('components.administrator_studentmodal_vue_cancel') }}</CButton>
             <CButton color="danger" @click="submit">{{ isEditing ? 'Update Student' : 'Save Student' }}</CButton>
         </template>
     </CModal>

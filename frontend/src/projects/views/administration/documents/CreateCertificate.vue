@@ -2,30 +2,33 @@
     <div class="create-certificate-container">
         <DocumentTopNav v-if="isTemplateReady" :isPreview.sync="isPreview" :showSettings.sync="showSettings"
             :showHistorySidebar="showHistorySidebar" @toggle-history-sidebar="toggleSidebar('history')"
-            @cancel="$router.push('/documents/certificate')" @save="handleSave" />
+            @cancel="$router.push('/documents/certificate')" @back="$router.push('/documents/certificate')" @save="handleSave" />
 
         <CModal :show.sync="showTemplateSetupModal" centered :close-on-backdrop="false" :close-on-esc="false"
-            :close-button="false" title="Create Certificate" color="primary" size="lg"
+            :close-button="false" :title="$t('create_certificate_title')" color="primary" size="lg"
             @update:show="handleTemplateModalVisibility">
             <CCard class="border-0 shadow-none mb-0">
                 <CCardBody class="p-3 p-md-4">
                     <p class="text-muted mb-4">
-                        Set the certificate name and language before you start designing the layout.
+                        {{ $t('certificate_setup_instruction') }}
                     </p>
 
                     <CForm @submit.prevent="confirmTemplateSetup">
                         <CRow>
                             <CCol md="7">
-                                <label class="font-weight-bold text-uppercase text-muted mb-2">Certificate Name</label>
-                                <CInput v-model="templateNameDraft" placeholder="Enter certificate name" />
+                                <label class="font-weight-bold text-uppercase text-muted mb-2">{{ $t('certificate_name')
+                                }}</label>
+                                <CInput v-model="templateNameDraft" :placeholder="$t('certificate_name_prompt')" />
                             </CCol>
                             <CCol md="5">
-                                <label class="font-weight-bold text-uppercase text-muted mb-2">Template Language</label>
+                                <label class="font-weight-bold text-uppercase text-muted mb-2">{{
+                                    $t('template_language') }}</label>
                                 <select v-model="templateLocale" class="form-control">
                                     <option value="th">th - ไทย</option>
                                     <option value="en">en - English</option>
                                 </select>
-                                <small class="text-muted d-block mt-2">Selected: {{ templateLocale }}</small>
+                                <small class="text-muted d-block mt-2">{{ $t('selected') }}: {{ templateLocale
+                                }}</small>
                             </CCol>
                         </CRow>
                     </CForm>
@@ -34,10 +37,10 @@
             <template #footer-wrapper>
                 <div class="d-flex justify-content-end w-100 p-3 px-md-4 pb-md-4 pt-0">
                     <CButton color="light" class="mr-2" @click="cancelTemplateSetup">
-                        Cancel
+                        {{ $t('cancel') }}
                     </CButton>
                     <CButton color="primary" @click="confirmTemplateSetup">
-                        OK
+                        {{ $t('ok') }}
                     </CButton>
                 </div>
             </template>
@@ -175,14 +178,14 @@ export default {
         async handleSave() {
             if (!this.$refs.konvaEditor) {
                 console.warn('handleSave: KonvaEditor ref not available');
-                window.alert && window.alert('Editor not ready. Please try again.');
+                window.alert && window.alert(this.$t('editor_not_ready'));
                 return;
             }
 
             const content = this.$refs.konvaEditor.saveToJSON();
             if (!content) {
                 console.warn('handleSave: saveToJSON returned empty content');
-                window.alert && window.alert('Nothing to save (empty certificate).');
+                window.alert && window.alert(this.$t('nothing_to_save'));
                 return;
             }
 
@@ -190,7 +193,7 @@ export default {
                 JSON.stringify(content);
             } catch (serErr) {
                 console.error('handleSave: content not serializable', serErr);
-                window.alert && window.alert('Cannot save certificate: content contains unserializable data. Check console for details.');
+                window.alert && window.alert(this.$t('failed_to_save_document', { message: 'content contains unserializable data. Check console for details.' }));
                 return;
             }
 
@@ -214,20 +217,20 @@ export default {
                     }
                 }
 
-                window.alert && window.alert('Certificate saved successfully!');
+                window.alert && window.alert(this.$t('document_saved_successfully'));
                 return res;
             } catch (err) {
                 console.error('handleSave: Failed to save certificate', err);
                 const msg = err && err.response && err.response.data && (err.response.data.message || err.response.data.msg || err.response.data.error)
                     ? (err.response.data.message || err.response.data.msg || err.response.data.error)
                     : (err && err.message ? err.message : 'Unknown error');
-                window.alert && window.alert('Failed to save certificate: ' + msg);
+                window.alert && window.alert(this.$t('failed_to_save_document', { message: msg }));
             }
         },
         confirmTemplateSetup() {
             const name = String(this.templateNameDraft || '').trim();
             if (!name) {
-                window.alert && window.alert('Certificate name is required.');
+                window.alert && window.alert(this.$t('template_name_required'));
                 return;
             }
 

@@ -4,9 +4,9 @@
       <div class="rating-circle shadow-sm">
         {{ n }}
       </div>
-      <div class="rating-label" v-if="n === 1">Poor</div>
-      <div class="rating-label" v-if="n === 3">Good</div>
-      <div class="rating-label" v-if="n === 5">Excellent</div>
+      <div class="rating-label" v-if="n === 1">{{ $t('components.util_ratingselector_vue_poor') }}</div>
+      <div class="rating-label" v-if="n === 3">{{ $t('components.util_ratingselector_vue_good') }}</div>
+      <div class="rating-label" v-if="n === 5">{{ $t('components.util_ratingselector_vue_excellent') }}</div>
     </div>
   </div>
 </template>

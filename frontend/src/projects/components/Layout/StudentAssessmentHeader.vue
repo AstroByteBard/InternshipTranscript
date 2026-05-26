@@ -8,8 +8,7 @@
             {{ avatarInitial }}
           </div>
           <div class="status-indicator">
-            <span class="status-dot"></span>
-            ACTIVE INTERN
+            <span class="status-dot"></span>{{ $t('components.layout_studentassessmentheader_vue_active_intern') }}
           </div>
         </div>
 
@@ -17,32 +16,32 @@
         <div class="flex-grow-1 text-center text-md-left">
           <h2 class="student-full-name mb-1">{{ studentName }}</h2>
           <p class="student-id-badge d-inline-block px-3 py-1 rounded-pill mb-4">
-            <CIcon name="cil-id-card" class="mr-2" /> {{ studentID }}
+            <CIcon name="cil-badge" class="mr-2" /> {{ studentID }}
           </p>
 
           <!-- Detail Grid -->
           <CRow class="student-details-grid">
             <CCol sm="6" md="3" class="mb-3">
               <div class="detail-item">
-                <div class="detail-label">SCHOOL / FACULTY</div>
+                <div class="detail-label">{{ $t('components.layout_studentassessmentheader_vue_school_faculty') }}</div>
                 <div class="detail-value">{{ schoolName }}</div>
               </div>
             </CCol>
             <CCol sm="6" md="3" class="mb-3">
               <div class="detail-item">
-                <div class="detail-label">PROGRAM / MAJOR</div>
+                <div class="detail-label">{{ $t('components.layout_studentassessmentheader_vue_program_major') }}</div>
                 <div class="detail-value">{{ programName }}</div>
               </div>
             </CCol>
             <CCol sm="6" md="3" class="mb-3">
               <div class="detail-item">
-                <div class="detail-label">ACADEMIC YEAR</div>
+                <div class="detail-label">{{ $t('components.layout_studentassessmentheader_vue_academic_year') }}</div>
                 <div class="detail-value text-danger font-weight-bold">{{ academicYear }}</div>
               </div>
             </CCol>
             <CCol sm="6" md="3" class="mb-3">
               <div class="detail-item">
-                <div class="detail-label">SEMESTER</div>
+                <div class="detail-label">{{ $t('components.layout_studentassessmentheader_vue_semester') }}</div>
                 <div class="detail-value">{{ semester }}</div>
               </div>
             </CCol>
@@ -135,6 +134,11 @@ export default {
   font-size: 13px;
   font-weight: 700;
   border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
 }
 
 .detail-label {
@@ -153,7 +157,14 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .student-full-name { font-size: 22px; }
-  .avatar-circle { width: 80px; height: 80px; font-size: 32px; }
+  .student-full-name {
+    font-size: 22px;
+  }
+
+  .avatar-circle {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
 }
 </style>

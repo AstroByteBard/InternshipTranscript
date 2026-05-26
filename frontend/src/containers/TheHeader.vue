@@ -7,7 +7,7 @@
       <!-- Left Side: Title and Subtitle -->
       <div class="mr-auto d-flex flex-column justify-content-center">
         <h4 class="mb-0 font-weight-bold page-title">{{ routeTitle }}</h4>
-        <div class="text-muted small page-subtitle">Academic Year {{ currentAcademicYear }}</div>
+        <div class="text-muted small page-subtitle">{{ $t('academicYear') }} {{ currentAcademicYear }}</div>
       </div>
 
       <!-- Right Side: Search, Lang, Notif, User -->
@@ -49,9 +49,28 @@ export default {
       // Return the current route name like 'Dashboard' or fallback
       const name = (this.$route && this.$route.name) ? this.$route.name : null;
       if (name) {
+        const routeTitleKeyMap = {
+          CorrespondenceStudent: 'components.correspondence_correspondenceheader_vue_student',
+          CorrespondenceAdviser: 'components.correspondence_correspondenceheader_vue_adviser',
+          CompetenciesSoftskill: 'components.layout_competenciesheader_vue_general_competencies',
+          CompetenciesHardskill: 'components.layout_competenciesheader_vue_specific_skills',
+          CompetenciesSuggestions: 'components.layout_competenciesheader_vue_propositions',
+          AdministratorStudent: 'components.layout_administratorheader_vue_student',
+          AdministratorAdviser: 'components.layout_administratorheader_vue_student_advisor_control_cente',
+        };
+        const mappedKey = routeTitleKeyMap[name];
+        if (mappedKey && this.$te(mappedKey)) {
+          return this.$t(mappedKey);
+        }
+        const key = name.toLowerCase();
+        if (this.$te(key)) {
+          return this.$t(key);
+        } else if (this.$te(name)) {
+          return this.$t(name);
+        }
         return name.charAt(0).toUpperCase() + name.slice(1);
       }
-      return 'Dashboard';
+      return this.$t('dashboard');
     },
     currentAcademicYear() {
       const currentYear = new Date().getFullYear();

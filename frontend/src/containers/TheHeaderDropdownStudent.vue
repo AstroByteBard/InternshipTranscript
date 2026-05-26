@@ -8,7 +8,7 @@
                     </div>
                     <div class="user-info mr-2 d-none d-sm-flex">
                         <div class="user-name">{{ displayName }}</div>
-                        <div class="user-role">Student</div>
+                        <div class="user-role">{{ $t('student') }}</div>
                     </div>
                     <CIcon name="cil-chevron-bottom" size="sm" class="text-muted d-none d-sm-block"
                         style="width: 12px; height: 12px;" />
@@ -17,7 +17,7 @@
         </template>
 
         <CDropdownItem @click="handleLogout">
-            <CIcon name="cil-lock-locked" size="xl" /> Logout
+            <CIcon name="cil-lock-locked" size="xl" /> {{ $t('logout') }}
         </CDropdownItem>
     </CDropdown>
 </template>

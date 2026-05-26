@@ -15,7 +15,7 @@
             <img class="pt-2 pb-2" src="@/assets/logo.svg" height="60px">
             <CCol class="text-white">
               <p class="font-weight-bold mb-0 mt-2 h5">MFU</p>
-              <p class="font-weight-bold">Internship Transcript System</p>
+              <p class="font-weight-bold">{{ $t('components.layout_heroheader_vue_internship_transcript_system') }}</p>
             </CCol>
           </CRow>
         </a>
@@ -48,116 +48,114 @@ export default {
     },
     minimize() {
       return this.$store.state.sidebarMinimize
-    }
-  },
-  data: function () {
-    return {
-      nav: [{
+    },
+    nav() {
+      return [{
         _name: 'CSidebarNav',
         _children: [
           {
             _name: 'CSidebarNavTitle',
-            _children: ['Overview']
+            _children: [this.$t('overview')]
           },
           {
             _name: 'CSidebarNavItem',
-            name: 'Dashboard',
+            name: this.$t('dashboard'),
             to: '/dashboard',
             icon: 'cil-window-restore'
           },
           {
             _name: 'CSidebarNavTitle',
-            _children: ['Main']
+            _children: [this.$t('main')]
           },
           {
             _name: 'CSidebarNavDropdown',
-            name: 'Correspondence',
+            name: this.$t('correspondence'),
             route: '/correspondence',
             icon: 'cil-envelope-closed',
             items: [
               {
-                name: 'Student',
+                name: this.$t('student'),
                 to: '/correspondence/student',
               },
               {
-                name: 'Adviser',
+                name: this.$t('adviser'),
                 to: '/correspondence/adviser',
               },
             ]
           },
           {
             _name: 'CSidebarNavDropdown',
-            name: 'Competencies',
+            name: this.$t('competencies'),
             route: '/Competencies',
             icon: 'cil-lightbulb',
             items: [
               {
-                name: 'Soft Skill',
+                name: this.$t('soft_skill'),
                 to: '/Competencies/softskill',
               },
               {
-                name: 'Hard Skill',
+                name: this.$t('hard_skill'),
                 to: '/Competencies/hardskill',
               },
               {
-                name: "Suggestions",
+                name: this.$t('suggestions'),
                 to: "/Competencies/suggestions"
               }
             ]
           },
           {
             _name: 'CSidebarNavDropdown',
-            name: 'Documents',
+            name: this.$t('documents'),
             to: '/documents',
             icon: 'cil-description',
             items: [
               {
-                name: 'Document',
+                name: this.$t('document'),
                 to: '/documents/document',
               },
               {
-                name: 'Certificate',
+                name: this.$t('certificate'),
                 to: '/documents/certificate',
               },
             ]
           },
           {
             _name: 'CSidebarNavTitle',
-            _children: ['Administrator']
+            _children: [this.$t('administrator')]
           },
           {
             _name: 'CSidebarNavDropdown',
-            name: 'Administrator',
+            name: this.$t('administrator'),
             route: '/administrator',
             icon: 'cil-lightbulb',
             items: [
               {
-                name: 'Student',
+                name: this.$t('student'),
                 to: '/administrator/student',
               },
               {
-                name: 'Adviser',
+                name: this.$t('adviser'),
                 to: '/administrator/adviser',
               },
             ]
           },
           {
             _name: 'CSidebarNavTitle',
-            _children: ['Project shortcuts']
+            _children: [this.$t('project_shortcuts')]
           },
           {
             _name: 'CSidebarNavDropdown',
-            name: 'Settings',
+            name: this.$t('settings'),
             route: '/project/settings',
             icon: 'cil-settings',
             items: [
               {
-                name: 'General',
+                name: this.$t('general'),
                 // to: '/project//settings/general'
                 to: `/project/${this.$route.params.application}/settings/general`
               },
               {
-                name: 'Permission',
+                name: this.$t('permission'),
                 // to: '/project/settings/permission'
                 to: `/project/${this.$route.params.application}/settings/permission`
               },
@@ -165,7 +163,7 @@ export default {
             ]
           }
         ]
-      }],
+      }]
     }
   }
 }

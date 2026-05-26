@@ -3,22 +3,16 @@
 
     <CCard  class="bg-style2">
       <CCardHeader class="bg-gradient-danger text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem ">
-        <span class="font-weight-bold h6"><CIcon :name="icon" size="lg"/> QRCode </span>
+        <span class="font-weight-bold h6"><CIcon :name="icon" size="lg"/>{{ $t('components.util_qrcodes_vue_qrcode') }}</span>
 
-<!--        <div class="card-header-actions">-->
-<!--          <CButton @click="downloadQr2" class="mr-1" v-c-tooltip.hover.click="'Download'" size="sm" color="success" shape="pill"  >-->
-<!--            <CIcon name="cil-cloud-download" />-->
-<!--          </CButton>-->
-<!--        </div>-->
-
-      </CCardHeader>
+<!--        <div class="card-header-actions">{{ $t('components.util_qrcodes_vue') }}<!--          <CButton @click="downloadQr2" class="mr-1" v-c-tooltip.hover.click="'Download'" size="sm" color="success" shape="pill"  >{{ $t('components.util_qrcodes_vue') }}<!--            <CIcon name="cil-cloud-download" />{{ $t('components.util_qrcodes_vue') }}<!--          </CButton>{{ $t('components.util_qrcodes_vue') }}<!--        </div>{{ $t('components.util_qrcodes_vue') }}</CCardHeader>
       <CCardBody >
 
         <CRow>
           <CCol class="text-center" id="qr-code">
             <div class="qrcode-wrapper">
               <qr-code id="qr-code" :text="messages" :size="200" level="H" render-as="canvas" />
-              <img class="logo" src="@/assets/logo.svg" alt="logo" />
+              <img class="logo" src="@/assets/logo.svg" alt=":alt='$t("components.util_qrcodes_vue_logo")'" />
             </div>
           </CCol>
         </CRow>

@@ -1,15 +1,7 @@
 <template>
   <CCard class="table-card border-0 shadow-sm mb-4">
-    <CDataTable
-      class="custom-table mb-0"
-      :items="items"
-      :fields="fields"
-      :items-per-page="itemsPerPage"
-      :pagination="false"
-      hover
-      :activePage="activePage"
-      @update:activePage="$emit('update:activePage', $event)"
-    >
+    <CDataTable class="custom-table mb-0" :items="items" :fields="fields" :items-per-page="itemsPerPage"
+      :pagination="false" hover :activePage="activePage" @update:activePage="$emit('update:activePage', $event)">
       <!-- Year -->
       <template #year="{ item }">
         <td class="text-center align-middle">
@@ -47,28 +39,15 @@
       <!-- Active Status -->
       <template #status="{ item }">
         <td class="text-center align-middle">
-          <div
-            v-if="item.active"
-            class="status-pill status-replied d-inline-flex align-items-center font-weight-bold"
-            style="cursor: pointer;"
-            title="Click to deactivate"
-            @click="$emit('toggle-status', item._id)"
-          >
+          <div v-if="item.active" class="status-pill status-replied d-inline-flex align-items-center font-weight-bold"
+            style="cursor: pointer;" :title="$t('click_to_deactivate')" @click="$emit('toggle-status', item._id)">
             <CIcon name="cil-check-circle" class="mr-1" size="sm" />
-            Active
+            {{ $t('active') }}
           </div>
-          <div
-            v-else
-            class="status-pill status-closed d-inline-flex align-items-center text-muted"
-            style="cursor: pointer;"
-            title="Click to make active"
-            @click="$emit('toggle-status', item._id)"
-          >
-            <div
-              class="mr-2"
-              style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;"
-            ></div>
-            Inactive
+          <div v-else class="status-pill status-closed d-inline-flex align-items-center text-muted"
+            style="cursor: pointer;" :title="$t('click_to_make_active')" @click="$emit('toggle-status', item._id)">
+            <div class="mr-2" style="width: 14px; height: 14px; border-radius: 50%; border: 1px solid #cbd5e1;"></div>
+            {{ $t('inactive') }}
           </div>
         </td>
       </template>
@@ -76,18 +55,19 @@
       <!-- Assessment Question Count -->
       <template #assessmentQuestion="{ item }">
         <td class="text-center align-middle">
-          <CBadge color="secondary" shape="pill" class="px-3 py-2" style="font-size: 11px; background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
-            {{ item.config ? item.config.length : 0 }} Questions
+          <CBadge color="secondary" shape="pill" class="px-3 py-2"
+            style="font-size: 11px; background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+            {{ item.config ? item.config.length : 0 }} {{ $t('questions') }}
           </CBadge>
         </td>
       </template>
 
       <template #actions="{ item }">
         <td class="text-center align-middle">
-          <CButton class="btn-action-icon mr-2" title="Edit" @click="$emit('edit', item)">
+          <CButton class="btn-action-icon mr-2" :title="$t('edit')" @click="$emit('edit', item)">
             <CIcon name="cil-pencil" />
           </CButton>
-          <CButton class="btn-action-icon" title="Delete" @click="$emit('delete', item._id)">
+          <CButton class="btn-action-icon" :title="$t('delete')" @click="$emit('delete', item._id)">
             <CIcon name="cil-trash" />
           </CButton>
         </td>
@@ -95,21 +75,12 @@
 
       <!-- Pagination Footer -->
       <template #under-table>
-        <div
-          class="d-flex justify-content-between align-items-center px-4 py-3"
-          style="border-top: 1px solid #f3f4f6;"
-        >
+        <div class="d-flex justify-content-between align-items-center px-4 py-3" style="border-top: 1px solid #f3f4f6;">
           <div class="text-muted" style="font-size: 13px;">
-            Showing {{ tableStart }} to {{ tableEnd }} of {{ totalItems }} results
+            {{ $t('showing_results', { start: tableStart, end: tableEnd, total: totalItems }) }}
           </div>
-          <CPagination
-            :activePage="activePage"
-            @update:activePage="$emit('update:activePage', $event)"
-            :pages="totalPages"
-            :doubleArrows="false"
-            align="end"
-            class="mb-0 custom-pagination"
-          />
+          <CPagination :activePage="activePage" @update:activePage="$emit('update:activePage', $event)"
+            :pages="totalPages" :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
         </div>
       </template>
     </CDataTable>

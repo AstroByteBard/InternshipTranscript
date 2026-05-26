@@ -4,30 +4,21 @@
       <CRow class="align-items-end">
         <!-- Search Bar -->
         <CCol lg="6" md="6" class="mb-3 mb-lg-0">
-          <label class="filter-mini-label">SEARCH</label>
+          <label class="filter-mini-label">{{ $t('components.filter_filtersoftskill_vue_search') }}</label>
           <div class="search-input-wrapper">
             <CIcon name="cil-search" class="search-icon" />
-            <input
-              type="text"
-              class="form-control modern-search-input"
-              placeholder="Search Softskill..."
-              :value="searchQuery"
-              @input="$emit('update:searchQuery', $event.target.value)"
-            />
+            <input type="text" class="form-control modern-search-input"
+              :placeholder="$t('components.filter_filtersoftskill_vue_search_softskill')" :value="searchQuery"
+              @input="$emit('update:searchQuery', $event.target.value)" />
           </div>
         </CCol>
 
         <!-- Academic Year Filter -->
         <CCol lg="6" md="6" class="mb-3 mb-lg-0">
-          <label class="filter-mini-label">ACADEMIC YEAR</label>
-          <CSelect
-            custom
-            class="modern-select-filter mb-0"
-            :options="yearOptions"
-            :value="selectionAcademicYear"
+          <label class="filter-mini-label">{{ $t('components.filter_filtersoftskill_vue_academic_year') }}</label>
+          <CSelect custom class="modern-select-filter mb-0" :options="yearOptions" :value="selectionAcademicYear"
             @update:value="$emit('update:selectionAcademicYear', $event)"
-            placeholder="All Years"
-          />
+            :placeholder="$t('components.filter_filtersoftskill_vue_all_years')" style="max-width:420px;" />
         </CCol>
       </CRow>
     </CCardBody>

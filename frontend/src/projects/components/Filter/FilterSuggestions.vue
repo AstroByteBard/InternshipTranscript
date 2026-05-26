@@ -4,27 +4,22 @@
             <CRow class="align-items-end">
                 <!-- Search Bar -->
                 <CCol lg="6" md="6" class="mb-3 mb-lg-0">
-                    <label class="filter-mini-label">SEARCH</label>
+                    <label class="filter-mini-label">{{ $t('components.filter_filtersuggestions_vue_search') }}</label>
                     <div class="search-input-wrapper">
                         <CIcon name="cil-search" class="search-icon" />
                         <input type="text" class="form-control modern-search-input"
-                            placeholder="Search Suggestions..." 
-                            :value="searchQuery"
-                            @input="$emit('update:searchQuery', $event.target.value)" />
+                            :placeholder="$t('components.filter_filtersuggestions_vue_search_suggestions')"
+                            :value="searchQuery" @input="$emit('update:searchQuery', $event.target.value)" />
                     </div>
                 </CCol>
 
                 <!-- Academic Year Filter -->
                 <CCol lg="6" md="6" class="mb-3 mb-lg-0">
-                    <label class="filter-mini-label">ACADEMIC YEAR</label>
-                    <CSelect 
-                        custom 
-                        class="modern-select-filter mb-0" 
-                        :options="yearOptions"
-                        :value="selectionAcademicYear"
-                        @update:value="$emit('update:selectionAcademicYear', $event)"
-                        placeholder="All Years" 
-                    />
+                    <label class="filter-mini-label">{{ $t('components.filter_filtersuggestions_vue_academic_year')
+                        }}</label>
+                    <CSelect custom class="modern-select-filter mb-0" :options="yearOptions"
+                        :value="selectionAcademicYear" @update:value="$emit('update:selectionAcademicYear', $event)"
+                        :placeholder="$t('components.filter_filtersuggestions_vue_all_years')" />
                 </CCol>
             </CRow>
         </CCardBody>

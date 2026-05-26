@@ -7,8 +7,8 @@
             <span class="avatar-text">AD</span>
           </div>
           <div class="user-info mr-2 d-none d-sm-flex">
-            <div class="user-name">Admin User</div>
-            <div class="user-role">System Administrator</div>
+            <div class="user-name">{{ $t('admin_user') }}</div>
+            <div class="user-role">{{ $t('system_administrator') }}</div>
           </div>
           <CIcon name="cil-chevron-bottom" size="sm" class="text-muted d-none d-sm-block"
             style="width: 12px; height: 12px;" />
@@ -93,7 +93,7 @@
     <!--      <CIcon name="cil-shield-alt" size="xl" /> Lock Account-->
     <!--    </CDropdownItem>-->
     <CDropdownItem @click="handleLogout">
-      <CIcon name="cil-lock-locked" size="xl" /> Logout
+      <CIcon name="cil-lock-locked" size="xl" /> {{ $t('logout') }}
     </CDropdownItem>
   </CDropdown>
 </template>

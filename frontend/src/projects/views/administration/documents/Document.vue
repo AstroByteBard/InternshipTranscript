@@ -7,10 +7,11 @@
 
         <CRow>
             <CCol>
-                <DocsFilterCard @search="(q) => { }" />
+                <DocsFilterCard :searchQuery.sync="searchQuery" :selectedLocale.sync="selectedLocale"
+                    :localeOptions="localeOptions" />
 
-                <DocumentsTable :items="documentsData" :fields="documentFields" @download="onDownload" @edit="onEdit"
-                    @copy="onCopy" @delete="onDelete" />
+                <DocumentsTable :items="filteredDocuments" :fields="documentFields" @download="onDownload"
+                    @edit="onEdit" @copy="onCopy" @delete="onDelete" />
             </CCol>
         </CRow>
 
@@ -35,12 +36,8 @@ export default {
     data() {
         return {
             selected: 'Document',
-            documentFields: [
-                { key: 'nameContent', label: 'NAME' },
-                { key: 'locale', label: 'LANGUAGE' },
-                { key: 'status', label: 'STATUS' },
-                { key: 'actions', label: 'ACTIONS', _classes: 'text-right pe-4', sorter: false, filter: false },
-            ],
+            searchQuery: '',
+            selectedLocale: '',
             documentsData: []
         }
     },
@@ -86,7 +83,7 @@ export default {
             this.$router.push(`/documents/edit/${item._id}`);
         },
         onCopy(item) {
-            if (!confirm(`Copy "${item.title}"?`)) return;
+            if (!confirm(this.$t('copy_confirm', { title: item.title }))) return;
             const payload = {
                 title: item.title + ' (Copy)',
                 type: 'document',
@@ -99,7 +96,7 @@ export default {
                 .catch(err => console.error('Copy failed', err));
         },
         async onDelete(item) {
-            if (!confirm(`Delete "${item.title}"? This cannot be undone.`)) return;
+            if (!confirm(this.$t('delete_confirm', { title: item.title }))) return;
             try {
                 await this.$api.documents('delete', { _id: item._id });
                 this.loadDocuments();
@@ -112,6 +109,40 @@ export default {
         }
     },
     computed: {
+        documentFields() {
+            return [
+                { key: 'nameContent', label: this.$t('name_label') },
+                { key: 'locale', label: this.$t('language_label') },
+                { key: 'status', label: this.$t('status_label') },
+                { key: 'actions', label: this.$t('actions_short'), _classes: 'text-right pe-4', sorter: false, filter: false },
+            ]
+        },
+        localeOptions() {
+            return [
+                { value: '', label: this.$t('all_languages_label') },
+                { value: 'th', label: this.$t('thai_label') },
+                { value: 'en', label: this.$t('english_label') },
+            ]
+        },
+        filteredDocuments() {
+            let source = this.documentsData
+
+            if (this.selectedLocale) {
+                source = source.filter(item => String(item.locale || (item.content && item.content.__language) || 'th').toLowerCase().startsWith(this.selectedLocale))
+            }
+
+            if (this.searchQuery && this.searchQuery.trim()) {
+                const q = this.searchQuery.toLowerCase().trim()
+                source = source.filter(item => {
+                    const title = String(item.title || item.name || '').toLowerCase()
+                    const status = String(item.status || '').toLowerCase()
+                    const locale = String(item.locale || (item.content && item.content.__language) || '').toLowerCase()
+                    return title.includes(q) || status.includes(q) || locale.includes(q)
+                })
+            }
+
+            return source
+        },
         publishedCount() {
             return this.documentsData.filter(d => d.status === 'Published').length;
         },

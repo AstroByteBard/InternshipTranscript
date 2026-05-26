@@ -6,12 +6,14 @@
                     <div class="search-input-wrapper">
                         <CIcon name="cil-search" class="search-icon" />
                         <input type="text" class="form-control search-input"
-                            placeholder="Search by name, ID, or email..." v-model="internalSearch" />
+                            :placeholder="$t('components.filter_adminstrator_filteradvisor_vue_search_by_name_id_or_e')"
+                            v-model="internalSearch" />
                     </div>
                 </CCol>
                 <CCol lg="6" md="4" class="d-flex justify-content-end align-items-center">
                     <CButton class="btn-filter-action btn-filter-red ml-2" @click="showFilters = !showFilters">
-                        <CIcon name="cil-filter" class="mr-2" /> Filters
+                        <CIcon name="cil-filter" class="mr-2" />{{
+                            $t('components.filter_adminstrator_filteradvisor_vue_filters') }}
                     </CButton>
                 </CCol>
             </CRow>
@@ -21,24 +23,31 @@
                     <hr class="filter-divider" />
                     <CRow>
                         <CCol md="3">
-                            <label class="filter-label">SCHOOL</label>
+                            <label class="filter-label">{{ $t('components.filter_adminstrator_filteradvisor_vue_school')
+                                }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="schoolOptions" :value.sync="internalSchool"
-                                placeholder="Select School" />
+                                :placeholder="$t('components.filter_adminstrator_filteradvisor_vue_select_school')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">PROGRAM</label>
+                            <label class="filter-label">{{
+                                $t('components.filter_adminstrator_filteradvisor_vue_program') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="programOptions"
-                                :value.sync="internalProgram" placeholder="Select Program" />
+                                :value.sync="internalProgram"
+                                :placeholder="$t('components.filter_adminstrator_filteradvisor_vue_select_program')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">ACADEMIC YEAR</label>
+                            <label class="filter-label">{{
+                                $t('components.filter_adminstrator_filteradvisor_vue_academic_year') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="academicOptions"
-                                :value.sync="internalAcademic" placeholder="Select Academic" />
+                                :value.sync="internalAcademic"
+                                :placeholder="$t('components.filter_adminstrator_filteradvisor_vue_select_academic')" />
                         </CCol>
                         <CCol md="3">
-                            <label class="filter-label">Province</label>
+                            <label class="filter-label">{{
+                                $t('components.filter_adminstrator_filteradvisor_vue_province') }}</label>
                             <CSelect class="custom-select-ui mb-0" :options="provinceOptions"
-                                :value.sync="internalProvince" placeholder="Select Province" />
+                                :value.sync="internalProvince"
+                                :placeholder="$t('components.filter_adminstrator_filteradvisor_vue_select_province')" />
                         </CCol>
                     </CRow>
                 </div>
@@ -71,16 +80,20 @@ export default {
 
         schoolOptions() {
             if (!this.storedSchools) return [];
+            const lang = this.$i18n.locale || 'en';
             return [
-                { value: '', label: 'Select School' },
+                { value: '', label: this.$t('components.filter_adminstrator_filteradvisor_vue_select_school') },
                 ...this.storedSchools.map(s => ({
                     value: s._id,
-                    label: s.title.find(t => t.key === 'en')?.value || s.title.find(t => t.key === 'th')?.value || s._id
+                    label: s.title?.find(t => t.key === lang)?.value
+                        || s.title?.find(t => t.key === 'en')?.value
+                        || s.title?.find(t => t.key === 'th')?.value
+                        || s._id
                 }))
             ];
         },
         programOptions() {
-            const lang = this.$i18n.locale;
+            const lang = this.$i18n.locale || 'en';
             let source = this.storedPrograms || [];
 
             if (this.internalSchool) {
@@ -88,9 +101,11 @@ export default {
             }
 
             return [
-                { value: '', label: 'Select Program' },
+                { value: '', label: this.$t('components.filter_adminstrator_filteradvisor_vue_select_program') },
                 ...source.map(item => {
-                    const titleObj = item.title.find(t => t.key === lang);
+                    const titleObj = Array.isArray(item.title)
+                        ? (item.title.find(t => t.key === lang) || item.title.find(t => t.key === 'en') || item.title.find(t => t.key === 'th'))
+                        : null;
                     return {
                         value: item._id,
                         label: titleObj ? titleObj.value : ''
@@ -99,15 +114,17 @@ export default {
             ];
         },
         academicOptions() {
-            if (!this.storedAdvisors) return [];
-            // Assuming academic year comes from the advisor's student, or the advisor itself
-            // Following the pattern from Administrator.vue's formattedAdvisors
+            // Try to collect academic years from advisor -> student info when available
             const years = new Set();
-            this.storedAdvisors.forEach(adv => {
+            (this.storedAdvisors || []).forEach(adv => {
                 if (adv.year) years.add(adv.year);
+                if (adv.student && typeof adv.student === 'object') {
+                    const y = adv.student.info?.year;
+                    if (y) years.add(y);
+                }
             });
             return [
-                { value: '', label: 'Select Academic' },
+                { value: '', label: this.$t('components.filter_adminstrator_filteradvisor_vue_select_academic') },
                 ...Array.from(years).sort().map(y => ({ value: y, label: y }))
             ];
         },
@@ -115,9 +132,11 @@ export default {
             const lang = this.$i18n.locale || 'en';
             const provinces = this.$store.getters['setting/province/province'] || [];
             return [
-                { value: '', label: 'Select Province' },
+                { value: '', label: this.$t('components.filter_adminstrator_filteradvisor_vue_select_province') },
                 ...provinces.map(p => {
-                    const titleObj = (Array.isArray(p.title) ? p.title.find(t => t.key === lang) : null) || (Array.isArray(p.title) ? p.title[0] : null);
+                    const titleObj = Array.isArray(p.title)
+                        ? (p.title.find(t => t.key === lang) || p.title.find(t => t.key === 'en') || p.title.find(t => t.key === 'th'))
+                        : null;
                     return {
                         value: p._id,
                         label: titleObj ? titleObj.value : p._id

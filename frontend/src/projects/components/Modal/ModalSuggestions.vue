@@ -1,15 +1,14 @@
 <template>
-    <CModal 
-        :centered="true" 
-        :show="show" 
-        @update:show="$emit('update:show', $event)"
-        :close-on-backdrop="true" 
-        size="lg"
-    >
+    <CModal :centered="true" :show="show" @update:show="$emit('update:show', $event)" :close-on-backdrop="true"
+        size="lg">
         <template #header>
             <div>
-                <h5 class="modal-title font-weight-bold mb-1" style="color: #111827;">{{ isEdit ? 'Edit' : 'Create New' }} Suggestions</h5>
-                <p class="mb-0 text-muted" style="font-size: 13px;">{{ isEdit ? 'Update' : 'Add a new bilingual' }} suggestions assessment criteria.</p>
+                <h5 class="modal-title font-weight-bold mb-1" style="color: #111827;">{{ isEdit ?
+                    $t('components.modal_modalsuggestions_vue_edit_suggestions') :
+                    $t('components.modal_modalsuggestions_vue_create_suggestions') }}</h5>
+                <p class="mb-0 text-muted" style="font-size: 13px;">{{ isEdit ?
+                    $t('components.modal_modalsuggestions_vue_update_suggestions_assessment_criteria') :
+                    $t('components.modal_modalsuggestions_vue_add_new_bilingual_suggestions_assessment_criteria') }}</p>
             </div>
             <CButtonClose @click="$emit('update:show', false)" class="text-black" />
         </template>
@@ -19,31 +18,40 @@
             <div class="modal-section mb-4">
                 <div class="section-header mb-3">
                     <span class="section-bar"></span>
-                    <span class="section-title">BASIC INFORMATION</span>
+                    <span class="section-title">{{ $t('components.modal_modalsuggestions_vue_basic_information')
+                    }}</span>
                 </div>
                 <CRow class="mb-3">
                     <CCol md="6">
-                        <label class="modal-field-label">Thai Title <span class="text-danger">*</span></label>
+                        <label class="modal-field-label">{{ $t('components.modal_modalsuggestions_vue_thai_title') }}
+                            <span class="text-danger">*</span></label>
                         <CInput v-model="form.titleTh" placeholder="e.g. หัวเรื่องข้อเสนอแนะ" class="modal-input" />
                     </CCol>
                     <CCol md="6">
-                        <label class="modal-field-label">English Title <span class="text-danger">*</span></label>
+                        <label class="modal-field-label">{{ $t('components.modal_modalsuggestions_vue_english_title') }}
+                            <span class="text-danger">*</span></label>
                         <CInput v-model="form.titleEn" placeholder="e.g. Suggestion Title" class="modal-input" />
                     </CCol>
                 </CRow>
                 <CRow class="mb-3">
                     <CCol md="6">
-                        <label class="modal-field-label">Thai Description</label>
-                        <CTextarea v-model="form.descriptionTh" placeholder="Description in Thai..." class="modal-input" rows="2" />
+                        <label class="modal-field-label">{{ $t('components.modal_modalsuggestions_vue_thai_description')
+                        }}</label>
+                        <CTextarea v-model="form.descriptionTh" placeholder="Description in Thai..." class="modal-input"
+                            rows="2" />
                     </CCol>
                     <CCol md="6">
-                        <label class="modal-field-label">English Description</label>
-                        <CTextarea v-model="form.descriptionEn" placeholder="Description in English..." class="modal-input" rows="2" />
+                        <label class="modal-field-label">{{
+                            $t('components.modal_modalsuggestions_vue_english_description')
+                        }}</label>
+                        <CTextarea v-model="form.descriptionEn" placeholder="Description in English..."
+                            class="modal-input" rows="2" />
                     </CCol>
                 </CRow>
                 <CRow>
                     <CCol md="6">
-                        <label class="modal-field-label">Academic Year <span class="text-danger">*</span></label>
+                        <label class="modal-field-label">{{ $t('components.modal_modalsuggestions_vue_academic_year') }}
+                            <span class="text-danger">*</span></label>
                         <CInput v-model="form.year" placeholder="e.g. 2026" class="modal-input" />
                     </CCol>
                 </CRow>
@@ -54,44 +62,54 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="section-header d-flex align-items-center">
                         <span class="section-bar"></span>
-                        <span class="section-title">SUGGESTION ITEMS</span>
+                        <span class="section-title">{{ $t('components.modal_modalsuggestions_vue_suggestion_items')
+                        }}</span>
                     </div>
                     <button type="button" class="btn btn-link d-flex align-items-center font-weight-bold p-0"
                         style="color: #dc2626; font-size: 14px; text-decoration: none;" @click="$emit('add-question')">
-                        <CIcon name="cil-plus" size="sm" class="mr-2" /> Add Suggestion
+                        <CIcon name="cil-plus" size="sm" class="mr-2" /> {{
+                            $t('components.modal_modalsuggestions_vue_add_suggestion') }}
                     </button>
                 </div>
 
                 <div v-if="form.questions.length === 0" class="text-center text-muted py-4"
                     style="border: 1px dashed #e2e8f0; border-radius: 8px; font-size: 14px;">
-                    No suggestions yet. Click "Add Suggestion" to begin.
+                    {{ $t('components.modal_modalsuggestions_vue_no_suggestions_yet_click_add_suggestion_to_begin') }}
                 </div>
 
                 <div v-for="(q, idx) in form.questions" :key="idx" class="question-card mb-3">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <span class="question-number-badge">{{ idx + 1 }}</span>
                         <CButton size="sm" variant="ghost" color="secondary" class="p-0" style="line-height:1;"
-                            @click="$emit('remove-question', idx)" title="Remove">
+                            @click="$emit('remove-question', idx)" :title="$t('remove')">
                             <CIcon name="cil-x" size="sm" style="color:#94a3b8;" />
                         </CButton>
                     </div>
                     <CRow class="mb-3">
                         <CCol md="6">
-                            <label class="modal-field-label-sm">VARIABLE (THAI)</label>
+                            <label class="modal-field-label-sm">{{
+                                $t('components.modal_modalsuggestions_vue_variable_thai')
+                            }}</label>
                             <CInput v-model="q.categoryTh" placeholder="e.g. การสื่อสาร" class="modal-input" />
                         </CCol>
                         <CCol md="6">
-                            <label class="modal-field-label-sm">VARIABLE (ENGLISH)</label>
+                            <label class="modal-field-label-sm">{{
+                                $t('components.modal_modalsuggestions_vue_variable_english')
+                            }}</label>
                             <CInput v-model="q.categoryEn" placeholder="e.g. Communication" class="modal-input" />
                         </CCol>
                     </CRow>
                     <CRow>
                         <CCol md="6">
-                            <label class="modal-field-label-sm">SUGGESTION (THAI) <span class="text-danger">*</span></label>
+                            <label class="modal-field-label-sm">{{
+                                $t('components.modal_modalsuggestions_vue_suggestion_thai')
+                            }} <span class="text-danger">*</span></label>
                             <CInput v-model="q.th" placeholder="คำแนะนำ..." class="modal-input" />
                         </CCol>
                         <CCol md="6">
-                            <label class="modal-field-label-sm">SUGGESTION (ENGLISH) <span class="text-danger">*</span></label>
+                            <label class="modal-field-label-sm">{{
+                                $t('components.modal_modalsuggestions_vue_suggestion_english') }} <span
+                                    class="text-danger">*</span></label>
                             <CInput v-model="q.en" placeholder="Suggestion..." class="modal-input" />
                         </CCol>
                     </CRow>
@@ -104,11 +122,12 @@
                 <CButton color="light" class="mr-3 font-weight-bold"
                     style="color: #374151; padding: 10px 24px; border-radius: 6px; border: 1px solid #e5e7eb;"
                     @click="$emit('update:show', false)">
-                    Cancel
+                    {{ $t('cancel') }}
                 </CButton>
                 <CButton color="danger" class="font-weight-bold d-flex align-items-center"
                     style="padding: 10px 24px; border-radius: 6px;" @click="$emit('save')">
-                    <CIcon name="cil-save" class="mr-2" /> {{ isEdit ? 'Update' : 'Create' }} Suggestions
+                    <CIcon name="cil-save" class="mr-2" /> {{ isEdit ? $t('update') : $t('create_new') }} {{
+                        $t('suggestions') }}
                 </CButton>
             </div>
         </template>
@@ -145,7 +164,7 @@ export default {
     margin-bottom: 4px;
 }
 
-.modal-input >>> .form-control {
+.modal-input>>>.form-control {
     border-radius: 6px;
     border: 1px solid #e5e7eb;
     font-size: 14px;
@@ -155,7 +174,7 @@ export default {
     transition: border-color 0.15s;
 }
 
-.modal-input >>> .form-control:focus {
+.modal-input>>>.form-control:focus {
     border-color: #dc2626;
     box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.08);
 }

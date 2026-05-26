@@ -1,14 +1,9 @@
 <template>
     <div>
         <CorrespondenceHeader @preview="handlePreview" />
-        
-        <WidgetsCorrespondence 
-            :emailReady="isEmailReady"
-            :total="totalCount" 
-            :pending="pendingCount" 
-            :sent="sentCount" 
-            :failed="failedCount" 
-        />
+
+        <WidgetsCorrespondence :emailReady="isEmailReady" :total="totalCount" :pending="pendingCount" :sent="sentCount"
+            :failed="failedCount" />
 
         <!-- Unified Management Bar -->
         <CCard class="management-card border-0 mb-4 shadow-sm">
@@ -20,17 +15,17 @@
                         <div class="search-input-wrapper">
                             <CIcon name="cil-search" class="search-icon" />
                             <input type="text" class="form-control modern-search-input"
-                                placeholder="Search by name, ID, or subject..." v-model="searchQuery" />
+                                :placeholder="$t('search_by_name_id_subject')" v-model="searchQuery" />
                         </div>
                     </CCol>
 
                     <!-- Action Buttons -->
                     <CCol lg="6" md="6" class="d-flex justify-content-end align-items-center flex-wrap">
                         <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')">
-                            <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> Send Email Org
+                            <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> {{ $t('send_email_org') }}
                         </CButton>
                         <CButton class="btn-modern-action btn-modern-filter mr-2" @click="showFilters = !showFilters">
-                            <CIcon name="cil-filter" class="mr-2" /> Filters
+                            <CIcon name="cil-filter" class="mr-2" /> {{ $t('filters') }}
                         </CButton>
                     </CCol>
                 </CRow>
@@ -40,34 +35,19 @@
                     <div v-show="showFilters" class="mt-3 pt-3 border-top">
                         <CRow>
                             <CCol md="3">
-                                <label class="filter-mini-label">SCHOOL</label>
-                                <CSelect 
-                                    custom 
-                                    class="modern-select-filter mb-0" 
-                                    :options="schoolOptions"
-                                    :value.sync="filterSchool" 
-                                    placeholder="All Schools" 
-                                />
+                                <label class="filter-mini-label">{{ $t('school') }}</label>
+                                <CSelect custom class="modern-select-filter mb-0" :options="schoolOptions"
+                                    :value.sync="filterSchool" :placeholder="$t('all_schools_label')" />
                             </CCol>
                             <CCol md="3">
-                                <label class="filter-mini-label">PROGRAM</label>
-                                <CSelect 
-                                    custom 
-                                    class="modern-select-filter mb-0" 
-                                    :options="programOptions"
-                                    :value.sync="filterProgram" 
-                                    placeholder="All Programs" 
-                                />
+                                <label class="filter-mini-label">{{ $t('program') }}</label>
+                                <CSelect custom class="modern-select-filter mb-0" :options="programOptions"
+                                    :value.sync="filterProgram" :placeholder="$t('all_programs_label')" />
                             </CCol>
                             <CCol md="3">
-                                <label class="filter-mini-label">STATUS</label>
-                                <CSelect 
-                                    custom 
-                                    class="modern-select-filter mb-0" 
-                                    :options="statusOptions"
-                                    :value.sync="filterStatus" 
-                                    placeholder="All Status" 
-                                />
+                                <label class="filter-mini-label">{{ $t('status') }}</label>
+                                <CSelect custom class="modern-select-filter mb-0" :options="statusOptions"
+                                    :value.sync="filterStatus" :placeholder="$t('all_status_label')" />
                             </CCol>
                         </CRow>
                     </div>
@@ -77,14 +57,8 @@
 
         <!-- Content Area -->
         <div class="content-pannel">
-            <AdviserEmailSection 
-                ref="adviserSection"
-                :search-query="searchQuery"
-                :school="filterSchool"
-                :program="filterProgram"
-                :year="filterYear"
-                :status="filterStatus"
-            />
+            <AdviserEmailSection ref="adviserSection" :search-query="searchQuery" :school="filterSchool"
+                :program="filterProgram" :year="filterYear" :status="filterStatus" />
         </div>
 
         <ModalEmailPreview ref="modalPreview" />
@@ -132,13 +106,13 @@ export default {
 
             const items = section.advisersTable;
             if (!items || items.length === 0) {
-                alert('No data to preview with.');
+                alert(this.$t('no_data_to_preview'));
                 return;
             }
 
             const activeTemplate = section.emailsData.find(t => t.active);
             if (!activeTemplate) {
-                alert('No active template found. Please activate a template first.');
+                alert(this.$t('no_active_template_found'));
                 return;
             }
 
@@ -150,18 +124,18 @@ export default {
 
             // Filter for Pending only as requested
             const items = section.advisersTable.filter(item => item.sendStatus === 'PENDING');
-            
+
             if (!items || items.length === 0) {
-                alert('No pending advisers found to send emails to.');
+                alert(this.$t('no_pending_advisers_found'));
                 return;
             }
 
-            if (!confirm(`Are you sure you want to send emails to ${items.length} pending admins/advisers?`)) {
+            if (!confirm(this.$t('confirm_send_emails_admin', { count: items.length }))) {
                 return;
             }
 
             this.$store.commit('dialog/loading', true);
-            this.$store.commit('dialog/loadingMessage', 'กำลังส่ง...');
+            this.$store.commit('dialog/loadingMessage', this.$t('submitting'));
 
             for (const item of items) {
                 try {
@@ -170,8 +144,8 @@ export default {
                     console.error(`Failed to send email to ${item._id}:`, error);
                 }
             }
-            
-            this.$store.commit('dialog/loadingMessage', 'เสร็จแล้ว');
+
+            this.$store.commit('dialog/loadingMessage', this.$t('done'));
             setTimeout(() => {
                 this.$store.commit('dialog/loading', false);
             }, 1500);
@@ -201,10 +175,10 @@ export default {
         schoolOptions() {
             const lang = this.$store.getters['setting/lang'] || 'en';
             return [
-                { value: null, label: 'All Schools' },
-                ...(this.storedSchools || []).map(item => ({ 
-                    value: item._id, 
-                    label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '' 
+                { value: null, label: this.$t('all_schools_label') },
+                ...(this.storedSchools || []).map(item => ({
+                    value: item._id,
+                    label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? ''
                 }))
             ]
         },
@@ -213,19 +187,19 @@ export default {
             let progs = this.storedPrograms || [];
             if (this.filterSchool) progs = progs.filter(p => p.school === this.filterSchool);
             return [
-                { value: null, label: 'All Programs' },
-                ...progs.map(item => ({ 
-                    value: item._id, 
-                    label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '' 
+                { value: null, label: this.$t('all_programs_label') },
+                ...progs.map(item => ({
+                    value: item._id,
+                    label: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? ''
                 }))
             ]
         },
         statusOptions() {
             return [
-                { value: null, label: 'All Status' },
-                { value: 'PENDING', label: 'Pending' },
-                { value: 'COMPLETE', label: 'Complete' },
-                { value: 'FAILED', label: 'Closed' },
+                { value: null, label: this.$t('all_status_label') },
+                { value: 'PENDING', label: this.$t('pending') },
+                { value: 'COMPLETE', label: this.$t('complete') },
+                { value: 'FAILED', label: this.$t('closed') },
             ]
         }
     }
@@ -290,7 +264,7 @@ export default {
 .modern-search-input:focus {
     background-color: #ffffff;
     border-color: #cbd5e1 !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .btn-modern-action {
@@ -348,13 +322,16 @@ export default {
     font-weight: 600;
 }
 
-.slide-enter-active, .slide-leave-active {
+.slide-enter-active,
+.slide-leave-active {
     transition: all 0.3s ease;
     max-height: 200px;
     opacity: 1;
     overflow: hidden;
 }
-.slide-enter, .slide-leave-to {
+
+.slide-enter,
+.slide-leave-to {
     max-height: 0;
     opacity: 0;
 }

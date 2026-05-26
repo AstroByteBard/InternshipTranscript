@@ -11,7 +11,7 @@
               <CCol col="12">
                 <CRow class="mb-3">
                   <CCol col="3">
-                    <label class="mt-2"> องค์กร </label>
+                    <label class="mt-2">{{ $t('components.filter_filterorganization_vue') }}</label>
                   </CCol>
                   <CCol>
                     <Multiselect class="os"
@@ -29,7 +29,7 @@
               <CCol col="12">
                 <CRow class="mb-3">
                   <CCol col="3">
-                    <label class="mt-2"> หน่วยงาน </label>
+                    <label class="mt-2">{{ $t('components.filter_filterorganization_vue_1') }}</label>
                   </CCol>
                   <CCol>
                     <Multiselect class="os"
@@ -47,7 +47,7 @@
               <CCol col="12">
                 <CRow>
                   <CCol col="3">
-                    <label class="mt-2"> สำนัก </label>
+                    <label class="mt-2">{{ $t('components.filter_filterorganization_vue_2') }}</label>
                   </CCol>
                   <CCol>
                     <Multiselect class="os"
@@ -64,34 +64,15 @@
               </CCol>
             </CRow>
 
-<!--            <CRow>-->
-<!--              <CCol col="3" class="mt-3">-->
-<!--                <label> วันที่เวลา </label>-->
-<!--              </CCol>-->
-<!--              <CCol  class="mt-3">-->
-<!--                <div class=" ">-->
-<!--                  <CButtonGroup class="float-left mr-3 mt-1">-->
-<!--                    <CButton-->
+<!--            <CRow>{{ $t('components.filter_filterorganization_vue_3') }}<!--              <CCol col="3" class="mt-3">{{ $t('components.filter_filterorganization_vue_3') }}<!--                <label>{{ $t('components.filter_filterorganization_vue_4') }}</label>{{ $t('components.filter_filterorganization_vue_3') }}<!--              </CCol>{{ $t('components.filter_filterorganization_vue_3') }}<!--              <CCol  class="mt-3">{{ $t('components.filter_filterorganization_vue_3') }}<!--                <div class=" ">{{ $t('components.filter_filterorganization_vue_3') }}<!--                  <CButtonGroup class="float-left mr-3 mt-1">{{ $t('components.filter_filterorganization_vue_3') }}<!--                    <CButton-->
 <!--                        class="flex-fill"-->
 <!--                        v-for="opt in styles"-->
 <!--                        :key="opt.id"-->
 <!--                        color="info"-->
 <!--                        variant="outline"-->
 <!--                        :pressed="select.id === opt.id"-->
-<!--                        @click="selectStyle(opt)">-->
-<!--                      {{ opt.label }}-->
-<!--                    </CButton>-->
-
-<!--                  </CButtonGroup>-->
-
-<!--                  <CInput class="float-left pt-0" type="date"  v-model="select.startDate"/>-->
-<!--                  <span class="float-left m-2">-</span>-->
-<!--                  <CInput  class="float-left" type="date"   v-model="select.endDate"/>-->
-<!--                </div>-->
-<!--              </CCol>-->
-<!--            </CRow>-->
-
-          </CCardBody>
+<!--                        @click="selectStyle(opt)">{{ $t('components.filter_filterorganization_vue_3') }}<!--                      {{ opt.label }}-->
+<!--                    </CButton>{{ $t('components.filter_filterorganization_vue_3') }}<!--                  </CButtonGroup>{{ $t('components.filter_filterorganization_vue_3') }}<!--                  <CInput class="float-left pt-0" type="date"  v-model="select.startDate"/>{{ $t('components.filter_filterorganization_vue_3') }}<!--                  <span class="float-left m-2">{{ $t('components.filter_filterorganization_vue_5') }}</span>{{ $t('components.filter_filterorganization_vue_3') }}<!--                  <CInput  class="float-left" type="date"   v-model="select.endDate"/>{{ $t('components.filter_filterorganization_vue_3') }}<!--                </div>{{ $t('components.filter_filterorganization_vue_3') }}<!--              </CCol>{{ $t('components.filter_filterorganization_vue_3') }}<!--            </CRow>{{ $t('components.filter_filterorganization_vue_3') }}</CCardBody>
         </CCard>
       </CCol>
     </CRow>

@@ -1,53 +1,58 @@
 <template>
     <CModal :centered="true" :show.sync="show" :close-on-backdrop="true" size="lg">
         <template #header>
-            <h5 class="modal-title font-weight-bold" style="color: #111827;">{{ editingEmailId ? 'EditEmailTemplate' :
-                'Create Email Template' }}</h5>
+            <h5 class="modal-title font-weight-bold" style="color: #111827;">{{ editingEmailId ?
+                $t('edit_email_template') :
+                $t('create_email_template') }}</h5>
             <CButtonClose @click="close" class="text-black" />
         </template>
 
         <div class="px-3 py-2">
             <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">Template Name
+                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{
+                    $t('template_name')
+                    }}
                     <span class="text-danger">*</span></label>
                 <CInput v-model="title" placeholder="e.g. Acceptance Letter" class="custom-input shadow-sm" />
             </div>
 
             <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">Subject <span
-                        class="text-danger">*</span></label>
+                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{ $t('subject')
+                    }}
+                    <span class="text-danger">*</span></label>
                 <CInput v-model="subject" placeholder="e.g. Regarding your application"
                     class="custom-input shadow-sm" />
             </div>
 
             <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">Insert
-                    Variables</label>
+                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{
+                    $t('insert_variables') }}</label>
                 <div class="d-flex flex-wrap" style="gap: 16px;">
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student Name')">
-                        <CIcon name="cil-plus" size="sm" class="mr-1" /> Student Name
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('student_name') }}
                     </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student ID')">
-                        <CIcon name="cil-plus" size="sm" class="mr-1" /> Student ID
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('student_id') }}
                     </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('School')">
-                        <CIcon name="cil-plus" size="sm" class="mr-1" /> School
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('school') }}
                     </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Program')">
-                        <CIcon name="cil-plus" size="sm" class="mr-1" /> Program
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('program') }}
                     </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Academic Year')">
-                        <CIcon name="cil-plus" size="sm" class="mr-1" /> Academic Year
+                        <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('academicYear') }}
                     </CButton>
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Evaluation Link')">
-                        <CIcon name="cil-link" size="sm" class="mr-1" /> Evaluation Link
+                        <CIcon name="cil-link" size="sm" class="mr-1" /> {{ $t('evaluation_link') }}
                     </CButton>
                 </div>
             </div>
 
             <div>
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">Content <span
-                        class="text-danger">*</span></label>
+                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{ $t('content')
+                    }}
+                    <span class="text-danger">*</span></label>
                 <CTextarea v-model="template" :rows="8" class="custom-textarea shadow-sm"
                     placeholder="Write your email content here..." style="border-color: #ef4444;" />
             </div>
@@ -56,10 +61,11 @@
         <template #footer>
             <div class="w-100 d-flex justify-content-end px-3 py-2">
                 <CButton color="light" class="mr-3 filter-card font-weight-bold"
-                    style="color: #4b5563; padding: 8px 24px;" @click="close">Cancel</CButton>
+                    style="color: #4b5563; padding: 8px 24px;" @click="close">{{ $t('cancel') }}</CButton>
                 <CButton color="danger" class="font-weight-bold px-4 d-flex align-items-center"
                     style="padding: 8px 24px; border-radius: 6px;" @click="save">
-                    <CIcon name="cil-save" class="mr-2" /> {{ editingEmailId ? 'Update Template' : 'Save Template' }}
+                    <CIcon name="cil-save" class="mr-2" /> {{ editingEmailId ? $t('update_template') :
+                        $t('save_template') }}
                 </CButton>
             </div>
         </template>

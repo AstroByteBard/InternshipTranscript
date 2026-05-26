@@ -1,31 +1,26 @@
 <template>
   <nav class="form-navbar sticky-top">
     <div class="container-fluid px-4 py-2 d-flex align-items-center justify-content-between h-100">
-      
+
       <!-- Left: Logo & Branding -->
       <div class="navbar-branding d-flex align-items-center">
         <div class="logo-box mr-3">
           <CIcon name="cil-school" size="lg" class="text-white" />
         </div>
         <div>
-          <h1 class="logo-text mb-0">Internship Evaluation</h1>
-          <p class="logo-subtext text-muted mb-0">Digital University Program</p>
+          <h1 class="logo-text mb-0">{{ $t('components.layout_formnavbar_vue_internship_evaluation') }}</h1>
+          <p class="logo-subtext text-muted mb-0">{{ $t('components.layout_formnavbar_vue_digital_university_program')
+            }}</p>
         </div>
       </div>
 
       <!-- Right: Language Switcher -->
       <div class="navbar-actions d-flex align-items-center">
         <div class="lang-pill border d-flex align-items-center p-1 rounded-pill bg-light shadow-sm">
-          <button 
-            class="btn btn-sm rounded-pill lang-btn px-3" 
-            :class="{ 'active bg-danger text-white': lang === 'th' }"
-            @click="switchLang('th')"
-          >TH</button>
-          <button 
-            class="btn btn-sm rounded-pill lang-btn px-3" 
-            :class="{ 'active bg-danger text-white': lang === 'en' }"
-            @click="switchLang('en')"
-          >EN</button>
+          <button aria-label="Switch to Thai" class="btn btn-sm rounded-pill lang-btn compact px-3"
+            :class="{ 'active bg-danger text-white': lang === 'th' }" @click="switchLang('th')">TH</button>
+          <button aria-label="Switch to English" class="btn btn-sm rounded-pill lang-btn compact px-3"
+            :class="{ 'active bg-danger text-white': lang === 'en' }" @click="switchLang('en')">EN</button>
         </div>
       </div>
 
@@ -131,6 +126,14 @@ export default {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.lang-btn.compact {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 999px;
+}
+
 .lang-btn.active {
   box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
@@ -141,7 +144,12 @@ export default {
 }
 
 @media (max-width: 576px) {
-  .logo-text { font-size: 15px; }
-  .logo-subtext { display: none; }
+  .logo-text {
+    font-size: 15px;
+  }
+
+  .logo-subtext {
+    display: none;
+  }
 }
 </style>

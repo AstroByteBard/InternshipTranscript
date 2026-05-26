@@ -42,10 +42,10 @@
             <!-- Actions -->
             <template #actions="{ item }">
                 <td class="text-center align-middle">
-                    <CButton class="btn-action-icon mr-2" @click="$emit('edit', item)" title="Edit">
+                    <CButton class="btn-action-icon mr-2" @click="$emit('edit', item)" :title="$t('edit')">
                         <CIcon name="cil-pencil" />
                     </CButton>
-                    <CButton class="btn-action-icon" @click="$emit('delete', item)" title="Delete">
+                    <CButton class="btn-action-icon" @click="$emit('delete', item)" :title="$t('delete')">
                         <CIcon name="cil-trash" />
                     </CButton>
                 </td>

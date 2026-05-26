@@ -2,16 +2,12 @@
     <CCard class="border-0 shadow-sm h-100">
         <CCardBody class="p-3 d-flex flex-column h-100">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="mb-0 font-weight-bold">History Log</h6>
-                <CButton size="sm" color="light" class="history-clear-btn" @click="$emit('clear')">
-                    Clear
-                </CButton>
+                <h6 class="mb-0 font-weight-bold">{{ $t('components.documents_editor_historylogsidebar_vue_history_log') }}</h6>
+                <CButton size="sm" color="light" class="history-clear-btn" @click="$emit('clear')">{{ $t('components.documents_editor_historylogsidebar_vue_clear') }}</CButton>
             </div>
 
             <div class="history-list flex-grow-1 custom-scrollbar">
-                <div v-if="!historyLog || !historyLog.length" class="text-muted small py-2">
-                    No recorded actions yet.
-                </div>
+                <div v-if="!historyLog || !historyLog.length" class="text-muted small py-2">{{ $t('components.documents_editor_historylogsidebar_vue_no_recorded_actions_y') }}</div>
 
                 <div v-for="entry in historyLog" :key="entry.id" class="history-entry">
                     <div class="history-entry-meta">

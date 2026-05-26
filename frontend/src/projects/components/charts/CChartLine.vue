@@ -3,8 +3,7 @@
         <CCardBody>
             <CRow>
                 <CCol sm="8">
-                    <h4 class="card-title mb-0">Line Chart for the Number of Student Logins and File Download per Week
-                    </h4>
+                    <h4 class="card-title mb-0">{{ $t('components.charts_cchartline_vue_line_chart_for_the_number_of_student_l') }}</h4>
                 </CCol>
                 <CCol sm="4" class="d-none d-md-block">
                     <!-- Optional controls -->
@@ -15,9 +14,9 @@
             </div>
             <div class="text-center mt-3">
                 <CButtonGroup>
-                    <CButton color="outline-secondary" class="mx-0" style="width: 120px;">Daily</CButton>
-                    <CButton color="danger" class="mx-0" style="width: 120px;">Weekly</CButton>
-                    <CButton color="outline-secondary" class="mx-0" style="width: 120px;">Monthly</CButton>
+                    <CButton color="outline-secondary" class="mx-0" style="width: 120px;">{{ $t('components.charts_cchartline_vue_daily') }}</CButton>
+                    <CButton color="danger" class="mx-0" style="width: 120px;">{{ $t('components.charts_cchartline_vue_weekly') }}</CButton>
+                    <CButton color="outline-secondary" class="mx-0" style="width: 120px;">{{ $t('components.charts_cchartline_vue_monthly') }}</CButton>
                 </CButtonGroup>
             </div>
         </CCardBody>
