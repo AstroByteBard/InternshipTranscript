@@ -12,13 +12,8 @@
                   <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_school') }}</span>
                 </div>
                 <slot name="school">
-                  <CSelect 
-                    custom 
-                    class="mb-0 modern-select" 
-                    :options="schoolOptions" 
-                    :value="school"
-                    @update:value="$emit('update:school', $event)"
-                  />
+                  <CSelect custom class="mb-0 modern-select" :options="schoolOptions" :value="school"
+                    @update:value="$emit('update:school', $event)" />
                 </slot>
               </div>
             </CCol>
@@ -31,13 +26,8 @@
                   <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_program') }}</span>
                 </div>
                 <slot name="program">
-                  <CSelect 
-                    custom 
-                    class="mb-0 modern-select" 
-                    :options="programOptions" 
-                    :value="program"
-                    @update:value="$emit('update:program', $event)"
-                  />
+                  <CSelect custom class="mb-0 modern-select" :options="programOptions" :value="program"
+                    @update:value="$emit('update:program', $event)" />
                 </slot>
               </div>
             </CCol>
@@ -50,13 +40,8 @@
                   <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_academic_year') }}</span>
                 </div>
                 <slot name="year">
-                  <CSelect 
-                    custom 
-                    class="mb-0 modern-select" 
-                    :options="yearOptions" 
-                    :value="year"
-                    @update:value="$emit('update:year', $event)"
-                  />
+                  <CSelect custom class="mb-0 modern-select" :options="yearOptions" :value="year"
+                    @update:value="$emit('update:year', $event)" />
                 </slot>
               </div>
             </CCol>
@@ -69,13 +54,8 @@
                   <span class="filter-label">{{ $t('components.filter_dashboardfilter_vue_status') }}</span>
                 </div>
                 <slot name="evaluated">
-                  <CSelect 
-                    custom 
-                    class="mb-0 modern-select" 
-                    :options="evaluatedOptions" 
-                    :value="evaluated"
-                    @update:value="$emit('update:evaluated', $event)"
-                  />
+                  <CSelect custom class="mb-0 modern-select" :options="evaluatedOptions" :value="evaluated"
+                    @update:value="$emit('update:evaluated', $event)" />
                 </slot>
               </div>
             </CCol>
@@ -135,10 +115,21 @@ export default {
   margin-right: 8px;
 }
 
-.school-icon { color: #0369a1; }
-.program-icon { color: #7c3aed; }
-.year-icon { color: #ea580c; }
-.evaluated-icon { color: #16a34a; }
+.school-icon {
+  color: #0369a1;
+}
+
+.program-icon {
+  color: #7c3aed;
+}
+
+.year-icon {
+  color: #ea580c;
+}
+
+.evaluated-icon {
+  color: #16a34a;
+}
 
 .filter-label {
   font-size: 11px;
@@ -151,33 +142,32 @@ export default {
 .modern-select {
   border-radius: 10px !important;
   border: 1.5px solid #f1f5f9 !important;
-  background-color: #ffffff !important;
-  color: #1e293b !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
   height: 44px !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  cursor: pointer !important;
-  padding-left: 12px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .modern-select:hover {
   border-color: #cbd5e1 !important;
-  background-color: #f8fafc !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+  background-color: #f8fafc;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .modern-select:focus {
   border-color: #c83f36 !important;
-  box-shadow: 0 0 0 4px rgba(200, 63, 54, 0.1) !important;
-  background-color: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(200, 63, 54, 0.1);
+  background-color: #ffffff;
 }
 
-/* Specific select styling to override CoreUI defaults */
 ::v-deep .modern-select select {
   border: none !important;
   background-color: transparent !important;
   padding: 0 !important;
+  padding-left: 8px !important;
   font-weight: inherit !important;
 }
 </style>
