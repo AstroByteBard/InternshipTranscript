@@ -17,6 +17,7 @@ try {
 } catch (e) {
     AccountModel = mongoose.model('Information_Accounts', AccountSchema, 'Information_Accounts');
 }
+const StudentModel = require('../../Member/models/students.model');
 
 exports.loginByEmail = async function (email) {
     if (!email) throw new Error('Email is required');
@@ -32,13 +33,24 @@ exports.loginByEmail = async function (email) {
         ]
     };
 
-    const doc = await AccountModel.findOne(query).lean();
+    let doc = await AccountModel.findOne(query).lean();
+    let source = 'account';
+
+    if (!doc) {
+        doc = await StudentModel.findOne(query).lean();
+        source = 'student';
+    }
+
     if (!doc) throw new Error('User not found');
+
+    const nameValue = Array.isArray(doc.name)
+        ? ((doc.name.find((item) => item && item.value) || doc.name[0] || {}).value || null)
+        : (doc.name || doc.fullname || doc.displayName || doc.firstname || doc.firstName || null);
 
     const user = {
         id: doc._id || doc.id || (doc.studentID || doc.studentId) || null,
-        email: doc.email || doc.Email || doc.emailAddress || null,
-        name: doc.name || doc.fullname || doc.displayName || doc.firstname || doc.firstName || null,
+        email: doc.email || doc.Email || doc.emailAddress || (source === 'student' ? (doc.studentID || doc.studentId || null) : null),
+        name: nameValue,
         role: doc.role || (doc.studentID ? 'student' : 'user'),
         studentID: doc.studentID || doc.studentId || null,
         picture: doc.picture || doc.avatar || null

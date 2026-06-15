@@ -295,3 +295,161 @@ exports.onDelete = async function (request, response) {
         return ResMessage.sendResponse(response, 0, 40000);
     }
 };
+
+exports.onAverages = async function (request, response) {
+    try {
+        const studentId = request.query.studentId || request.body.studentId;
+        console.log('===== AVERAGE CALCULATION START =====');
+        console.log('1. Input studentId:', studentId);
+        if (!studentId) {
+            return ResMessage.sendResponse(response, 0, 40000, 'studentId is required');
+        }
+
+        const mongoose = require('mongoose');
+        const Students = mongoose.model('Students');
+        const EvaluationModel = mongoose.model('Competencies_Evaluation');
+
+        const student = await Students.findById(studentId).lean();
+        if (!student) {
+            console.log('2. Student not found');
+            return ResMessage.sendResponse(response, 0, 40000, 'Student not found');
+        }
+        console.log('2. Found student:', student.studentID);
+        console.log('   - Program ID:', student.info?.program);
+        console.log('   - Year data:', JSON.stringify(student.info?.year));
+
+        const studentProgram = student.info?.program;
+        const yearArr = student.info?.year;
+        let yearValues = [];
+        if (Array.isArray(yearArr)) {
+            yearValues = yearArr.map(y => y.value).filter(Boolean);
+        } else if (yearArr && typeof yearArr === 'object') {
+            yearValues = [yearArr.value].filter(Boolean);
+        } else if (yearArr) {
+            yearValues = [String(yearArr)];
+        }
+        console.log('3. Extracted year values:', yearValues);
+        if (yearValues.length === 0) {
+            console.log('   -> No year values found, returning empty');
+            return ResMessage.sendResponse(response, 0, 20000, { soft: [], hard: [], softCount: 0, hardCounts: {} });
+        }
+
+        const sameYearStudents = await Students.find({
+            'info.year.value': { $in: yearValues }
+        }).lean();
+
+        console.log('4. Students in same academic year (' + yearValues.join(', ') + '):', sameYearStudents.length);
+        sameYearStudents.forEach(s => {
+            console.log('   -', s.studentID, '| Program:', s.info?.program, '| Year:', JSON.stringify(s.info?.year));
+        });
+
+        const sameYearStudentIds = sameYearStudents.map(s => s._id);
+        const sameYearProgramMap = {};
+        sameYearStudents.forEach(s => {
+            sameYearProgramMap[String(s._id)] = s.info?.program ? String(s.info?.program) : null;
+        });
+
+        const evaluations = await EvaluationModel.find({
+            studentId: { $in: sameYearStudentIds }
+        }).lean();
+
+        console.log('5. Evaluations found:', evaluations.length);
+        evaluations.forEach(ev => {
+            const sid = ev.studentId?._id || ev.studentId;
+            const prog = sameYearProgramMap[String(sid)];
+            const softCount = Array.isArray(ev.softskills) ? ev.softskills.length : 0;
+            const hardCount = Array.isArray(ev.hardskills) ? ev.hardskills.length : 0;
+            console.log('   - studentId:', String(sid), '| Program:', prog, '| Soft:', softCount, 'items, Hard:', hardCount, 'items');
+            if (Array.isArray(ev.softskills)) {
+                ev.softskills.forEach((item, i) => {
+                    console.log('     Soft[' + i + '] score:', item.answer.score);
+                });
+            }
+            if (Array.isArray(ev.hardskills)) {
+                ev.hardskills.forEach((item, i) => {
+                    console.log('     Hard[' + i + '] score:', item.answer.score);
+                });
+            }
+        });
+
+        const softCount = evaluations.length;
+        const softScores = [];
+        const hardByProgram = {};
+
+        evaluations.forEach(ev => {
+            const progId = sameYearProgramMap[String(ev.studentId)];
+
+            if (Array.isArray(ev.softskills)) {
+                ev.softskills.forEach((item, idx) => {
+                    if (!softScores[idx]) softScores[idx] = [];
+                    softScores[idx].push(Number(item.answer.score) || 0);
+                });
+            }
+
+            if (Array.isArray(ev.hardskills) && progId) {
+                if (!hardByProgram[progId]) hardByProgram[progId] = [];
+                const arr = hardByProgram[progId];
+                ev.hardskills.forEach((item, idx) => {
+                    if (!arr[idx]) arr[idx] = [];
+                    arr[idx].push(Number(item.answer.score) || 0);
+                });
+            }
+        });
+
+        console.log('6. Soft skill raw scores per index (all programs):');
+        softScores.forEach((arr, idx) => {
+            console.log('   Index[' + idx + '] scores:', JSON.stringify(arr), '-> sum:', arr.reduce((s, v) => s + v, 0), 'count:', arr.length);
+        });
+
+        const soft = softScores.map(arr => {
+            if (!arr || arr.length === 0) return 0;
+            const sum = arr.reduce((s, v) => s + v, 0);
+            const avg = sum / arr.length;
+            const rounded = Math.round(avg * 100) / 100;
+            console.log('   -> Soft[' + softScores.indexOf(arr) + '] avg = ' + sum + ' / ' + arr.length + ' = ' + avg + ' (rounded: ' + rounded + ')');
+            return rounded;
+        });
+
+        console.log('7. Hard skill raw scores per program:');
+        Object.keys(hardByProgram).forEach(progId => {
+            console.log('   Program:', progId);
+            hardByProgram[progId].forEach((arr, idx) => {
+                console.log('     Index[' + idx + '] scores:', JSON.stringify(arr), '-> sum:', arr.reduce((s, v) => s + v, 0), 'count:', arr.length);
+            });
+        });
+
+        const hard = {};
+        Object.keys(hardByProgram).forEach(progId => {
+            hard[progId] = hardByProgram[progId].map(arr => {
+                if (!arr || arr.length === 0) return 0;
+                const sum = arr.reduce((s, v) => s + v, 0);
+                const avg = sum / arr.length;
+                const rounded = Math.round(avg * 100) / 100;
+                console.log('     -> Hard[prog=' + progId + '][' + hardByProgram[progId].indexOf(arr) + '] avg = ' + sum + ' / ' + arr.length + ' = ' + avg + ' (rounded: ' + rounded + ')');
+                return rounded;
+            });
+        });
+
+        const hardCounts = {};
+        Object.keys(hardByProgram).forEach(progId => {
+            hardCounts[progId] = hardByProgram[progId].length > 0 ? hardByProgram[progId][0].length : 0;
+        });
+
+        const currentHard = hard[String(studentProgram)] || [];
+        console.log('8. Current student program:', String(studentProgram));
+        console.log('   Soft averages:', JSON.stringify(soft));
+        console.log('   Hard averages (for this program):', JSON.stringify(currentHard));
+        console.log('   Soft count:', softCount, '| Hard count:', hardCounts[String(studentProgram)] || 0);
+        console.log('===== AVERAGE CALCULATION END =====');
+
+        return ResMessage.sendResponse(response, 0, 20000, {
+            soft,
+            hard: currentHard,
+            softCount,
+            hardCount: hardCounts[String(studentProgram)] || 0
+        });
+    } catch (err) {
+        console.error('[evaluation:averages]', err);
+        return ResMessage.sendResponse(response, 0, 40000);
+    }
+};

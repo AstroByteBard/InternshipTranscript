@@ -11,11 +11,14 @@ var objsSchema = new Schema({
     }],
     email: { type: String, default: null },
     info: {
-        semester: { type: String, default: null },
+        semester: { type: mongoose.Schema.Types.ObjectId, ref: 'Setting_Semester', default: null },
         program: { type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Program', default: null },
         school: { type: mongoose.Schema.Types.ObjectId, ref: 'Academic_School', default: null },
         course: { type: mongoose.Schema.Types.ObjectId, ref: 'Academic_Course', default: null },
-        year: { type: String, default: new Date().getFullYear().toString() }
+        year: [{
+            key: { type: String, default: null },
+            value: { type: String, default: null },
+        }],
     },
     company: { type: String, default: null },
     evaluation: { type: mongoose.Schema.Types.ObjectId, ref: 'Competencies_Evaluation', default: null },

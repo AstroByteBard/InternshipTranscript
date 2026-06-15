@@ -77,6 +77,7 @@ export default {
         ...mapGetters('academic/schools', { storedSchools: 'schools' }),
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
+        ...mapGetters('setting/semester', { storedSemesters: 'item' }),
 
         schoolOptions() {
             const lang = this.$i18n.locale || 'en';
@@ -110,7 +111,19 @@ export default {
         },
         academicOptions() {
             if (!this.storedStudents) return [];
-            const years = new Set(this.storedStudents.map(s => s.info?.year).filter(y => y));
+            const lang = this.$i18n.locale || 'en';
+            const getYearValues = (yr) => {
+                if (Array.isArray(yr)) {
+                    const found = yr.find(y => y.key === lang) || yr.find(y => y.key === 'en');
+                    return found ? [found.value] : [];
+                }
+                if (yr && typeof yr === 'object') return [yr.value].filter(Boolean);
+                return yr ? [yr] : [];
+            };
+            const years = new Set();
+            (this.storedStudents || []).forEach(s => {
+                getYearValues(s.info?.year).forEach(y => years.add(y));
+            });
             return [
                 { value: '', label: this.$t('components.filter_adminstrator_filterstudent_vue_select_academic') },
                 ...Array.from(years).sort().map(y => ({ value: y, label: y }))
@@ -118,21 +131,18 @@ export default {
         },
         semesterOptions() {
             const lang = this.$i18n.locale || 'en';
-            const statuses = this.$store.getters['setting/status/item'] || [];
+            const semesters = this.storedSemesters || [];
 
-            // Convert localized semester strings (e.g. "Semester 1", "เทอมที่ 1") to numeric options
             return [
                 { value: '', label: this.$t('components.filter_adminstrator_filterstudent_vue_select_semester') },
-                ...statuses.map((s, idx) => {
+                ...semesters.map(s => {
                     const titleObj = Array.isArray(s.title)
                         ? (s.title.find(t => t.key === lang) || s.title.find(t => t.key === 'en') || s.title.find(t => t.key === 'th'))
                         : s.title;
-                    const raw = titleObj ? (titleObj.value || titleObj) : (s.value || s._id || String(idx + 1));
-                    const m = String(raw).match(/(\d+)/);
-                    const numeric = m ? Number(m[1]) : (idx + 1);
+                    const label = titleObj ? titleObj.value : s._id;
                     return {
-                        value: numeric,
-                        label: String(numeric)
+                        value: s._id,
+                        label: label
                     };
                 })
             ];

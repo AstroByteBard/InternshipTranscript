@@ -22,6 +22,10 @@ export const createPdfTableRenderers = ({ layer, dataMap = {} } = {}) => {
     const addCompetencyTable = (attrs, items, title, placeholderChildren) => {
         const lang = (dataMap && dataMap.__language) ? dataMap.__language : 'en';
         const defaultFontFamily = attrs.fontFamily || getLocaleFontFamily(lang);
+        const isThai = String(lang).toLowerCase().startsWith('th');
+        const emptyMessage = isThai
+            ? 'ยังไม่ได้รับผลลัพธ์การฝึกงาน'
+            : 'Internship results are not available yet.';
         const group = new Konva.Group({
             x: attrs.x || 0,
             y: attrs.y || 0,
@@ -41,6 +45,51 @@ export const createPdfTableRenderers = ({ layer, dataMap = {} } = {}) => {
         const addTextNode = (templateAttrs, overrides) => {
             group.add(new Konva.Text(Object.assign({}, templateAttrs || {}, overrides || {})));
         };
+
+        if (!Array.isArray(items) || items.length === 0) {
+            const titleTemplate = textChildren[0] && textChildren[0].attrs ? textChildren[0].attrs : {};
+            addTextNode(templateOr(titleTemplate, {
+                fontFamily: defaultFontFamily,
+                fontSize: 18,
+                fontStyle: '600',
+                fill: attrs.fill || '#1e293b',
+                x: 0,
+                y: 0
+            }), {
+                text: displayTitle,
+                fontFamily: titleTemplate.fontFamily || defaultFontFamily,
+                fontSize: titleTemplate.fontSize || 18,
+                fontStyle: titleTemplate.fontStyle || '600',
+                fill: titleTemplate.fill || attrs.fill || '#1e293b',
+                x: typeof titleTemplate.x === 'number' ? titleTemplate.x : 0,
+                y: typeof titleTemplate.y === 'number' ? titleTemplate.y : 0,
+                width: titleTemplate.width,
+                align: titleTemplate.align,
+                lineHeight: titleTemplate.lineHeight,
+                wrap: titleTemplate.wrap
+            });
+
+            addTextNode({
+                fontFamily: defaultFontFamily,
+                fontSize: attrs.fontSize || 14,
+                fontStyle: attrs.fontStyle || 'normal',
+                fill: attrs.fill || '#475569',
+                x: 0,
+                y: 34,
+                width: typeof attrs.width === 'number' ? attrs.width : 420,
+                align: 'left',
+                wrap: 'word',
+                lineHeight: 1.4
+            }, {
+                text: emptyMessage,
+                fontFamily: defaultFontFamily,
+                fill: '#64748b'
+            });
+
+            layer.add(group);
+            applyZIndex(group, attrs);
+            return group;
+        }
 
         if (textChildren.length) {
             const titleTemplate = textChildren[0] && textChildren[0].attrs ? textChildren[0].attrs : {};

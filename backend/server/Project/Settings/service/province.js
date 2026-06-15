@@ -41,12 +41,12 @@ exports.onCreate = async function (request, response, next) {
         // data.create = request.body.create;
 
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
 
     } catch (err) {
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 };
@@ -57,15 +57,15 @@ exports.onUpdate = async function (request, response, next) {
         query._id = new mongo.ObjectId(request.body._id);
 
 
-        const doc = await Province.onUpdate(query,request.body);
+        const doc = await Province.onUpdate(query, request.body);
 
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
 
     } catch (err) {
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 };
@@ -73,16 +73,16 @@ exports.onDelete = async function (request, response, next) {
     try {
 
         var query = {};
-        query._id = new mongo.ObjectId(request.body.id)
+        query._id = new mongo.ObjectId(request.body._id || request.body.id)
         const doc = await Province.onDelete(query);
 
-        var resData = await resMsg.onMessage_Response(0,20000)
+        var resData = await resMsg.onMessage_Response(0, 20000)
         resData.data = doc
         response.status(200).json(resData);
 
     } catch (err) {
 
-        var resData = await resMsg.onMessage_Response(0,40400)
+        var resData = await resMsg.onMessage_Response(0, 40400)
         response.status(404).json(resData);
     }
 

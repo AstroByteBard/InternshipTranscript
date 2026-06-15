@@ -6,10 +6,11 @@ const status = require("./service/status");
 const group = require("./service/group")
 const verification = require("./service/verification");
 const province = require("./service/province")
+const semester = require("./service/semester")
+const general = require("./service/general")
 const mockAuth = require("./service/mockAuth");
 const realAuth = require("./service/realAuth");
 // const auth_message = require("./service/auth_message");
-// const Role = require("../Accounts/service/role");
 // const Authen_Type = require("../Accounts/service/authen_type");
 
 router.get("/province", province.onQuerys);
@@ -32,6 +33,14 @@ router.post("/group", group.onCreate)
 router.put("/group", group.onUpdate)
 router.delete("/group", group.onDelete)
 
+router.get("/semester", semester.onQuerys);
+router.post("/semester", semester.onCreate);
+router.put("/semester", semester.onUpdate);
+router.delete("/semester", semester.onDelete);
+
+router.get("/general", general.onGetSettings);
+router.post("/general", general.onUpdateSettings);
+router.put("/general", general.onUpdateSettings);
 
 // router.get("/levels", level.onQuerys);
 // router.post("/levels/explorers", level.onCreate);
@@ -53,11 +62,6 @@ router.delete("/verification", verification.onDelete);
 // router.post("/auth/message", auth_message.onCreate);
 // router.put("/auth/message", auth_message.onUpdate);
 // router.delete("/auth/message", auth_message.onDelete);
-
-// router.get("/role", Role.onQuerys);
-// router.post("/role", Role.onCreate);
-// router.put("/role", Role.onUpdate);
-// router.delete("/role", Role.onDelete);
 
 // router.get("/authen/type", Authen_Type.onQuerys);
 // router.post("/authen/type", Authen_Type.onCreate);

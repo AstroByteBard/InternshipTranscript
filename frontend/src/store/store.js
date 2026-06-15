@@ -68,9 +68,6 @@ export default new Vuex.Store({
     //   auth : Authentication,
     // account : Accounts,
     //
-    // roles : settingRoles,
-    //
-    //
     // // application
     //
     // application: Application,

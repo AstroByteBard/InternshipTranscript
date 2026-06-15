@@ -49,6 +49,19 @@ export default {
         routeTitle() {
             const name = (this.$route && this.$route.name) ? this.$route.name : null;
             if (name) {
+                const isTh = this.$i18n && this.$i18n.locale === 'th';
+                const directRouteTitleMap = {
+                    ProjectSettingsGeneral: isTh ? 'การตั้งค่าทั่วไป' : 'General Settings',
+                    ProjectSettingsSchool: isTh ? 'ตั้งค่าโรงเรียน' : 'School Settings',
+                    ProjectSettingsMajor: isTh ? 'ตั้งค่าสาขาวิชา' : 'Major Settings',
+                    ProjectSettingsCourse: isTh ? 'ตั้งค่ารายวิชา' : 'Course Settings',
+                    ProjectSettingsProvince: isTh ? 'ตั้งค่าจังหวัด' : 'Province Settings',
+                    ProjectSettingsSemester: isTh ? 'ตั้งค่าภาคการศึกษา' : 'Semester Settings',
+                };
+                if (directRouteTitleMap[name]) {
+                    return directRouteTitleMap[name];
+                }
+
                 const routeTitleKeyMap = {
                     CorrespondenceStudent: 'components.correspondence_correspondenceheader_vue_student',
                     CorrespondenceAdviser: 'components.correspondence_correspondenceheader_vue_adviser',

@@ -240,6 +240,8 @@ export default {
       selectedDocumentId: '',
       specificCompetencies: [],
       generalCompetencies: [],
+      softAverages: [],
+      hardAverages: [],
       Outstanding: [],
       Opportunities: [],
       specificChartLabels: [],
@@ -564,6 +566,9 @@ export default {
       this.specificChartLabels = specificLabels;
       this.generalChartLabels = generalLabels;
       // Use consistent purple/pink styling matching exported PDF
+      const hardAvg = this.hardAverages.length > 0 ? this.hardAverages : new Array(specificData.length).fill(65);
+      const softAvg = this.softAverages.length > 0 ? this.softAverages : new Array(generalData.length).fill(70);
+
       this.specificChartDatasets = [
         {
           label: 'You',
@@ -580,7 +585,7 @@ export default {
         },
         {
           label: 'Average',
-          data: new Array(specificData.length).fill(65),
+          data: hardAvg,
           borderColor: '#fb7185',
           backgroundColor: 'rgba(251,113,133,0.3)',
           pointBackgroundColor: '#fb7185',
@@ -609,7 +614,7 @@ export default {
         },
         {
           label: 'Average',
-          data: new Array(generalData.length).fill(70),
+          data: softAvg,
           borderColor: '#fb7185',
           backgroundColor: 'rgba(251,113,133,0.3)',
           pointBackgroundColor: '#fb7185',
@@ -672,7 +677,14 @@ export default {
         console.log('Filtered Evaluation Data:', evalData);
         console.groupEnd();
 
-        if (!evalData) return;
+        if (!evalData) {
+          this.generalCompetencies = [];
+          this.specificCompetencies = [];
+          this.Outstanding = [];
+          this.Opportunities = [];
+          this.updateChartsFromCompetencies();
+          return;
+        }
 
         const softskills = Array.isArray(evalData) ? evalData[0]?.softskills : evalData.softskills;
         const hardskills = Array.isArray(evalData) ? evalData[0]?.hardskills : evalData.hardskills;
@@ -701,9 +713,21 @@ export default {
           this.Outstanding = [];
           this.Opportunities = [];
         }
+        await this.fetchAverages(student._id);
         this.updateChartsFromCompetencies();
       } catch (err) {
         console.error('Failed to load evaluation data', err);
+      }
+    },
+    async fetchAverages(studentId) {
+      try {
+        const res = await this.$store.dispatch('competencies/evaluation/averages', { studentId });
+        this.softAverages = (res?.soft || []).map(s => this.normalizeScoreToPercent(s));
+        this.hardAverages = (res?.hard || []).map(s => this.normalizeScoreToPercent(s));
+      } catch (err) {
+        console.warn('Failed to fetch averages:', err);
+        this.softAverages = [];
+        this.hardAverages = [];
       }
     },
     async loadStudentData() {
@@ -851,7 +875,15 @@ export default {
 
         // Choose candidate configs: prefer same program and year, then active ones, fallback to any
         const programId = student?.info?.program?._id || student?.info?.program || null;
-        const studentYear = student?.info?.year || null;
+        const getYrVal = yr => {
+          if (Array.isArray(yr)) {
+            const found = yr.find(y => y.key === 'en') || yr[0];
+            return found ? found.value : null;
+          }
+          if (yr && typeof yr === 'object') return yr.value || null;
+          return yr || null;
+        };
+        const studentYear = getYrVal(student?.info?.year);
 
         let candidates = hards;
         if (programId) candidates = candidates.filter(h => h.program && ((h.program._id && String(h.program._id) === String(programId)) || String(h.program) === String(programId)));
@@ -932,9 +964,11 @@ export default {
             return String(sId) === String(student?._id);
           })
           : evalPayload;
-        rawSuggestions = Array.isArray(evalDataRecord)
-          ? (evalDataRecord[0]?.sugestion || evalDataRecord[0]?.suggestions || [])
-          : (evalDataRecord?.sugestion || evalDataRecord?.suggestions || []);
+        rawSuggestions = evalDataRecord
+          ? (Array.isArray(evalDataRecord)
+            ? (evalDataRecord?.sugestion || evalDataRecord?.suggestions || [])
+            : (evalDataRecord.sugestion || evalDataRecord.suggestions || []))
+          : [];
       } catch (e) { rawSuggestions = []; }
 
       // Fetch translated Student Name, School, and Program if available
@@ -1023,34 +1057,41 @@ export default {
 
       // Always rebuild suggestion data from the raw payload for export language.
       const suggestionGroups = this.parseSuggestionLists(rawSuggestions, exportLanguage);
-      const outForPdf = suggestionGroups.outstandingGroups;
-      const oppForPdf = suggestionGroups.opportunityGroups;
+      const missingResultMessage = String(exportLanguage || 'en').toLowerCase().startsWith('th')
+        ? 'ยังไม่ได้รับผลลัพธ์การฝึกงาน'
+        : 'Internship results are not available yet.';
+      const ensureSuggestionFallback = (groups) => (Array.isArray(groups) && groups.length > 0 ? groups : [missingResultMessage]);
+      const outForPdf = ensureSuggestionFallback(suggestionGroups.outstandingGroups);
+      const oppForPdf = ensureSuggestionFallback(suggestionGroups.opportunityGroups);
 
       // Re-map evaluation data into the selected language for the PDF without updating the UI state
       let generalMapped = this.generalCompetencies;
       try {
         const evalPayload = this.storedEvaluations || [];
         const evalData = Array.isArray(evalPayload)
-          ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
+          ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id))
           : evalPayload;
         if (evalData && evalData.softskills) {
           generalMapped = this.mapEvaluationList(evalData.softskills, exportLanguage);
+        } else {
+          generalMapped = [];
         }
       } catch (e) {
         console.warn('Failed to remap general competencies for PDF', e);
+        generalMapped = [];
       }
 
       const specificMappedLocalized = (() => {
         try {
-          const evalPayload = this.storedEvaluations || [];
-          const evalData = Array.isArray(evalPayload)
-            ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id)) || evalPayload[0]
-            : evalPayload;
-          if (evalData && evalData.hardskills) {
-            return this.mapEvaluationList(evalData.hardskills, exportLanguage);
-          }
-        } catch (e) { }
-        return specificMapped;
+        const evalPayload = this.storedEvaluations || [];
+        const evalData = Array.isArray(evalPayload)
+          ? evalPayload.find(e => String(e?.studentId?._id || e?.studentId) === String(studentForLang?._id))
+          : evalPayload;
+        if (evalData && evalData.hardskills) {
+          return this.mapEvaluationList(evalData.hardskills, exportLanguage);
+        }
+      } catch (e) { }
+        return [];
       })();
 
       return {
@@ -1061,8 +1102,14 @@ export default {
         AcademyYear: String(new Date().getFullYear()),
         CompanyLogo: '',
         StudentPhoto: this.studentData.picture,
-        GeneralCompetencies: toPdfItems(generalMapped),
-        SpecificCompetencies: specificMappedLocalized,
+        GeneralCompetencies: toPdfItems(generalMapped).map((item, idx) => ({
+          ...item,
+          average: Number.isFinite(this.softAverages?.[idx]) ? this.softAverages[idx] : undefined
+        })),
+        SpecificCompetencies: specificMappedLocalized.map((item, idx) => ({
+          ...item,
+          average: Number.isFinite(this.hardAverages?.[idx]) ? this.hardAverages[idx] : undefined
+        })),
         Outstanding: outForPdf,
         Opportunities: oppForPdf,
         // include raw suggestion objects so generator can pull answer.value.outstanding/opportunity if needed

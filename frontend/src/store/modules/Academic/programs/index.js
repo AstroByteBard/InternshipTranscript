@@ -14,38 +14,43 @@ const ServerModule = {
 
     actions: {
         programs({ commit }, data) {
-            Service.program('get', data, {})
+            return Service.program('get', data, {})
                 .then((response) => {
                     commit('programs', response.data.data)
+                    return response.data.data
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         createPrograms({ dispatch }, data) {
-            Service.program('post', data, {})
+            return Service.program('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
                     return dispatch('programs')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         updatePrograms({ dispatch }, data) {
-            Service.program('put', data, {})
+            return Service.program('put', data, {})
                 .then((response) => {
                     console.log('สถานนะการแก้ไข : ', response.data)
                     return dispatch('programs')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         deletePrograms({ dispatch }, data) {
-            Service.program('delete', data, {})
+            return Service.program('delete', data, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
                     return dispatch('programs')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
     },

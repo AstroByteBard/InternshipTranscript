@@ -418,10 +418,23 @@ export default {
       return this.translate(this.studentDoc.info.program.title || this.studentDoc.info.program.name, lang);
     },
     yearInfo() {
-      return this.studentDoc?.info?.year || 'N/A';
+      const yr = this.studentDoc?.info?.year;
+      if (Array.isArray(yr)) {
+        const found = yr.find(y => y.key === 'en') || yr[0];
+        return found ? found.value : 'N/A';
+      }
+      if (yr && typeof yr === 'object') return yr.value || 'N/A';
+      return yr || 'N/A';
     },
     semesterInfo() {
-      return this.studentDoc?.info?.semester || 'N/A';
+      const sem = this.studentDoc?.info?.semester;
+      if (!sem) return 'N/A';
+      if (typeof sem === 'object' && sem.title && Array.isArray(sem.title)) {
+        const lang = this.$i18n.locale || 'en';
+        const found = sem.title.find(t => t.key === lang) || sem.title.find(t => t.key === 'en') || sem.title[0];
+        return found ? found.value : 'N/A';
+      }
+      return 'N/A';
     }
   },
   methods: {

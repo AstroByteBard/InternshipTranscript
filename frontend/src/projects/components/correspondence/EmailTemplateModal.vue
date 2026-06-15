@@ -102,7 +102,7 @@ export default {
                     this.form = {
                         title: newData.title || '',
                         subject: newData.subject || '',
-                        template: newData.template || newData.templete || ''
+                        template: newData.template || newData.template || ''
                     };
                 }
             },

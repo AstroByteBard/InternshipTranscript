@@ -154,11 +154,6 @@ export default {
                 // to: '/project//settings/general'
                 to: `/project/${this.$route.params.application}/settings/general`
               },
-              {
-                name: this.$t('permission'),
-                // to: '/project/settings/permission'
-                to: `/project/${this.$route.params.application}/settings/permission`
-              },
 
             ]
           }

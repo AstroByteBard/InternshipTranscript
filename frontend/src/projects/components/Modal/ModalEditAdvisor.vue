@@ -1,5 +1,5 @@
 <template>
-    <CModal :title="$t('components.modal_modaleditadvisor_vue_isediting_edit_advisor_add_new_ad')" :show.sync="show"
+    <CModal :title="isEditing ? $t('components.modal_modaleditadvisor_vue_isediting_edit_advisor_add_new_ad') : $t('components.administrator_actionbuttons_vue_add_advisor')" :show.sync="show"
         color="danger" size="lg">
         <CRow>
             <CCol sm="6">
@@ -11,6 +11,11 @@
                 <CInput :label="$t('components.modal_modaleditadvisor_vue_enter_student_id')"
                     :placeholder="$t('components.modal_modaleditadvisor_vue_enter_student_id')"
                     v-model="formAdvisor.studentID" />
+            </CCol>
+            <CCol sm="6">
+                <CInput :label="$t('components.administrator_studentmodal_vue_organization')"
+                    :placeholder="$t('components.administrator_studentmodal_vue_organization')"
+                    v-model="formAdvisor.company" />
             </CCol>
             <CCol sm="12">
                 <CInput :label="$t('components.modal_modaleditadvisor_vue_organization_name')"
@@ -26,10 +31,6 @@
                 <CSelect :label="$t('components.filter_adminstrator_filteradvisor_vue_province')"
                     :options="provinceOptions" :value="formAdvisor.province"
                     @update:value="formAdvisor.province = $event" />
-            </CCol>
-            <CCol sm="6">
-                <CInput :label="$t('components.modal_modaleditadvisor_vue_year')"
-                    :placeholder="$t('components.modal_modaleditadvisor_vue_year')" v-model="formAdvisor.year" />
             </CCol>
         </CRow>
         <template #footer>
@@ -50,13 +51,14 @@ export default {
             show: false,
             isEditing: false,
             editID: null,
+            studentRefID: null,
             formAdvisor: {
                 email: '',
                 studentID: '',
+                company: '',
                 organizationName: '',
                 organizationAddress: '',
-                province: '',
-                year: ''
+                province: ''
             },
         }
     },
@@ -83,21 +85,37 @@ export default {
         openAdd() {
             this.isEditing = false;
             this.editID = null;
+            this.studentRefID = null;
             this.formAdvisor = {
-                email: '', studentID: '', organizationName: '', organizationAddress: '', province: '', year: ''
+                email: '', studentID: '', company: '', organizationName: '', organizationAddress: '', province: ''
             };
             this.show = true;
         },
         openEdit(item) {
+            const resolveStudent = () => {
+                if (item.student && typeof item.student === 'object') {
+                    return item.student;
+                }
+
+                if (item.student) {
+                    return this.storedStudents.find(s => s._id === item.student || s.studentID === item.student) || null;
+                }
+
+                return null;
+            };
+
+            const student = resolveStudent();
+
             this.isEditing = true;
             this.editID = item._id;
+            this.studentRefID = student ? student._id : null;
             this.formAdvisor = {
                 email: item.email || '',
-                studentID: item.student ? item.student.studentID : '',
+                studentID: student ? (student.studentID || '') : '',
+                company: student ? (student.company || '') : '',
                 organizationName: item.organizationName || '',
                 organizationAddress: item.organizationAddress || '',
-                province: item.province ? (item.province._id || item.province) : '',
-                year: item.year || ''
+                province: item.province ? (item.province._id || item.province) : ''
             };
             this.show = true;
         },
@@ -116,20 +134,35 @@ export default {
                     alert(`Student ID ${this.formAdvisor.studentID} not found. Cannot link to student.`);
                     return; // Prevent saving if they typed a wrong ID
                 }
+            } else if (this.studentRefID) {
+                studentRefId = this.studentRefID;
             }
+
+            const matchedStudent = studentRefId
+                ? this.storedStudents.find(s => s._id === studentRefId) || null
+                : null;
 
             const advisorData = {
                 organizationName: this.formAdvisor.organizationName || null,
                 organizationAddress: this.formAdvisor.organizationAddress || null,
                 email: this.formAdvisor.email,
                 province: this.formAdvisor.province || null,
-                student: studentRefId,
-                year: this.formAdvisor.year ? String(this.formAdvisor.year) : new Date().getFullYear().toString()
+                student: studentRefId
             };
 
             if (this.isEditing) {
                 advisorData._id = this.editID;
-                this.$store.dispatch("member/advisors/updateAdvisors", advisorData).then(() => {
+
+                const updateStudentCompany = matchedStudent && String(matchedStudent.company || '') !== String(this.formAdvisor.company || '')
+                    ? this.$store.dispatch("member/students/updateStudents", {
+                        _id: matchedStudent._id,
+                        company: this.formAdvisor.company || null
+                    })
+                    : Promise.resolve();
+
+                updateStudentCompany.then(() => {
+                    return this.$store.dispatch("member/advisors/updateAdvisors", advisorData);
+                }).then(() => {
                     this.$emit('refresh');
                     this.show = false;
                     alert(`Advisor updated successfully!`);
@@ -139,6 +172,15 @@ export default {
                 });
             } else {
                 this.$store.dispatch("member/advisors/createAdvisors", [advisorData]).then(() => {
+                    const updateStudentCompany = matchedStudent && String(matchedStudent.company || '') !== String(this.formAdvisor.company || '')
+                        ? this.$store.dispatch("member/students/updateStudents", {
+                            _id: matchedStudent._id,
+                            company: this.formAdvisor.company || null
+                        })
+                        : Promise.resolve();
+
+                    return updateStudentCompany;
+                }).then(() => {
                     this.$emit('refresh');
                     this.show = false;
                     alert(`Advisor created successfully!`);

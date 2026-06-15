@@ -38,6 +38,10 @@ export const createPdfGraphRenderers = ({ layer, dataMap = {} } = {}) => {
         return [];
     };
 
+    const getEmptyResultMessage = () => String(lang || 'en').toLowerCase().startsWith('th')
+        ? 'ยังไม่ได้รับผลลัพธ์การฝึกงาน'
+        : 'Internship results are not available yet.';
+
     const addRadarGraph = (attrs, graphData, items, title, templateChildren = []) => {
         const x = attrs.x || 0;
         const y = attrs.y || 0;
@@ -551,10 +555,59 @@ export const createPdfGraphRenderers = ({ layer, dataMap = {} } = {}) => {
         const isRadar = graphKind === 'radar' || String(graphType).includes('Radar');
         const cleanKey = String(graphType).replace(/Graph_/g, '');
         const isGeneral = String(attrs.graphScope || '').toLowerCase() === 'general' || cleanKey.includes('General');
+        const templateChildren = Array.isArray(attrs.children) ? attrs.children : [];
+        const width = attrs.width || 360;
+        const height = attrs.height || 260;
+        const layoutScale = Math.max(0.55, Math.min(1.25, Math.min(width / 600, height / 450)));
+        const group = new Konva.Group({
+            x: attrs.x || 0,
+            y: attrs.y || 0,
+            scaleX: attrs.scaleX || 1,
+            scaleY: attrs.scaleY || 1,
+            rotation: attrs.rotation || 0,
+            name: 'graph-placeholder',
+            graphType: attrs.graphType
+        });
+        let title = isGeneral ? 'General Competencies' : 'Specific Competencies';
 
         const fallbackItems = isGeneral
             ? localizedCollection(dataMap.GeneralCompetencies || dataMap.generalCompetencies || [])
             : localizedCollection(dataMap.SpecificCompetencies || dataMap.specificCompetencies || []);
+
+        if (!fallbackItems.length) {
+            const titleAttrs = findGraphTitleAttrs(templateChildren, title, String(title || '').includes('à¸—à¸±à¸à¸©à¸°à¸—à¸±à¹ˆà¸§à¹„à¸›')
+                ? 'General Competencies'
+                : (String(title || '').includes('à¸—à¸±à¸à¸©à¸°à¹€à¸‰à¸žà¸²à¸°à¸—à¸²à¸‡') ? 'Specific Competencies' : title));
+            group.add(new Konva.Text({
+                x: typeof titleAttrs.x === 'number' ? titleAttrs.x : 10,
+                y: typeof titleAttrs.y === 'number' ? titleAttrs.y : 8,
+                text: title || 'Radar',
+                fontSize: titleAttrs.fontSize || attrs.titleFontSize || attrs.fontSize || Math.round(16 * layoutScale),
+                fontFamily: titleAttrs.fontFamily || fontFamilyForLang,
+                fontStyle: titleAttrs.fontStyle || '600',
+                fill: titleAttrs.fill || '#1e293b',
+                width: typeof titleAttrs.width === 'number' ? titleAttrs.width : (width - 20),
+                align: titleAttrs.align || 'left'
+            }));
+
+            group.add(new Konva.Text({
+                x: 16,
+                y: Math.round(height * 0.5),
+                text: getEmptyResultMessage(),
+                fontSize: Math.max(12, Math.round(13 * layoutScale)),
+                fontFamily: fontFamilyForLang,
+                fontStyle: 'normal',
+                fill: '#64748b',
+                width: Math.max(120, width - 32),
+                align: 'left',
+                wrap: 'word',
+                lineHeight: 1.35
+            }));
+
+            layer.add(group);
+            applyZIndex(group, attrs);
+            return group;
+        }
 
         const pData = {
             labels: fallbackItems.map((i) => localizedText(i && (i.name || i.label || i.title || i.text || i), lang)),
@@ -567,14 +620,11 @@ export const createPdfGraphRenderers = ({ layer, dataMap = {} } = {}) => {
             }]
         };
 
-        let title = isGeneral ? 'General Competencies' : 'Specific Competencies';
         if (lang === 'th') {
             title = isGeneral ? 'ทักษะทั่วไป' : 'ทักษะเฉพาะทาง';
             pData.datasets[0].label = 'คุณ';
             pData.datasets[1].label = 'ค่าเฉลี่ย';
         }
-
-        const templateChildren = Array.isArray(attrs.children) ? attrs.children : [];
 
         if (isRadar) {
             addRadarGraph(attrs, pData, fallbackItems, title, templateChildren);

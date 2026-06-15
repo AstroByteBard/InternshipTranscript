@@ -26,6 +26,14 @@ const CompetenciesHardskill = () => import('@/projects/views/administration/Comp
 const CompetenciesSuggestions = () => import('@/projects/views/administration/Competencies/Suggestions')
 const FillForm = () => import('@/projects/views/administration/FillForm')
 
+// project settings
+const ProjectSettingsGeneral = () => import('@/projects/views/administration/settings/General')
+const ProjectSettingsSchool = () => import('@/projects/views/administration/settings/School')
+const ProjectSettingsMajor = () => import('@/projects/views/administration/settings/Major')
+const ProjectSettingsProvince = () => import('@/projects/views/administration/settings/Province')
+const ProjectSettingsCourse = () => import('@/projects/views/administration/settings/Course')
+const ProjectSettingsSemester = () => import('@/projects/views/administration/settings/Semester')
+
 
 //correspondence
 const CorrespondenceStudent = () => import('@/projects/views/administration/Correspondence/Student')
@@ -156,6 +164,36 @@ export default new Router({
                     path: 'administrator/adviser',
                     name: 'AdministratorAdviser',
                     component: AdministratorAdviser
+                },
+                {
+                    path: 'project/:application/settings/general',
+                    name: 'ProjectSettingsGeneral',
+                    component: ProjectSettingsGeneral
+                },
+                {
+                    path: 'project/:application/settings/school',
+                    name: 'ProjectSettingsSchool',
+                    component: ProjectSettingsSchool
+                },
+                {
+                    path: 'project/:application/settings/major',
+                    name: 'ProjectSettingsMajor',
+                    component: ProjectSettingsMajor
+                },
+                {
+                    path: 'project/:application/settings/province',
+                    name: 'ProjectSettingsProvince',
+                    component: ProjectSettingsProvince
+                },
+                {
+                    path: 'project/:application/settings/course',
+                    name: 'ProjectSettingsCourse',
+                    component: ProjectSettingsCourse
+                },
+                {
+                    path: 'project/:application/settings/semester',
+                    name: 'ProjectSettingsSemester',
+                    component: ProjectSettingsSemester
                 },
                 // sentiment-ui route removed
 

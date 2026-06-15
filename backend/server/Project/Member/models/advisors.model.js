@@ -9,7 +9,6 @@ var objsSchema = new Schema({
     province: { type: mongoose.Schema.Types.ObjectId, ref: 'Setting_Province', default: null },
     email: { type: String, default: null, required: true },
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'Students', default: null },
-    year: { type: String, default: new Date().getFullYear().toString() },
 });
 
 module.exports = mongoose.model('Advisors', objsSchema, 'Advisors');

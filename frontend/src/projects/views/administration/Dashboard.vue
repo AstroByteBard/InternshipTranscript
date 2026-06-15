@@ -60,13 +60,13 @@ export default {
         const info = student.info || {};
 
         // School Filter
-        if (this.selectedSchool && (info.school?._id || info.school) !== this.selectedSchool) return false;
+        if (this.selectedSchool && String(info.school?._id || info.school) !== String(this.selectedSchool)) return false;
 
         // Program Filter
-        if (this.selectedProgram && (info.program?._id || info.program) !== this.selectedProgram) return false;
+        if (this.selectedProgram && String(info.program?._id || info.program) !== String(this.selectedProgram)) return false;
 
         // Year Filter
-        if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
+        if (this.selectedYear && String(this.getYearVal(info.year)) !== String(this.selectedYear)) return false;
 
         // Evaluated Filter (Logic: student.evaluation exists)
         if (this.selectedEvaluated === 'evaluated') {
@@ -80,19 +80,19 @@ export default {
     },
 
     totalStudentsCount() {
-      return this.filteredStudents.length;
+      return (this.storedStudents || []).length;
     },
 
     evaluatedCount() {
-      return this.filteredStudents.filter(s => s.evaluation).length;
+      return (this.storedStudents || []).filter(s => s.evaluation).length;
     },
 
     notEvaluatedCount() {
-      return this.filteredStudents.filter(s => !s.evaluation).length;
+      return (this.storedStudents || []).filter(s => !s.evaluation).length;
     },
 
     selectedSchoolName() {
-      const found = this.schoolOptions.find(s => s.value === this.selectedSchool);
+      const found = this.schoolOptions.find(s => String(s.value) === String(this.selectedSchool));
       return found ? found.label : this.$t('all_schools_label');
     },
 
@@ -123,15 +123,15 @@ export default {
         const count = this.storedStudents.filter(student => {
           const info = student.info || {};
           // Only apply Program, Year, and Evaluated filters for the bar chart distribution
-          if (this.selectedProgram && (info.program?._id || info.program) !== this.selectedProgram) return false;
-          if (this.selectedYear && String(info.year) !== String(this.selectedYear)) return false;
+          if (this.selectedProgram && String(info.program?._id || info.program) !== String(this.selectedProgram)) return false;
+          if (this.selectedYear && String(this.getYearVal(info.year)) !== String(this.selectedYear)) return false;
           if (this.selectedEvaluated === 'evaluated') {
             if (!student.evaluation) return false;
           } else if (this.selectedEvaluated === 'not_evaluated') {
             if (student.evaluation) return false;
           }
 
-          return (info.school?._id || info.school) === school._id;
+          return String(info.school?._id || info.school) === String(school._id);
         }).length;
 
         data.push(count);
@@ -180,7 +180,7 @@ export default {
     },
     yearOptions() {
       if (!this.storedStudents || !this.storedStudents.length) return [{ value: '', label: this.$t('all_years_label') }];
-      const years = new Set(this.storedStudents.map(s => s.info?.year).filter(y => y));
+      const years = new Set(this.storedStudents.map(s => this.getYearVal(s.info?.year)).filter(y => y));
       return [
         { value: '', label: this.$t('all_years_label') },
         ...Array.from(years).sort().reverse().map(y => ({ value: y, label: String(y) }))
@@ -208,7 +208,7 @@ export default {
     },
     downloadReport() {
       const lang = this.$store.getters['setting/lang'] || 'en';
-      const students = this.filteredStudents;
+      const students = this.storedStudents || [];
       if (!students.length) return;
 
       // Build Label Dictionaries from active competency definitions to help legacy data
@@ -223,7 +223,6 @@ export default {
 
       const hardDict = [];
       if (this.storedSpecific) {
-        // We use all active specific questions as candidates
         this.storedSpecific.filter(i => i.active).forEach(cat => {
           (cat.config || []).forEach(conf => {
             hardDict.push(this.translate(conf.question, lang));
@@ -231,65 +230,97 @@ export default {
         });
       }
 
-      // Identify the max number of items for all categories and their unique titles from DB
-      const softSkillMap = {};
-      const hardSkillMap = {};
-      const suggestionMap = {};
+      const getT = (t) => (Array.isArray(t) ? (t.find(x => x.key === lang) ?? t[0])?.value ?? '' : t ?? '');
 
-      students.forEach(s => {
-        if (s.evaluation) {
-          (s.evaluation.softskills || []).forEach((item, idx) => {
-            if (!softSkillMap[idx]) softSkillMap[idx] = new Set();
-            const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
-            if (ititle) softSkillMap[idx].add(ititle);
-          });
-          (s.evaluation.hardskills || []).forEach((item, idx) => {
-            if (!hardSkillMap[idx]) hardSkillMap[idx] = new Set();
-            const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
-            if (ititle) hardSkillMap[idx].add(ititle);
-          });
-          (s.evaluation.sugestion || []).forEach((item, idx) => {
-            if (!suggestionMap[idx]) suggestionMap[idx] = new Set();
-            const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
-            if (ititle) suggestionMap[idx].add(ititle);
-          });
-        }
-      });
-
-      // Build definitive header lists based on indices and Dictionary lookup
       const getDisplayHeader = (map, dict, prefix) => {
         return Object.keys(map).sort((a, b) => parseInt(a) - parseInt(b)).map(idxStr => {
           const idx = parseInt(idxStr);
           const titles = Array.from(map[idx]);
           let titleStr = titles.length === 1 ? titles[0] : titles.join(' / ');
 
-          // If title seems too generic or matches category pattern, try to get detailed title from dictionary
           if (dict[idx] && (titleStr.length < 5 || titleStr.includes('Competencies'))) {
             titleStr = dict[idx];
           }
 
-          return {
-            idx: idx,
-            label: `${prefix} ${idx + 1}: ${titleStr}`
-          };
+          return { idx: idx, label: `${prefix} ${idx + 1}: ${titleStr}` };
         });
       };
 
-      const softHeaders = getDisplayHeader(softSkillMap, softDict, 'Soft Skill');
-      const hardHeaders = getDisplayHeader(hardSkillMap, hardDict, 'Hard Skill');
-      const suggHeaders = getDisplayHeader(suggestionMap, [], 'Suggestion');
+      const buildSuggestionHeaders = (map) => {
+        const result = [];
+        Object.keys(map).sort((a, b) => parseInt(a) - parseInt(b)).forEach(idxStr => {
+          const idx = parseInt(idxStr);
+          const titles = Array.from(map[idx]);
+          let titleStr = titles.length === 1 ? titles[0] : titles.join(' / ');
+          const baseLabel = titleStr || `Item ${idx + 1}`;
+          result.push({ idx, bucket: 'outstanding', subIdx: 0, label: `Outstanding 1: ${baseLabel}` });
+          result.push({ idx, bucket: 'outstanding', subIdx: 1, label: `Outstanding 2: ${baseLabel}` });
+          result.push({ idx, bucket: 'outstanding', subIdx: 2, label: `Outstanding 3: ${baseLabel}` });
+          result.push({ idx, bucket: 'opportunity', subIdx: 0, label: `Opportunity 1: ${baseLabel}` });
+          result.push({ idx, bucket: 'opportunity', subIdx: 1, label: `Opportunity 2: ${baseLabel}` });
+          result.push({ idx, bucket: 'opportunity', subIdx: 2, label: `Opportunity 3: ${baseLabel}` });
+        });
+        return result;
+      };
 
-      const getT = (t) => (Array.isArray(t) ? (t.find(x => x.key === lang) ?? t[0])?.value ?? '' : t ?? '');
+      const getSuggestionCell = (item, bucket, subIdx) => {
+        if (!item) return '';
+        const v = item.answer?.value;
+        if (!v) return '';
+        if (typeof v === 'string') return bucket === 'outstanding' ? v : '';
+        if (typeof v === 'object') {
+          const bucketData = v[bucket];
+          if (!bucketData) return '';
+          const entry = bucketData.items?.[subIdx];
+          if (!entry) return '';
+          const c = entry.content;
+          if (typeof c === 'string') return c;
+          return c?.en || c?.th || '';
+        }
+        return '';
+      };
 
-      const data = students.map(s => {
+      const buildHeaders = (groupStudents) => {
+        const softSkillMap = {};
+        const hardSkillMap = {};
+        const suggestionMap = {};
+
+        groupStudents.forEach(s => {
+          if (s.evaluation) {
+            (s.evaluation.softskills || []).forEach((item, idx) => {
+              if (!softSkillMap[idx]) softSkillMap[idx] = new Set();
+              const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
+              if (ititle) softSkillMap[idx].add(ititle);
+            });
+            (s.evaluation.hardskills || []).forEach((item, idx) => {
+              if (!hardSkillMap[idx]) hardSkillMap[idx] = new Set();
+              const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
+              if (ititle) hardSkillMap[idx].add(ititle);
+            });
+            (s.evaluation.sugestion || []).forEach((item, idx) => {
+              if (!suggestionMap[idx]) suggestionMap[idx] = new Set();
+              const ititle = item.answer?.title?.[lang] || item.answer?.title?.['en'] || item.answer?.title?.['th'] || '';
+              if (ititle) suggestionMap[idx].add(ititle);
+            });
+          }
+        });
+
+        return {
+          softHeaders: getDisplayHeader(softSkillMap, softDict, 'Soft Skill'),
+          hardHeaders: getDisplayHeader(hardSkillMap, hardDict, 'Hard Skill'),
+          suggHeaders: buildSuggestionHeaders(suggestionMap)
+        };
+      };
+
+      const buildRow = (s, softHeaders, hardHeaders, suggHeaders) => {
         const info = s.info || {};
         const schoolQuery = info.school?._id || info.school;
-        const school = (info.school && info.school.title) ? info.school : (this.storedSchools.find(sc => sc._id === schoolQuery) || {});
+        const school = (info.school && info.school.title) ? info.school : (this.storedSchools.find(sc => String(sc._id) === String(schoolQuery)) || {});
 
         const programQuery = info.program?._id || info.program;
-        const program = (info.program && info.program.title) ? info.program : (this.storedPrograms.find(p => p._id === programQuery) || {});
+        const program = (info.program && info.program.title) ? info.program : (this.storedPrograms.find(p => String(p._id) === String(programQuery)) || {});
 
-        const advisor = this.storedAdvisors.find(a => a.student === s._id || a.student?._id === s._id);
+        const advisor = this.storedAdvisors.find(a => String(a.student?._id || a.student) === String(s._id));
 
         const row = {
           'Student ID': s.studentID || 'N/A',
@@ -297,13 +328,12 @@ export default {
           'Name (EN)': (s.name?.find?.(x => x.key === 'en') || {}).value || 'N/A',
           'School': getT(school.title) || 'N/A',
           'Program': getT(program.title) || 'N/A',
-          'Academic Year': info.year || 'N/A',
-          'Semester': info.semester || 'N/A',
+          'Academic Year': this.getYearVal(info.year) || 'N/A',
+          'Semester': getT(info.semester?.title) || 'N/A',
           'Adviser Email': advisor ? advisor.email : 'N/A',
           'Evaluation Status': s.evaluation ? 'Complete' : 'Pending'
         };
 
-        // Map scores by fixed indices to keep columns consistent
         softHeaders.forEach(h => {
           const item = s.evaluation?.softskills?.[h.idx];
           row[h.label] = item ? item.answer.score : '';
@@ -316,19 +346,44 @@ export default {
 
         suggHeaders.forEach(h => {
           const item = s.evaluation?.sugestion?.[h.idx];
-          row[h.label] = item ? item.answer.value : '';
+          row[h.label] = getSuggestionCell(item, h.bucket, h.subIdx);
         });
 
         return row;
+      };
+
+      // Group students by program name
+      const groups = {};
+      students.forEach(s => {
+        const info = s.info || {};
+        const programQuery = info.program?._id || info.program;
+        const program = (info.program && info.program.title) ? info.program : (this.storedPrograms.find(p => String(p._id) === String(programQuery)) || {});
+        const programName = getT(program.title) || 'No Program';
+        if (!groups[programName]) groups[programName] = [];
+        groups[programName].push(s);
       });
 
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Evaluation Report");
+      const sortedGroups = Object.keys(groups).sort();
 
-      // Fine-tune column widths: headers can be long
-      const wscols = Object.keys(data[0] || {}).map(key => ({ wch: Math.max(key.length, 15) }));
-      worksheet['!cols'] = wscols;
+      const sanitizeSheetName = (name) => {
+        const cleaned = name.replace(/[*?:\[\]\/\\]/g, ' ').trim();
+        return cleaned.length > 31 ? cleaned.substring(0, 31) : cleaned;
+      };
+
+      const workbook = XLSX.utils.book_new();
+
+      sortedGroups.forEach(programName => {
+        const groupStudents = groups[programName];
+        const { softHeaders, hardHeaders, suggHeaders } = buildHeaders(groupStudents);
+        const sheetData = groupStudents.map(s => buildRow(s, softHeaders, hardHeaders, suggHeaders));
+        const worksheet = XLSX.utils.json_to_sheet(sheetData);
+
+        const sheetName = sanitizeSheetName(programName);
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+        const wscols = Object.keys(sheetData[0] || {}).map(key => ({ wch: Math.max(key.length, key === 'Adviser Email' ? 28 : 15) }));
+        worksheet['!cols'] = wscols;
+      });
 
       XLSX.writeFile(workbook, `Evaluation_Report_${this.moment().format('YYYY-MM-DD')}.xlsx`);
     },
@@ -336,6 +391,14 @@ export default {
       if (!data || !Array.isArray(data)) return data
       const found = data.find(i => i.key === key)
       return found ? found.value : (data[0] ? data[0].value : '')
+    },
+    getYearVal(yr) {
+      if (Array.isArray(yr)) {
+        const found = yr.find(y => y.key === 'en') || yr[0];
+        return found ? found.value : '';
+      }
+      if (yr && typeof yr === 'object') return yr.value || '';
+      return yr || '';
     },
     handleStatusFilter(status) {
       if (status === 'all') {

@@ -14,38 +14,43 @@ const ServerModule = {
 
     actions: {
         advisors({ commit }, data) {
-            Service.advisors('get', data, {})
+            return Service.advisors('get', data, {})
                 .then((response) => {
                     commit('advisors', response.data.data)
+                    return response.data.data
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         createAdvisors({ dispatch }, data) {
-            Service.advisors('post', data, {})
+            return Service.advisors('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
                     return dispatch('advisors')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         updateAdvisors({ dispatch }, data) {
-            Service.advisors('put', data, {})
+            return Service.advisors('put', data, {})
                 .then((response) => {
                     console.log('สถานนะการแก้ไข : ', response.data)
                     return dispatch('advisors')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         deleteAdvisors({ dispatch }, data) {
-            Service.advisors('delete', data, {})
+            return Service.advisors('delete', data, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
                     return dispatch('advisors')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
     },

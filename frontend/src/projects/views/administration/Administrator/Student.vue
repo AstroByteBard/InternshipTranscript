@@ -1,6 +1,6 @@
 <template>
     <div class="administrator-view">
-        <AdministratorHeader @add-student="$refs.modalStudent.openAdd()" @refresh="onInit" />
+        <AdministratorHeader tab="Student" @add-student="$refs.modalStudent.openAdd()" @refresh="onInit" />
 
         <WidgetsAdministrator :studentCount="storedStudents ? storedStudents.length : 0"
             :advisorCount="storedAdvisors ? storedAdvisors.length : 0" :selectedSchool="selectedSchoolName"
@@ -56,6 +56,7 @@ export default {
             this.$store.dispatch("member/advisors/advisors")
             this.$store.dispatch("setting/status/get")
             this.$store.dispatch("setting/province/province")
+            this.$store.dispatch("setting/semester/get")
         }
     },
     computed: {
@@ -63,6 +64,7 @@ export default {
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
         ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
+        ...mapGetters('setting/semester', { storedSemesters: 'item' }),
         selectedSchoolName() {
             if (!this.school || !this.storedSchools) return this.$t('all');
             const lang = this.$i18n.locale || 'en';
@@ -106,21 +108,47 @@ export default {
                     return item ? item.value : '';
                 };
 
+                const semesterId = s.info?.semester?._id || s.info?.semester;
+                const semesterObj = semesterId ? (this.storedSemesters || []).find(sem => sem._id === semesterId) : null;
+                const semesterTitle = semesterObj
+                    ? (getVal(semesterObj.title, lang) || getVal(semesterObj.title, 'en') || getVal(semesterObj.title, 'th') || '')
+                    : (typeof s.info?.semester === 'object' && s.info?.semester?.title
+                        ? (getVal(s.info.semester.title, lang) || getVal(s.info.semester.title, 'en') || getVal(s.info.semester.title, 'th') || '')
+                        : '');
+
+                const advisor = (this.storedAdvisors || []).find(a => {
+                    const studentRef = a.student;
+                    return studentRef === s._id || studentRef?._id === s._id;
+                });
+
                 return {
                     ...s,
                     nameThai: getVal(s.name, 'th'),
                     nameEnglish: getVal(s.name, 'en'),
                     primaryName: getVal(s.name, lang) || getVal(s.name, 'th'),
                     secondaryName: getVal(s.name, altLang),
-                    primarySchoolName: s.info?.school ? (getVal(s.info.school.title, lang) || getVal(s.info.school.title, 'en') || getVal(s.info.school.title, 'th')) : '',
+                    primarySchoolName: s.info?.school ? (getVal(s.info.school.title, lang) || getVal(s.info.school.title, 'en') || getVal(s.info.school.title, 'th')) : (s.info?.schoolName || ''),
                     secondarySchoolName: s.info?.school ? getVal(s.info.school.title, altLang) : '',
-                    primaryProgramName: s.info?.program ? (getVal(s.info.program.title, lang) || getVal(s.info.program.title, 'en') || getVal(s.info.program.title, 'th')) : '',
+                    primaryProgramName: s.info?.program ? (getVal(s.info.program.title, lang) || getVal(s.info.program.title, 'en') || getVal(s.info.program.title, 'th')) : (s.info?.programName || ''),
                     secondaryProgramName: s.info?.program ? getVal(s.info.program.title, altLang) : '',
-                    programName: s.info?.program ? (getVal(s.info.program.title, lang) || getVal(s.info.program.title, 'en')) : '',
-                    schoolName: s.info?.school ? (getVal(s.info.school.title, lang) || getVal(s.info.school.title, 'en')) : '',
-                    courseName: s.info?.course ? (getVal(s.info.course.title, lang) || getVal(s.info.course.title, 'en')) : '',
-                    semester: s.info?.semester,
-                    year: s.info?.year
+                    programName: s.info?.program ? (getVal(s.info.program.title, lang) || getVal(s.info.program.title, 'en')) : (s.info?.programName || ''),
+                    schoolName: s.info?.school ? (getVal(s.info.school.title, lang) || getVal(s.info.school.title, 'en')) : (s.info?.schoolName || ''),
+                    courseName: s.info?.course ? (getVal(s.info.course.title, lang) || getVal(s.info.course.title, 'en')) : (s.info?.courseName || ''),
+                    semester: semesterTitle,
+                    semesterId: semesterId,
+                    year: (() => {
+                        const yr = s.info?.year;
+                        if (Array.isArray(yr)) {
+                            const found = yr.find(y => y.key === lang) || yr.find(y => y.key === 'en') || yr[0];
+                            return found ? found.value : '';
+                        }
+                        if (yr && typeof yr === 'object') return yr.value || '';
+                        return yr || '';
+                    })(),
+                    email: s.email || null,
+                    primaryOrgName: lang === 'th'
+                        ? (advisor?.organizationName || s.company || '')
+                        : (s.company || advisor?.organizationName || '')
                 };
             });
         },
@@ -150,7 +178,7 @@ export default {
 
                 if (this.studentFilters.academic && String(student.year) !== String(this.studentFilters.academic)) return false;
 
-                if (this.studentFilters.semester && String(student.semester) !== String(this.studentFilters.semester)) return false;
+                if (this.studentFilters.semester && String(student.semesterId || student.semester) !== String(this.studentFilters.semester)) return false;
 
                 return true;
             });

@@ -18,98 +18,40 @@
         </div>
       </div>
       <div class="hero-actions pr-4 animate-scale-in">
-        <input type="file" ref="fileInputStudent" @change="onFileChangeStudent" accept=".xlsx, .xls, .csv"
-          style="display: none;" />
-        <input type="file" ref="fileInputAdvisor" @change="onFileChangeAdvisor" accept=".xlsx, .xls, .csv"
+        <input type="file" ref="fileInput" @change="onFileChange" accept=".xlsx, .xls, .csv"
           style="display: none;" />
 
         <CButton color="light" class="btn-hero-action px-4 py-2 font-weight-bold shadow-sm d-flex align-items-center"
-          @click="showImportModal = true">
+          @click="triggerImport">
           <CIcon name="cil-cloud-upload" class="mr-2 text-primary" size="lg" />{{
             $t('components.layout_administratorheader_vue_import') }}
         </CButton>
       </div>
     </div>
 
-    <!-- Import Selection Modal -->
-    <CModal :title="$t('components.layout_administratorheader_vue_import_selection')" :show.sync="showImportModal"
+    <!-- Import Action Modal -->
+    <CModal :title="importTitle" :show.sync="showImportModal"
       centered size="lg" class="import-modal">
       <div class="p-4 text-center">
-        <h4 class="mb-4 text-dark font-weight-bold">{{
-          $t('components.layout_administratorheader_vue_what_would_you_like_to_import') }}</h4>
-        <div class="d-flex justify-content-center mb-5">
-          <div class="selection-card mr-4" :class="{ 'active': importType === 'Student' }"
-            @click="importType = 'Student'">
-            <div class="icon-box bg-soft-red mb-3">
-              <CIcon name="cil-people" height="40" class="text-danger" />
-            </div>
-            <div class="selection-label">{{ $t('components.layout_administratorheader_vue_student') }}</div>
-          </div>
-          <div class="selection-card" :class="{ 'active': importType === 'Advisor' }" @click="importType = 'Advisor'">
-            <div class="icon-box bg-soft-orange mb-3">
-              <CIcon name="cil-briefcase" height="40" class="text-warning" />
-            </div>
-            <div class="selection-label">{{ $t('components.layout_administratorheader_vue_advisor') }}</div>
-          </div>
-        </div>
-
-        <div class="action-options-container py-3 border-top">
-          <div v-if="importType === 'Student'" class="animate-fade-in">
-            <CRow>
-              <CCol md="6">
-                <CButton color="info" variant="outline" class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerStudentFile">
-                  <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_upload_excel_csv')
-                    }}</span>
-                  <small class="d-block mt-1 text-muted">{{
-                    $t('components.layout_administratorheader_vue_import_multiple_students_from') }}</small>
-                </CButton>
-              </CCol>
-              <CCol md="6">
-                <CButton color="danger" variant="outline" class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerStudentManual">
-                  <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_enter_text') }}</span>
-                  <small class="d-block mt-1 text-muted">{{
-                    $t('components.layout_administratorheader_vue_add_a_single_student_manually') }}</small>
-                </CButton>
-              </CCol>
-            </CRow>
-          </div>
-          <div v-if="importType === 'Advisor'" class="animate-fade-in">
-            <CRow>
-              <CCol md="6">
-                <CButton color="warning" variant="outline" class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerAdvisorFile">
-                  <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_upload_excel_csv')
-                    }}</span>
-                  <small class="d-block mt-1 text-muted">{{
-                    $t('components.layout_administratorheader_vue_import_multiple_advisors_from') }}</small>
-                </CButton>
-              </CCol>
-              <CCol md="6">
-                <CButton color="warning" variant="outline" class="btn-option p-4 w-100 shadow-sm"
-                  @click="triggerAdvisorManual">
-                  <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
-                  <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_enter_text') }}</span>
-                  <small class="d-block mt-1 text-muted">{{
-                    $t('components.layout_administratorheader_vue_add_a_single_advisor_manually') }}</small>
-                </CButton>
-              </CCol>
-            </CRow>
-          </div>
-        </div>
+        <CRow>
+          <CCol md="6">
+            <CButton color="info" variant="outline" class="btn-option p-4 w-100 shadow-sm"
+              @click="triggerFile">
+              <CIcon name="cil-file" height="30" class="mb-2 d-block mx-auto" />
+              <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_upload_excel_csv') }}</span>
+              <small class="d-block mt-1 text-muted">{{ tab === 'Advisor' ? $t('components.layout_administratorheader_vue_import_multiple_advisors_from') : $t('components.layout_administratorheader_vue_import_multiple_students_from') }}</small>
+            </CButton>
+          </CCol>
+          <CCol md="6">
+            <CButton :color="tab === 'Advisor' ? 'warning' : 'danger'" variant="outline" class="btn-option p-4 w-100 shadow-sm"
+              @click="triggerManual">
+              <CIcon name="cil-pencil" height="30" class="mb-2 d-block mx-auto" />
+              <span class="font-weight-bold">{{ $t('components.layout_administratorheader_vue_enter_text') }}</span>
+              <small class="d-block mt-1 text-muted">{{ tab === 'Advisor' ? $t('components.layout_administratorheader_vue_add_a_single_advisor_manually') : $t('components.layout_administratorheader_vue_add_a_single_student_manually') }}</small>
+            </CButton>
+          </CCol>
+        </CRow>
       </div>
-      <template #footer>
-        <CButton color="secondary" @click="showImportModal = false">{{
-          $t('components.layout_administratorheader_vue_close') }}</CButton>
-        <CButton color="info" variant="link" class="ml-auto" @click="$emit('refresh'); showImportModal = false">
-          <CIcon name="cil-reload" class="mr-1" size="sm" />{{ $t('components.layout_administratorheader_vue_sync_data')
-          }}
-        </CButton>
-      </template>
     </CModal>
     <!-- Abstract decorative elements -->
     <div class="hero-shape hero-shape-1"></div>
@@ -121,15 +63,20 @@
 <script>
 import * as XLSX from 'xlsx';
 import { mapGetters } from 'vuex';
+import studentImport from '@/utils/studentImport';
 
 export default {
   name: 'AdministratorHeader',
+  props: {
+    tab: { type: String, default: 'Student' }
+  },
   computed: {
     ...mapGetters('academic/schools', { storedSchools: 'schools' }),
     ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
     ...mapGetters('academic/course', { storedCourses: 'course' }),
     ...mapGetters('member/students', { storedStudents: 'students' }),
     ...mapGetters('setting/province', { storedProvinces: 'province' }),
+    ...mapGetters('setting/semester', { storedSemesters: 'item' }),
 
     currentTerm() {
       const date = new Date();
@@ -140,192 +87,257 @@ export default {
       else if (month >= 11 || month < 4) semester = 2;
       else semester = 3;
       return `${semester}/${year}`;
+    },
+    importTitle() {
+      return (this.$i18n.locale || 'en').startsWith('th') ? 'เลือกการนำเข้า' : 'Import Select';
     }
   },
   data() {
     return {
-      showImportModal: false,
-      importType: 'Student', // 'Student' or 'Advisor'
+      showImportModal: false
     }
   },
   methods: {
-    triggerStudentFile() {
-      this.$refs.fileInputStudent.click();
+    triggerImport() {
+      this.showImportModal = true;
+    },
+    triggerFile() {
+      this.$refs.fileInput.click();
       this.showImportModal = false;
     },
-    triggerStudentManual() {
-      this.$emit('add-student');
+    triggerManual() {
+      this.$emit(this.tab === 'Advisor' ? 'add-advisor' : 'add-student');
       this.showImportModal = false;
     },
-    triggerAdvisorFile() {
-      this.$refs.fileInputAdvisor.click();
-      this.showImportModal = false;
-    },
-    triggerAdvisorManual() {
-      this.$emit('add-advisor');
-      this.showImportModal = false;
-    },
-    onFileChangeStudent(e) {
+    onFileChange(e) {
       const files = e.target.files;
       if (!files.length) return;
       const file = files[0];
       const reader = new FileReader();
 
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const studentSignature = [
+        'ID', 'Name-Surname(TH)', 'Name-Surname(EN)', 'Programe(EN)',
+        'School(EN)', 'Organisation Name(EN)', 'Course(EN)',
+        'Semester(EN)', 'Year(EN)', 'Semester(TH)', 'Year(TH)'
+      ];
 
-        if (jsonData.length < 2) return;
-        const headers = jsonData[0].map(h => h.toString().toLowerCase().trim());
-        const rows = jsonData.slice(1);
-        const payload = [];
-
-        rows.forEach(row => {
-          if (row.length === 0) return;
-          const getValue = (headerName) => {
-            const index = headers.indexOf(headerName.toLowerCase());
-            return index !== -1 ? row[index] : null;
-          };
-
-          const studentID = getValue('ID')
-          const nameThai = getValue('Name-Surname (Thai)')
-          const nameEnglish = getValue('Name-Surname')
-          const email = getValue('Email');
-          const programName = getValue('Programe');
-          const schoolName = getValue('School');
-          const courseName = getValue('Course');
-          const company = getValue('Organization name');
-          const semester = getValue('Semester');
-          const year = getValue('Year');
-
-          if (!studentID) return;
-
-          const foundProgram = this.storedPrograms.find(p => Array.isArray(p.title) && p.title.some(t => t.key === 'en' && t.value === programName));
-          const foundSchool = this.storedSchools.find(s => Array.isArray(s.title) && s.title.some(t => t.key === 'en' && t.value === schoolName));
-          const foundCourse = this.storedCourses.find(c => Array.isArray(c.title) && c.title.some(t => t.key === 'en' && t.value === courseName));
-
-          payload.push({
-            studentID,
-            name: [{ key: 'th', value: nameThai || '' }, { key: 'en', value: nameEnglish || '' }],
-            email,
-            info: {
-              semester: semester ? String(semester) : null,
-              program: foundProgram ? foundProgram._id : null,
-              school: foundSchool ? foundSchool._id : null,
-              course: foundCourse ? foundCourse._id : null,
-              year: year
-            },
-            company: company,
-          });
-        });
-
-        if (payload.length > 0) {
-          this.$store.dispatch("member/students/createStudents", payload).then(() => {
-            this.$emit('refresh');
-            alert(`Imported ${payload.length} students successfully.`);
-          });
-        }
-        this.$refs.fileInputStudent.value = '';
+      const advisorColumnMap = {
+        'Student ID': 'studentID',
+        'Name-Surname(TH)': null,
+        'Organisation Name(TH)': 'organizationName',
+        'Organisation Adress': 'organizationAddress',
+        'Province(TH)': 'province',
+        'Evaluators Email': 'email'
       };
-      reader.readAsArrayBuffer(file);
-    },
-    onFileChangeAdvisor(e) {
-      const files = e.target.files;
-      if (!files.length) return;
-      const file = files[0];
-      const reader = new FileReader();
+
+      const detectType = (headers) => {
+        if (!Array.isArray(headers) || headers.length === 0) return null;
+        const normalized = headers.map(h => studentImport.normalizeHeader(h));
+        const studentScore = studentSignature.filter(col => normalized.includes(studentImport.normalizeHeader(col))).length;
+        const advisorScore = Object.keys(advisorColumnMap).filter(col => normalized.includes(studentImport.normalizeHeader(col))).length;
+        if (studentScore > advisorScore && studentScore >= 4) return 'Student';
+        if (advisorScore > studentScore && advisorScore >= 3) return 'Advisor';
+        if (studentScore >= 4 && advisorScore >= 3) return studentScore >= advisorScore ? 'Student' : 'Advisor';
+        if (studentScore >= 4) return 'Student';
+        if (advisorScore >= 3) return 'Advisor';
+        return null;
+      };
 
       reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetNames = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : [];
+          let studentPayloads = [];
+          let advisorPayloads = [];
+          let studentCount = 0;
+          let advisorCount = 0;
 
-        if (jsonData.length < 1) {
-          alert('The file appears to be empty.');
-          return;
-        }
+          let validationFailed = false;
+          sheetNames.forEach((sheetName) => {
+            if (validationFailed) return;
+            const worksheet = workbook?.Sheets?.[sheetName];
+            if (!worksheet) return;
 
-        // Find the header row by looking for keywords in the first 10 rows
-        let headerIndex = -1;
-        let headers = [];
-        for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
-          const row = jsonData[i];
-          if (!Array.isArray(row)) continue;
-          const potentialHeaders = row.map(h => h ? h.toString().toLowerCase().trim() : '');
-          if (potentialHeaders.some(h => h.includes('email') || h.includes('อีเมล') || h.includes('evaluator'))) {
-            headerIndex = i;
-            headers = potentialHeaders;
-            break;
-          }
-        }
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null });
+            if (!Array.isArray(jsonData) || jsonData.length < 1) return;
 
-        if (headerIndex === -1) {
-          alert('Could not find the header row. Please make sure your file has a column named "Email" or "อีเมลผู้ประเมิน".');
-          return;
-        }
+            let headerIndex = -1;
+            let rawHeaders = [];
+            for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
+              const row = jsonData[i];
+              if (!Array.isArray(row)) continue;
+              const nonEmpty = row.some(c => c !== undefined && c !== null && c !== '');
+              if (nonEmpty) {
+                headerIndex = i;
+                rawHeaders = row.map(h => (h === undefined || h === null) ? '' : String(h));
+                break;
+              }
+            }
 
-        const rows = jsonData.slice(headerIndex + 1);
-        const payload = [];
+            if (headerIndex === -1) return;
+            const type = detectType(rawHeaders);
+            if (!type) return;
 
-        rows.forEach(row => {
-          if (!row || row.length === 0) return;
+            if (type !== (this.tab === 'Advisor' ? 'Advisor' : 'Student')) {
+                const lang = this.$i18n.locale || 'en';
+                const expectedType = this.tab === 'Advisor' ? (lang.startsWith('th') ? 'อาจารย์ที่ปรึกษา' : 'Advisor') : (lang.startsWith('th') ? 'นักศึกษา' : 'Student');
+                const msg = lang.startsWith('th')
+                    ? `หน้านี้รองรับเฉพาะการนำเข้า${expectedType}เท่านั้น`
+                    : `This page only supports importing ${expectedType} data.`;
+                alert(msg);
+                this.$refs.fileInput.value = '';
+                validationFailed = true;
+                return;
+            }
 
-          const getValue = (searchTerms) => {
-            const terms = Array.isArray(searchTerms) ? searchTerms : [searchTerms];
-            const index = headers.findIndex(h => {
-              if (!h) return false;
-              const cleanH = String(h).toLowerCase().trim();
-              return terms.some(term => cleanH.includes(term.toLowerCase().trim()));
-            });
-            return (index !== -1 && row[index] !== undefined) ? row[index] : null;
-          };
+            const requiredColumns = type === 'Student' ? studentSignature : Object.keys(advisorColumnMap);
+            const normalizedHeaders = rawHeaders.map(h => studentImport.normalizeHeader(h));
+            const missingColumns = requiredColumns.filter(col =>
+                !normalizedHeaders.includes(studentImport.normalizeHeader(col))
+            );
+            if (missingColumns.length > 0) {
+                const lang = this.$i18n.locale || 'en';
+                const msg = lang.startsWith('th')
+                    ? `รูปแบบไฟล์ไม่ถูกต้อง: คอลัมน์ต่อไปนี้หายไป:\n${missingColumns.join('\n')}`
+                    : `Invalid file format. Missing columns:\n${missingColumns.join('\n')}`;
+                alert(msg);
+                this.$refs.fileInput.value = '';
+                validationFailed = true;
+                return;
+            }
 
-          // Supporting multiple formats in both Thai and English
-          const organizationName = getValue(['Organisation Name', 'สถานประกอบการ', 'company', 'organization']);
-          const organizationAddress = getValue(['Organisation Adress', 'Organisation Address', 'address', 'ที่อยู่']);
-          const province = getValue(['Province', 'จังหวัด']);
-          const email = getValue(['อีเมลผู้ประเมิน', 'Evaluators Email', 'Evaluator\'s Email', 'email', 'อีเมล']);
-          const studentID = getValue(['รหัสประจำตัว', 'Student ID', 'ID', 'student']);
+            const rows = jsonData.slice(headerIndex + 1);
 
-          if (!email) return;
+            if (type === 'Student') {
+              const headers = rawHeaders;
+              rows.forEach(row => {
+                if (!Array.isArray(row) || row.length === 0) return;
+                const getCell = (aliases) => {
+                  const index = studentImport.getHeaderIndex(headers, aliases);
+                  if (index === -1) return null;
+                  const val = row[index];
+                  return val === undefined || val === null || val === '' ? null : val;
+                };
+                const studentID = getCell(studentImport.HEADER_SYNONYMS.studentID);
+                if (!studentID) return;
+                const nameThai = getCell(studentImport.HEADER_SYNONYMS.nameThai);
+                const nameEnglish = getCell(studentImport.HEADER_SYNONYMS.nameEnglish);
+                const programName = getCell(studentImport.HEADER_SYNONYMS.programName);
+                const schoolName = getCell(studentImport.HEADER_SYNONYMS.schoolName);
+                const organizationName = getCell(studentImport.HEADER_SYNONYMS.organizationName);
+                const courseName = getCell(studentImport.HEADER_SYNONYMS.courseName);
+                const semesterEn = getCell(studentImport.HEADER_SYNONYMS.semesterEn);
+                const semesterTh = getCell(studentImport.HEADER_SYNONYMS.semesterTh);
+                const yearEn = getCell(studentImport.HEADER_SYNONYMS.yearEn);
+                const yearTh = getCell(studentImport.HEADER_SYNONYMS.yearTh);
+                const email = getCell(['email', 'อีเมล']);
 
-          let provinceId = null;
-          if (province) {
-            const cleanProv = String(province).trim().toLowerCase();
-            const foundProv = this.storedProvinces.find(p => {
-              if (!p.title || !Array.isArray(p.title)) return false;
-              return p.title.some(t => t.value && t.value.toLowerCase().trim() === cleanProv);
-            });
-            if (foundProv) provinceId = foundProv._id;
-          }
+                const foundProgram = studentImport.findAcademicRecord(this.storedPrograms || [], programName);
+                const foundSchool = studentImport.findAcademicRecord(this.storedSchools || [], schoolName);
+                const foundCourse = studentImport.findAcademicRecord(this.storedCourses || [], courseName);
+                const foundSemester = studentImport.findAcademicRecord(this.storedSemesters || [], semesterEn || semesterTh);
 
-          payload.push({
-            organizationName: organizationName ? String(organizationName).trim() : null,
-            organizationAddress: organizationAddress ? String(organizationAddress).trim() : null,
-            email: String(email).trim(),
-            province: provinceId,
-            student: studentID ? String(studentID).trim() : null, // Send raw ID string, backend will resolve
-            year: new Date().getFullYear().toString()
+                studentPayloads.push({
+                  studentID: String(studentID).trim(),
+                  name: [
+                    { key: 'th', value: nameThai ? String(nameThai).trim() : '' },
+                    { key: 'en', value: nameEnglish ? String(nameEnglish).trim() : '' }
+                  ],
+                  email: email ? String(email).trim() : `${String(studentID).trim()}@lamduan.mfu.ac.th`,
+                  company: organizationName ? String(organizationName).trim() : null,
+                  info: {
+                    semester: foundSemester ? foundSemester._id : null,
+                    program: foundProgram ? foundProgram._id : null,
+                    programName: programName ? String(programName).trim() : null,
+                    school: foundSchool ? foundSchool._id : null,
+                    schoolName: schoolName ? String(schoolName).trim() : null,
+                    course: foundCourse ? foundCourse._id : null,
+                    courseName: courseName ? String(courseName).trim() : null,
+                    year: [
+                      yearEn ? { key: 'en', value: String(yearEn).trim() } : null,
+                      yearTh ? { key: 'th', value: String(yearTh).trim() } : null
+                    ].filter(Boolean)
+                  }
+                });
+              });
+            } else {
+              const colIndices = {};
+              Object.keys(advisorColumnMap).forEach((colName) => {
+                const norm = studentImport.normalizeHeader(colName);
+                const idx = rawHeaders.findIndex(h => studentImport.normalizeHeader(h) === norm);
+                if (idx !== -1) colIndices[colName] = idx;
+              });
+
+              rows.forEach(row => {
+                if (!row || row.length === 0) return;
+                const getVal = (colName) => {
+                  const idx = colIndices[colName];
+                  return idx !== undefined && row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : null;
+                };
+                const email = getVal('Evaluators Email');
+                if (!email) return;
+                const provinceRaw = getVal('Province(TH)');
+                let provinceId = null;
+                if (provinceRaw) {
+                  const cleanProv = provinceRaw.toLowerCase();
+                  const foundProv = this.storedProvinces.find(p => {
+                    if (!p.title || !Array.isArray(p.title)) return false;
+                    return p.title.some(t => t.value && t.value.toLowerCase().trim() === cleanProv);
+                  });
+                  if (foundProv) provinceId = foundProv._id;
+                }
+                const studentID = getVal('Student ID');
+                let studentRefId = null;
+                if (studentID) {
+                  const foundStudent = (this.storedStudents || []).find(s => s.studentID === studentID);
+                  if (foundStudent) studentRefId = foundStudent._id;
+                }
+                advisorPayloads.push({
+                  organizationName: getVal('Organisation Name(TH)'),
+                  organizationAddress: getVal('Organisation Adress'),
+                  email: email,
+                  province: provinceId,
+                  student: studentRefId
+                });
+              });
+            }
           });
-        });
 
-        if (payload.length > 0) {
-          this.$store.dispatch("member/advisors/createAdvisors", payload).then(() => {
-            this.$emit('refresh');
-            alert(`Imported ${payload.length} advisors successfully.`);
-          }).catch((err) => {
-            console.error('Import error:', err);
-            alert('Failed to import advisors. Please check if the data format is correct.');
-          });
-        } else {
-          alert('No valid advisor data found in the file.');
+          studentCount = studentPayloads.length;
+          advisorCount = advisorPayloads.length;
+
+          let promises = [];
+          if (studentCount > 0) {
+            promises.push(
+              this.$store.dispatch("member/students/createStudents", studentPayloads)
+            );
+          }
+          if (advisorCount > 0) {
+            promises.push(
+              this.$store.dispatch("member/advisors/createAdvisors", advisorPayloads)
+            );
+          }
+
+          if (promises.length > 0) {
+            Promise.all(promises).then(() => {
+              this.$emit('refresh');
+              let msg = '';
+              if (studentCount > 0) msg += `Imported ${studentCount} student(s). `;
+              if (advisorCount > 0) msg += `Imported ${advisorCount} advisor(s). `;
+              alert(msg.trim());
+            }).catch((err) => {
+              console.error('Import error:', err);
+              alert('Failed to import. Please check if the data format is correct.');
+            });
+          } else {
+            alert('No valid data found in the file.');
+          }
+        } catch (err) {
+          console.error('Import error:', err);
+          alert('Import Error: ' + (err.message || err));
         }
-        this.$refs.fileInputAdvisor.value = '';
+        this.$refs.fileInput.value = '';
       };
       reader.readAsArrayBuffer(file);
     }

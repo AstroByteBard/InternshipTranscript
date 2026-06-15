@@ -26,6 +26,7 @@ router.get("/evaluation", Evaluation.onQuerys);
 router.post("/evaluation/query", Evaluation.onQuery);
 router.put("/evaluation", Evaluation.onUpdate);
 router.delete("/evaluation", Evaluation.onDelete);
+router.get("/evaluation/averages", Evaluation.onAverages);
 
 module.exports = router;
 

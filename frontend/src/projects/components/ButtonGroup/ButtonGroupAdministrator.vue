@@ -39,6 +39,7 @@
 <script>
 import * as XLSX from 'xlsx';
 import { mapGetters } from 'vuex';
+import { buildStudentImportPayload, normalizeHeader } from '@/utils/studentImport';
 
 export default {
     name: 'ButtonGroupAdministrator',
@@ -53,7 +54,9 @@ export default {
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('academic/course', { storedCourses: 'course' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
-        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' })
+        ...mapGetters('member/advisors', { storedAdvisors: 'advisors' }),
+        ...mapGetters('setting/semester', { storedSemesters: 'item' }),
+        ...mapGetters('setting/province', { storedProvinces: 'province' })
     },
     methods: {
         onFileChangeStudent(e) {
@@ -72,54 +75,21 @@ export default {
 
                 if (jsonData.length < 2) return; // No data
 
-                const headers = jsonData[0].map(h => h.toString().toLowerCase().trim());
+                const headers = (jsonData[0] || []).map(h => (h === undefined || h === null) ? '' : String(h));
                 const rows = jsonData.slice(1);
 
                 const payload = [];
 
                 rows.forEach(row => {
-                    if (row.length === 0) return;
+                    if (!Array.isArray(row) || row.length === 0) return;
 
-                    // Helper to get value by header name
-                    const getValue = (headerName) => {
-                        const index = headers.indexOf(headerName.toLowerCase());
-                        return index !== -1 ? row[index] : null;
-                    };
-
-                    const studentID = getValue('ID')
-                    const nameThai = getValue('Name-Surname (Thai)')
-                    const nameEnglish = getValue('Name-Surname')
-                    const email = getValue('Email');
-                    const programName = getValue('Programe');
-                    const schoolName = getValue('School');
-                    const courseName = getValue('Course');
-                    const company = getValue('Organization name');
-                    const semester = getValue('Semester');
-                    const year = getValue('Year');
-
-                    if (!studentID) return;
-
-                    const foundProgram = this.storedPrograms.find(p => Array.isArray(p.title) && p.title.some(t => t.key === 'en' && t.value === programName));
-                    const foundSchool = this.storedSchools.find(s => Array.isArray(s.title) && s.title.some(t => t.key === 'en' && t.value === schoolName));
-                    const foundCourse = this.storedCourses.find(c => Array.isArray(c.title) && c.title.some(t => t.key === 'en' && t.value === courseName));
-
-                    const studentData = {
-                        studentID,
-                        name: [
-                            { key: 'th', value: nameThai || '' },
-                            { key: 'en', value: nameEnglish || '' }
-                        ],
-                        email,
-                        info: {
-                            semester: semester ? String(semester) : null,
-                            program: foundProgram ? foundProgram._id : null,
-                            school: foundSchool ? foundSchool._id : null,
-                            course: foundCourse ? foundCourse._id : null,
-                            year: year
-                        },
-                        company: company,
-                    };
-                    payload.push(studentData);
+                    const studentData = buildStudentImportPayload(row, headers, {
+                        programs: this.storedPrograms,
+                        schools: this.storedSchools,
+                        courses: this.storedCourses,
+                        semesters: this.storedSemesters
+                    });
+                    if (studentData) payload.push(studentData);
                 });
 
                 if (payload.length > 0) {
@@ -139,70 +109,117 @@ export default {
             const file = files[0];
             const reader = new FileReader();
 
+            const columnMap = {
+                'Student ID': 'studentID',
+                'Name-Surname(TH)': null,
+                'Organisation Name(TH)': 'organizationName',
+                'Organisation Adress': 'organizationAddress',
+                'Province(TH)': 'province',
+                'Evaluators Email': 'email'
+            };
+
             reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetNames = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : [];
+                    const payload = [];
+                    let processedSheets = 0;
 
-                if (jsonData.length < 2) return;
+                    sheetNames.forEach((sheetName) => {
+                        const worksheet = workbook?.Sheets?.[sheetName];
+                        if (!worksheet) return;
 
-                const headers = jsonData[1].map(h => h ? h.toString().toLowerCase().trim() : '');
-                const rows = jsonData.slice(1);
-                console.log(headers)
-                const payload = [];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        if (!Array.isArray(jsonData) || jsonData.length < 1) return;
 
-                rows.forEach(row => {
-                    if (row.length === 0) return;
-
-                    const getValue = (headerName) => {
-                        const index = headers.indexOf(headerName.toLowerCase());
-                        return index !== -1 ? row[index] : null;
-                    };
-
-                    const organizationName = getValue('ชื่อสถานประกอบการ\r\norganisation name');
-                    const organizationAddress = getValue('ที่อยู่สถานประกอบการ\r\norganisation adress');
-                    const province = getValue('จังหวัด\r\nprovince');
-                    const email = getValue("อีเมลผู้ประเมิน\r\nevaluator's email");
-                    const studentID = getValue('รหัสประจำตัว\r\nstudent id');
-
-                    if (!email) return;
-
-                    let studentRefId = null;
-                    if (studentID) {
-                        const foundStudent = this.storedStudents.find(s => s.studentID === String(studentID));
-                        if (foundStudent) {
-                            studentRefId = foundStudent._id;
-                        } else {
-                            console.warn(`Student ID ${studentID} not found in database. Advisor ${email} will have no student linked.`);
+                        let headerIndex = -1;
+                        let rawHeaders = [];
+                        const normalizedTargets = Object.keys(columnMap).map(normalizeHeader);
+                        for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
+                            const row = jsonData[i];
+                            if (!Array.isArray(row)) continue;
+                            const normalizedRow = row.map(h => normalizeHeader(h));
+                            if (normalizedTargets.some(t => normalizedRow.includes(t))) {
+                                headerIndex = i;
+                                rawHeaders = row.map(h => (h === undefined || h === null) ? '' : String(h));
+                                break;
+                            }
                         }
-                    }
 
-                    const advisorData = {
-                        organizationName: organizationName || null,
-                        organizationAddress: organizationAddress || null,
-                        email: email,
-                        province: province || null,
-                        student: studentRefId,
-                        year: new Date().getFullYear().toString()
-                    };
+                        if (headerIndex === -1) return;
 
-                    payload.push(advisorData);
-                });
+                        const colIndices = {};
+                        Object.keys(columnMap).forEach((colName) => {
+                            const norm = normalizeHeader(colName);
+                            const idx = rawHeaders.findIndex(h => normalizeHeader(h) === norm);
+                            if (idx !== -1) colIndices[colName] = idx;
+                        });
 
-                if (payload.length > 0) {
-                    this.$store.dispatch("member/advisors/createAdvisors", payload).then(() => {
-                        this.$emit('refresh');
-                        alert(`Imported ${payload.length} advisors successfully.`);
-                    }).catch(err => {
-                        console.error('Error importing advisors:', err);
-                        alert('Failed to import advisors.');
+                        const rows = jsonData.slice(headerIndex + 1);
+
+                        rows.forEach(row => {
+                            if (row.length === 0) return;
+
+                            const getVal = (colName) => {
+                                const idx = colIndices[colName];
+                                return idx !== undefined && row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : null;
+                            };
+
+                            const email = getVal('Evaluators Email');
+                            if (!email) return;
+
+                            const studentID = getVal('Student ID');
+                            let studentRefId = null;
+                            if (studentID) {
+                                const foundStudent = this.storedStudents.find(s => s.studentID === studentID);
+                                if (foundStudent) {
+                                    studentRefId = foundStudent._id;
+                                } else {
+                                    console.warn(`Student ID ${studentID} not found in database. Advisor ${email} will have no student linked.`);
+                                }
+                            }
+
+                            const provinceRaw = getVal('Province(TH)');
+                            let provinceId = null;
+                            if (provinceRaw) {
+                                const cleanProv = provinceRaw.toLowerCase();
+                                const foundProv = (this.storedProvinces || []).find(p => {
+                                    if (!p.title || !Array.isArray(p.title)) return false;
+                                    return p.title.some(t => t.value && t.value.toLowerCase().trim() === cleanProv);
+                                });
+                                if (foundProv) provinceId = foundProv._id;
+                            }
+
+                            const advisorData = {
+                                organizationName: getVal('Organisation Name(TH)'),
+                                organizationAddress: getVal('Organisation Adress'),
+                                email: email,
+                                province: provinceId,
+                                student: studentRefId
+                            };
+
+                            payload.push(advisorData);
+                        });
+
+                        processedSheets++;
                     });
-                } else {
-                    alert('No valid advisor data found to import. Ensure emails are provided.');
-                }
 
+                    if (payload.length > 0) {
+                        this.$store.dispatch("member/advisors/createAdvisors", payload).then(() => {
+                            this.$emit('refresh');
+                            alert(`Imported ${payload.length} advisors from ${processedSheets} sheet(s) successfully.`);
+                        }).catch(err => {
+                            console.error('Error importing advisors:', err);
+                            alert('Failed to import advisors.');
+                        });
+                    } else {
+                        alert('No valid advisor data found to import. Ensure emails are provided.');
+                    }
+                } catch (err) {
+                    console.error('Import advisor error:', err);
+                    alert('Import Error: ' + (err.message || err));
+                }
                 this.$refs.fileInputAdvisor.value = '';
             };
             reader.readAsArrayBuffer(file);

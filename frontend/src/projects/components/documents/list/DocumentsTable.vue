@@ -12,9 +12,6 @@
                 <div class="font-weight-bold" style="color: #1f2937; font-size: 14px;">{{ item.title }}</div>
                 <div class="d-flex align-items-center flex-wrap text-muted small mt-1">
                   <span class="mr-2">{{ $t('components.documents_list_documentstable_vue_document_template') }}</span>
-                  <CBadge class="locale-badge mr-2" :color="getLocaleValue(item) === 'th' ? 'warning' : 'info'">
-                    {{ getLocaleValue(item) }}
-                  </CBadge>
                   <span>&bull; {{ (item.update && item.update.datetime) ? moment(item.update.datetime).fromNow() : '-'
                   }}</span>
                 </div>

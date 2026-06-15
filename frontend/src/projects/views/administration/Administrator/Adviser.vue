@@ -1,6 +1,6 @@
 <template>
     <div class="administrator-view">
-        <AdministratorHeader @add-advisor="$refs.modalAdvisor.openAdd()" @refresh="onInit" />
+        <AdministratorHeader tab="Advisor" @add-advisor="$refs.modalAdvisor.openAdd()" @refresh="onInit" />
 
         <WidgetsAdministrator :studentCount="storedStudents ? storedStudents.length : 0"
             :advisorCount="storedAdvisors ? storedAdvisors.length : 0" :selectedSchool="selectedSchoolName"
@@ -97,7 +97,9 @@ export default {
                 };
 
                 let studentName = '-';
+                let studentNameEn = '-';
                 let studentID = '-';
+                let studentCompany = '-';
 
                 // Try to resolve student info
                 if (adv.student) {
@@ -107,6 +109,8 @@ export default {
                         const nameThai = adv.student.name ? getVal(adv.student.name, 'th') : '';
                         const nameEnglish = adv.student.name ? getVal(adv.student.name, 'en') : '';
                         studentName = nameThai || nameEnglish || '-';
+                        studentNameEn = nameEnglish || nameThai || '-';
+                        studentCompany = adv.student.company || '-';
                     } else if (typeof adv.student === 'string') {
                         // Case 2: Just an ID string, try to find in storedStudents
                         const found = this.storedStudents.find(s => s._id === adv.student);
@@ -115,6 +119,8 @@ export default {
                             const nameThai = found.name ? getVal(found.name, 'th') : '';
                             const nameEnglish = found.name ? getVal(found.name, 'en') : '';
                             studentName = nameThai || nameEnglish || '-';
+                            studentNameEn = nameEnglish || nameThai || '-';
+                            studentCompany = found.company || '-';
                         } else {
                             // Case 3: Fallback if not found in store
                             studentID = adv.student;
@@ -127,10 +133,42 @@ export default {
                     studentID = 'Linking...';
                 }
 
+                let studentSchoolId = null;
+                let studentProgramId = null;
+                let studentYear = null;
+                let studentObj = null;
+
+                if (typeof adv.student === 'object' && adv.student !== null) {
+                    studentObj = adv.student;
+                } else if (typeof adv.student === 'string') {
+                    studentObj = this.storedStudents.find(s => s._id === adv.student);
+                }
+
+                if (studentObj) {
+                    if (studentObj.info) {
+                        studentSchoolId = studentObj.info.school?._id || studentObj.info.school || null;
+                        studentProgramId = studentObj.info.program?._id || studentObj.info.program || null;
+                        const yrData = studentObj.info.year;
+                        if (Array.isArray(yrData)) {
+                            const found = yrData.find(y => y.key === 'en') || yrData[0];
+                            studentYear = found ? found.value : null;
+                        } else if (yrData && typeof yrData === 'object') {
+                            studentYear = yrData.value || null;
+                        } else {
+                            studentYear = yrData || null;
+                        }
+                    }
+                }
+
                 return {
                     ...adv,
                     studentName,
-                    studentID
+                    studentNameEn,
+                    studentID,
+                    studentCompany,
+                    studentSchoolId,
+                    studentProgramId,
+                    studentYear
                 };
             });
         },
@@ -142,13 +180,18 @@ export default {
                     (adv.organizationName && adv.organizationName.toLowerCase().includes(searchLower)) ||
                     (adv.email && adv.email.toLowerCase().includes(searchLower)) ||
                     (adv.studentName && adv.studentName.toLowerCase().includes(searchLower)) ||
-                    (adv.studentID && adv.studentID.toLowerCase().includes(searchLower));
+                    (adv.studentNameEn && adv.studentNameEn.toLowerCase().includes(searchLower)) ||
+                    (adv.studentID && adv.studentID.toLowerCase().includes(searchLower)) ||
+                    (adv.studentCompany && adv.studentCompany.toLowerCase().includes(searchLower));
 
                 if (!matches) return false;
 
+                if (this.school && adv.studentSchoolId !== this.school) return false;
+                if (this.program && adv.studentProgramId !== this.program) return false;
+                if (this.academic && adv.studentYear !== this.academic) return false;
                 if (this.province) {
-                    const studentProvinceId = adv.province?._id || adv.province;
-                    if (studentProvinceId !== this.province) return false;
+                    const advisorProvinceId = adv.province?._id || adv.province;
+                    if (advisorProvinceId !== this.province) return false;
                 }
 
                 return true;

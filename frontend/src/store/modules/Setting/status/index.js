@@ -1,11 +1,10 @@
 
 import Service from "@/service/api.js";
-import store from "@/store/store";
 
 const module = {
     namespaced: true,
     state: {
-        item : []
+        item: []
     },
 
     mutations: {
@@ -22,32 +21,37 @@ const module = {
 
     actions: {
         get({ commit }, data) {
-            Service.status('get', data, {})
+            return Service.status('get', data, {})
                 .then((response) => {
                     commit("item", response.data.data)
+                    return response.data.data
                 }).catch((err) => {
+                    throw err;
                 });
         },
-        post({commit}, data) {
-            Service.status('post', data, {})
+        post({ dispatch }, data) {
+            return Service.status('post', data, {})
                 .then((response) => {
-
+                    return dispatch('get')
                 }).catch((err) => {
-            });
+                    throw err;
+                });
         },
-        put({commit}, data) {
-            Service.status('put', data, {})
+        put({ dispatch }, data) {
+            return Service.status('put', data, {})
                 .then((response) => {
-
+                    return dispatch('get')
                 }).catch((err) => {
-            });
+                    throw err;
+                });
         },
-        delete({commit}, data) {
-            Service.status('delete', data, {})
+        delete({ dispatch }, data) {
+            return Service.status('delete', data, {})
                 .then((response) => {
-
+                    return dispatch('get')
                 }).catch((err) => {
-            });
+                    throw err;
+                });
         },
     },
 

@@ -16,10 +16,14 @@
                             </td>
                         </template>
 
-                        <template #emailCompanyCombo="{ item }">
+                        <template #email="{ item }">
                             <td class="align-middle">
-                                <div><strong>{{ item.email || '-' }}</strong></div>
-                                <div class="text-muted small">{{ item.company || '-' }}</div>
+                                {{ item.email || '-' }}
+                            </td>
+                        </template>
+                        <template #company="{ item }">
+                            <td class="align-middle">
+                                {{ item.primaryOrgName || '-' }}
                             </td>
                         </template>
 
@@ -98,7 +102,8 @@ export default {
             return [
                 { key: 'studentID', label: this.$t('id_label') },
                 { key: 'nameCombo', label: this.$t('name_label') },
-                { key: 'emailCompanyCombo', label: this.$t('email_company') },
+                { key: 'email', label: this.$t('email') },
+                { key: 'company', label: this.$t('company') },
                 { key: 'schoolProgram', label: this.$t('school_and_program') },
                 { key: 'courseName', label: this.$t('course') },
                 { key: 'semester', label: this.$t('semester') },

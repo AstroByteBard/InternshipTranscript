@@ -1,7 +1,6 @@
 <template>
   <div class="c-app" :class="{ 'c-dark-theme': $store.state.darkMode }">
     <TheSidebar_Project />
-    <TheAside />
     <CWrapper>
       <TheHeader />
       <div class="c-body">
@@ -25,7 +24,6 @@
 <script>
 import TheHeader from './TheHeader'
 import TheFooter from './TheFooter'
-import TheAside from './TheAside'
 import { mapGetters } from "vuex";
 import store from "@/store/store";
 //
@@ -43,8 +41,7 @@ export default {
     CenterLoading,
     DialogMessage,
     TheHeader,
-    TheFooter,
-    TheAside
+    TheFooter
   },
 
   mounted() {

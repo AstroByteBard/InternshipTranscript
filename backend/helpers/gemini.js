@@ -1,18 +1,32 @@
 const fs = require('fs');
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
+const GeneralModel = require('../server/Project/Settings/models/general.model');
 
-const MODEL = 'gemini-3.1-flash-lite';
-const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent`;
-
+const DEV_MODEL = 'gemini-3.1-flash-lite';
 // Read API key from env (support multiple common names)
-const API_KEY = process.env.Gemini_API_Key || process.env.GEMINI_API_KEY || process.env.GENERATIVE_API_KEY || process.env.GEMINI_APIKEY;
+const ENV_API_KEY = process.env.Gemini_API_Key || process.env.GEMINI_API_KEY || process.env.GENERATIVE_API_KEY || process.env.GEMINI_APIKEY;
 
 async function generateText(prompt, opts = {}) {
     const generationConfig = {
         maxOutputTokens: opts.maxOutputTokens ?? 65536,
         temperature: opts.temperature ?? 0.0
     };
+
+    let dynamicApiKey = ENV_API_KEY;
+    let dynamicModel = DEV_MODEL;
+
+    try {
+        const settings = await GeneralModel.findOne({});
+        if (settings) {
+            if (settings.apiKey) dynamicApiKey = settings.apiKey;
+            if (settings.modelName) dynamicModel = settings.modelName;
+        }
+    } catch (e) {
+        console.warn('[gemini] Could not fetch settings from DB:', e.message);
+    }
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1/models/${dynamicModel}:generateContent`;
 
     const body = {
         contents: [
@@ -35,8 +49,8 @@ async function generateText(prompt, opts = {}) {
 
         // Prefer API key if provided (simpler for local testing).
         // Try query param first, then header fallback if that fails.
-        if (API_KEY) {
-            const urlWithKey = `${API_URL}?key=${API_KEY}`;
+        if (dynamicApiKey) {
+            const urlWithKey = `${API_URL}?key=${dynamicApiKey}`;
             console.log('[gemini] POST url (query): (masked)');
             try {
                 const res = await axios.post(urlWithKey, body, { headers: { 'Content-Type': 'application/json' }, timeout: opts.timeout || 20000 });
@@ -47,7 +61,7 @@ async function generateText(prompt, opts = {}) {
                 // If query-param method failed, try sending API key as header
                 try {
                     console.log('[gemini] POST url (header):', API_URL);
-                    const res2 = await axios.post(API_URL, body, { headers: { 'Content-Type': 'application/json', 'x-goog-api-key': API_KEY }, timeout: opts.timeout || 20000 });
+                    const res2 = await axios.post(API_URL, body, { headers: { 'Content-Type': 'application/json', 'x-goog-api-key': dynamicApiKey }, timeout: opts.timeout || 20000 });
                     console.log('[gemini] response status (header):', res2.status);
                     data = res2.data;
                 } catch (errHeader) {

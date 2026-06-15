@@ -21,7 +21,8 @@
 
                     <!-- Action Buttons -->
                     <CCol lg="6" md="6" class="d-flex justify-content-end align-items-center flex-wrap">
-                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')">
+                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')"
+                            :disabled="!isEmailReady">
                             <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> {{ $t('send_email_org') }}
                         </CButton>
                         <CButton class="btn-modern-action btn-modern-filter mr-2" @click="showFilters = !showFilters">
@@ -99,6 +100,7 @@ export default {
             this.$store.dispatch('academic/schools/schools')
             this.$store.dispatch('academic/programs/programs')
             this.$store.dispatch('email/emailAdviser/email')
+            this.$store.dispatch('email/emailTransactionAdviser/get')
         },
         async handlePreview() {
             const section = this.$refs.adviserSection;
@@ -122,8 +124,13 @@ export default {
             const section = this.$refs.adviserSection;
             if (!section) return;
 
+            if (!this.isEmailReady) {
+                alert(this.$t('no_active_template_found'));
+                return;
+            }
+
             // Filter for Pending only as requested
-            const items = section.advisersTable.filter(item => item.sendStatus === 'PENDING');
+            const items = section.advisersTable.filter(item => item.deliveryStatus === 'PENDING');
 
             if (!items || items.length === 0) {
                 alert(this.$t('no_pending_advisers_found'));
@@ -156,6 +163,7 @@ export default {
         ...mapGetters('academic/schools', { storedSchools: 'schools' }),
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('email/emailAdviser', { storedAdviserEmails: 'emailAdviser' }),
+        ...mapGetters('email/emailTransactionAdviser', { storedTransactionAdvisers: 'emailTransactionAdviser' }),
 
         isEmailReady() {
             return (this.storedAdviserEmails || []).some(t => t.active);
@@ -165,12 +173,24 @@ export default {
             return (this.storedAdvisors || []).length;
         },
         sentCount() {
-            return (this.storedAdvisors || []).filter(a => a.student?.evaluation).length;
+            const tx = this.storedTransactionAdvisers || []
+            const completed = tx.filter(t => (t.delivery_status || '').toUpperCase() === 'COMPLETED')
+            return new Set(completed.map(t => t.student_id?._id || t.student_id)).size
         },
         pendingCount() {
-            return this.totalCount - this.sentCount;
+            const tx = this.storedTransactionAdvisers || []
+            const pending = tx.filter(t => (t.delivery_status || '').toUpperCase() === 'PENDING')
+            const pendingIds = new Set(pending.map(t => t.student_id?._id || t.student_id))
+            const allIds = new Set((this.storedAdvisors || []).map(a => a.student?._id || a.student))
+            const txIds = new Set(tx.map(t => t.student_id?._id || t.student_id))
+            const noTxIds = [...allIds].filter(id => id && !txIds.has(id))
+            return pendingIds.size + noTxIds.length
         },
-        failedCount() { return 0; },
+        failedCount() {
+            const tx = this.storedTransactionAdvisers || []
+            const failed = tx.filter(t => (t.delivery_status || '').toUpperCase() === 'FAILED')
+            return new Set(failed.map(t => t.student_id?._id || t.student_id)).size
+        },
 
         schoolOptions() {
             const lang = this.$store.getters['setting/lang'] || 'en';

@@ -1,42 +1,36 @@
 import messages from "@/store/modules/Setting/messages/index";
 import status from "@/store/modules/Setting/status/index";
-import verification from  "@/store/modules/Setting/verification/index";
-import authen from  "@/store/modules/Setting/authen/index";
-import province from  "@/store/modules/Setting/province/index";
-
-
+import verification from "@/store/modules/Setting/verification/index";
+import authen from "@/store/modules/Setting/authen/index";
+import province from "@/store/modules/Setting/province/index";
+import semester from "@/store/modules/Setting/semester/index";
+import general from "@/store/modules/Setting/general/index";
 
 const module = {
     namespaced: true,
     modules: {
         messages,
         status,
+        semester,
+        general,
         verification,
         authen,
-        province
-
+        province,
     },
     state: {
-        lang : "en",
+        lang: "en",
     },
-
-
-
     mutations: {
         lang(state, obj) {
             state.lang = obj;
         },
     },
-
     actions: {
-
     },
-
     getters: {
         lang(state, obj) {
             return state.lang;
         },
-
     },
 };
 export default module;

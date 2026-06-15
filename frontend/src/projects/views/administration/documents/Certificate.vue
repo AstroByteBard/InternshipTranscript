@@ -7,9 +7,10 @@
 
         <CRow class="mb-4">
             <CCol>
-                <DocsFilterCard @search="(q) => { }" />
+                <DocsFilterCard :searchQuery.sync="searchQuery" :selectedLocale.sync="selectedLocale"
+                    :localeOptions="localeOptions" />
 
-                <DocumentsTable :items="certificatesData" :fields="documentFields" @download="onDownload" @edit="onEdit"
+                <DocumentsTable :items="filteredCertificates" :fields="documentFields" @download="onDownload" @edit="onEdit"
                     @copy="onCopy" @delete="onDelete" />
             </CCol>
         </CRow>
@@ -33,6 +34,8 @@ export default {
     },
     data() {
         return {
+            searchQuery: '',
+            selectedLocale: '',
             certificatesData: []
         }
     },
@@ -92,9 +95,36 @@ export default {
         documentFields() {
             return [
                 { key: 'nameContent', label: this.$t('name_label') },
+                { key: 'locale', label: this.$t('language_label') },
                 { key: 'status', label: this.$t('status_label') },
                 { key: 'actions', label: this.$t('actions_short'), _classes: 'text-right pe-4', sorter: false, filter: false },
             ]
+        },
+        localeOptions() {
+            return [
+                { value: '', label: this.$t('all_languages_label') },
+                { value: 'th', label: this.$t('thai_label') },
+                { value: 'en', label: this.$t('english_label') },
+            ]
+        },
+        filteredCertificates() {
+            let source = this.certificatesData;
+
+            if (this.selectedLocale) {
+                source = source.filter(item => String(item.locale || (item.content && item.content.__language) || 'th').toLowerCase().startsWith(this.selectedLocale));
+            }
+
+            if (this.searchQuery && this.searchQuery.trim()) {
+                const q = this.searchQuery.toLowerCase().trim();
+                source = source.filter(item => {
+                    const title = String(item.title || item.name || '').toLowerCase();
+                    const status = String(item.status || '').toLowerCase();
+                    const locale = String(item.locale || (item.content && item.content.__language) || '').toLowerCase();
+                    return title.includes(q) || status.includes(q) || locale.includes(q);
+                });
+            }
+
+            return source;
         },
         issuedCount() {
             return this.certificatesData.filter(d => d.status === 'Active' || d.status === 'Published').length;

@@ -23,7 +23,7 @@
 
                         <template #organizationCombo="{ item }">
                             <td class="align-middle">
-                                <div><strong>{{ item.organizationName || '-' }}</strong></div>
+                                <div><strong>{{ getOrganizationDisplayName(item) }}</strong></div>
                                 <div class="text-muted small">{{ item.organizationAddress || '-' }}</div>
                             </td>
                         </template>
@@ -43,7 +43,7 @@
                         <!-- Student Combo -->
                         <template #studentCombo="{ item }">
                             <td class="align-middle">
-                                <div><strong>{{ item.studentName || '-' }}</strong></div>
+                                <div><strong>{{ getStudentDisplayName(item) }}</strong></div>
                                 <div class="text-muted small">{{ item.studentID || '-' }}</div>
                             </td>
                         </template>
@@ -107,6 +107,16 @@ export default {
                 return titleObj ? titleObj.value : '-';
             }
             return '-';
+        },
+        getStudentDisplayName(item) {
+            const isThai = (this.$i18n.locale || 'en') === 'th';
+            return isThai ? (item.studentName || '-') : (item.studentNameEn || item.studentName || '-');
+        },
+        getOrganizationDisplayName(item) {
+            const isEnglish = (this.$i18n.locale || 'en') === 'en';
+            const englishValue = item.studentCompany || item.organizationName || '-';
+            const thaiValue = item.organizationName || item.studentCompany || '-';
+            return isEnglish ? englishValue : thaiValue;
         },
     },
     computed: {

@@ -6,6 +6,7 @@ const defaultPopulate = [
     { path: 'info.program', select: 'title' },
     { path: 'info.school', select: 'title' },
     { path: 'info.course', select: 'title' },
+    { path: 'info.semester', select: 'title' },
     { path: 'evaluation' }
 ];
 module.exports = createBaseService(objSchema, defaultPopulate);

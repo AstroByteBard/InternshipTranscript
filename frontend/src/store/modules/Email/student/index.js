@@ -49,12 +49,13 @@ const ServerModule = {
                 });
         },
         sendEmail({ dispatch }, data) {
-            Service.emailStudent('send', data, {})
+            return Service.emailStudent('send', data, {})
                 .then((response) => {
                     console.log('สถานนะการส่งอีเมล : ', response.data)
                     return dispatch('email')
                 }).catch((err) => {
                     console.log(err)
+                    return dispatch('email')
                 });
         },
     },

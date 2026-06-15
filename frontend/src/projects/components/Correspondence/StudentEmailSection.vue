@@ -3,7 +3,27 @@
         <div v-if="!selectedProgram">
             <CTabs variant="tabs" class="custom-tabs mt-0">
                 <CTab :title="$t('components.correspondence_studentemailsection_vue_student_email_list')" active>
-                    <CRow class="mt-3">
+                    <div v-if="activeTemplate" class="mt-3 mb-3">
+                        <CCard class="border-0 shadow-sm" style="border-radius: 8px; background: #f0fdf4; border-left: 4px solid #16a34a;">
+                            <CCardBody class="py-2 px-3 d-flex align-items-center">
+                                <CIcon name="cil-check-circle" class="mr-2" style="color: #16a34a; width: 18px; height: 18px;" />
+                                <span class="font-weight-bold" style="color: #166534; font-size: 14px;">
+                                    {{ $t('active_template_label') }}: {{ activeTemplate.title }}
+                                </span>
+                            </CCardBody>
+                        </CCard>
+                    </div>
+                    <div v-else class="mt-3 mb-3">
+                        <CCard class="border-0 shadow-sm" style="border-radius: 8px; background: #fef2f2; border-left: 4px solid #dc2626;">
+                            <CCardBody class="py-2 px-3 d-flex align-items-center">
+                                <CIcon name="cil-warning" class="mr-2" style="color: #dc2626; width: 18px; height: 18px;" />
+                                <span class="font-weight-bold" style="color: #991b1b; font-size: 14px;">
+                                    {{ $t('no_active_template_label') }}
+                                </span>
+                            </CCardBody>
+                        </CCard>
+                    </div>
+                    <CRow class="mt-2">
                         <CCol>
                             <CCard class="table-card border-0 shadow-sm mb-4">
                                 <div class="table-scroll">
@@ -23,19 +43,19 @@
                                                     :doubleArrows="false" align="end" class="mb-0 custom-pagination" />
                                             </div>
                                         </template>
-                                        <template #sendStatus="{ item }">
+                                        <template #deliveryStatus="{ item }">
                                             <td class="text-center align-middle">
-                                                <div class="status-pill" :class="getStatusClass(item.sendStatus)">
-                                                    <CIcon :name="getStatusIcon(item.sendStatus)" size="sm"
+                                                <div class="status-pill" :class="getStatusClass(item.deliveryStatus)">
+                                                    <CIcon :name="getStatusIcon(item.deliveryStatus)" size="sm"
                                                         class="mr-1" />
-                                                    {{ formatSendStatus(item.sendStatus) }}
+                                                    {{ formatSendStatus(item.deliveryStatus) }}
                                                 </div>
                                             </td>
                                         </template>
                                         <template #actions="{ item }">
                                             <td class="text-center align-middle">
                                                 <CButton class="btn-action-icon mr-2" @click="sendEmail(item._id)"
-                                                    :title="$t('send_email')">
+                                                    :title="$t('send_email')" :disabled="!activeTemplate">
                                                     <CIcon name="cil-envelope-closed" />
                                                 </CButton>
                                                 <CButton class="btn-action-icon" @click="selectProgram(item)"
@@ -102,7 +122,11 @@
                                                 <td class="pl-4">
                                                     <div class="font-weight-bold"
                                                         style="color: #1e293b; font-size: 15px;">{{
-                                                            email.title }}</div>
+                                                            email.title }}
+                                                        <span class="badge ml-2 font-weight-bold"
+                                                            :class="email.locale === 'th' ? 'badge-locale-th' : 'badge-locale-en'"
+                                                            style="font-size: 10px; padding: 2px 7px; vertical-align: middle; border-radius: 3px;">{{ email.locale === 'th' ? 'TH' : 'EN' }}</span>
+                                                    </div>
                                                     <div class="text-muted mt-1" style="font-size: 13px;">{{
                                                         email.description }}</div>
                                                 </td>
@@ -177,7 +201,7 @@ export default {
                 { key: 'student', _style: 'min-width: 300px' },
                 { key: 'programName', _style: 'min-width: 300px' },
                 { key: 'academicYear', _style: 'min-width: 140px' },
-                { key: 'sendStatus', _classes: 'text-center' },
+                { key: 'deliveryStatus', _classes: 'text-center' },
                 { key: 'actions', _classes: 'text-center', sorter: false, filter: false },
             ],
             activePage: 1,
@@ -190,10 +214,11 @@ export default {
     methods: {
         loadData() {
             this.$store.dispatch('email/emailStudent/email')
+            this.$store.dispatch('email/emailTransactionStudent/get')
             this.$store.dispatch('member/students/students')
         },
         getStatusClass(status) {
-            const map = { COMPLETE: 'status-replied', FAILED: 'status-closed', PENDING: 'status-pending' }
+            const map = { COMPLETE: 'status-replied', FAILED: 'status-failed', PENDING: 'status-pending' }
             return map[status] ?? 'status-pending'
         },
         getStatusIcon(status) {
@@ -201,19 +226,25 @@ export default {
             return map[status] ?? 'cil-clock'
         },
         formatSendStatus(status) {
-            if (!status) return ''
-            const key = status.toLowerCase()
-            return this.$te(key) ? this.$t(key) : (status.charAt(0) + status.slice(1).toLowerCase())
+            if (!status) return this.$t('pending')
+            if (status === 'PENDING') return this.$t('pending')
+            if (status === 'COMPLETE') return this.$t('complete')
+            if (status === 'FAILED') return this.$t('failed')
+            return status.charAt(0) + status.slice(1).toLowerCase()
         },
         selectProgram(program) { this.selectedProgram = program },
         openEditModal(email) { this.$refs.modalTemplate.openEdit(email) },
         useTemplate(_id) {
             this.$store.dispatch('email/emailStudent/updateEmail', { _id, active: true })
         },
-        sendEmail(_id) {
-            const activeTemplate = this.emailsData.find(t => t.active);
-            const templateId = activeTemplate ? activeTemplate._id : '6973168131640a4d402b0682'; // Fallback to hardcoded if none active
-            return this.$store.dispatch('email/emailStudent/sendEmail', { _id, templete: templateId });
+        async sendEmail(_id) {
+            const active = this.activeTemplate;
+            if (!active) {
+                alert(this.$t('no_active_template_found'));
+                return;
+            }
+            await this.$store.dispatch('email/emailStudent/sendEmail', { _id, template: active._id });
+            await this.$store.dispatch('email/emailTransactionStudent/get');
         },
         removeEmail(_id) {
             this.$store.dispatch('email/emailStudent/deleteEmail', { _id })
@@ -223,6 +254,7 @@ export default {
         ...mapGetters('academic/schools', { storedSchools: 'schools' }),
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('email/emailStudent', ['emailStudent']),
+        ...mapGetters('email/emailTransactionStudent', { storedTransactionStudents: 'emailTransactionStudent' }),
         ...mapGetters('member/students', { storedStudents: 'students' }),
 
         programsTable() {
@@ -242,12 +274,10 @@ export default {
                 })
             }
             if (this.year) {
-                source = source.filter(s => s.info?.year === this.year.toString())
-            }
-            if (this.status) {
                 source = source.filter(s => {
-                    const currentStat = s.evaluation ? 'COMPLETE' : 'PENDING';
-                    return currentStat === this.status;
+                    const yr = s.info?.year;
+                    const yrVal = Array.isArray(yr) ? (yr.find(y => y.key === 'en') || yr[0])?.value : (yr && typeof yr === 'object' ? yr.value : yr);
+                    return yrVal === this.year.toString();
                 })
             }
             if (this.searchQuery.trim()) {
@@ -259,21 +289,62 @@ export default {
             }
 
             const getTitle = t => (Array.isArray(t) ? (t.find(x => x.key === lang) ?? t[0])?.value ?? 'N/A' : t ?? 'N/A')
-            return source.map((item, index) => {
+
+            const active = this.activeTemplate
+            const transactions = this.storedTransactionStudents || []
+            const txMap = {}
+            transactions.forEach(tx => {
+                const studentId = tx.student_id?._id || tx.student_id
+                if (!studentId) return
+                const txTemplateId = tx.template_id?._id || tx.template_id
+                if (active && txTemplateId && String(txTemplateId) !== String(active._id)) return
+                if (!txMap[studentId]) txMap[studentId] = []
+                txMap[studentId].push(tx)
+            })
+
+            const normStatus = (s) => {
+                if (!s) return 'PENDING'
+                const up = s.toUpperCase()
+                if (up === 'COMPLETED' || up === 'COMPLETE') return 'COMPLETE'
+                if (up === 'FAILED') return 'FAILED'
+                return 'PENDING'
+            }
+
+            let result = source.map((item, index) => {
                 const info = item.info || {}
                 const program = info.program?.title ? info.program : this.storedPrograms.find(p => p._id === info.program) ?? null
                 const school = info.school?.title ? info.school : this.storedSchools.find(s => s._id === info.school) ?? null
+
+                const studentId = item._id
+                const itemTxList = studentId ? (txMap[studentId] || []) : []
+                const latestTx = itemTxList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+                const deliveryStatus = latestTx ? normStatus(latestTx.delivery_status) : 'PENDING'
+
                 return {
                     _id: item._id,
                     id: item.studentID ?? `COR-00${index + 1}`,
                     student: getTitle(item.name),
                     schoolName: school ? getTitle(school.title) : 'N/A',
                     programName: program ? getTitle(program.title) : 'N/A',
-                    academicYear: info.year ?? 'N/A',
+                    academicYear: (() => {
+                        const yr = info.year;
+                        if (Array.isArray(yr)) {
+                            const found = yr.find(y => y.key === 'en') || yr[0];
+                            return found ? found.value : 'N/A';
+                        }
+                        if (yr && typeof yr === 'object') return yr.value || 'N/A';
+                        return yr ?? 'N/A';
+                    })(),
                     semester: info.semester ?? 'N/A',
-                    sendStatus: item.evaluation ? 'COMPLETE' : 'PENDING',
+                    deliveryStatus,
                 }
             })
+
+            if (this.status) {
+                result = result.filter(item => item.deliveryStatus === this.status)
+            }
+
+            return result
         },
 
         // translate fields similar to other table components
@@ -283,7 +354,7 @@ export default {
                 schoolName: 'school',
                 programName: 'program',
                 id: 'id_label',
-                sendStatus: 'status',
+                deliveryStatus: 'delivery_status',
                 actions: 'actions',
                 student: 'student',
                 academicYear: 'academicYear'
@@ -319,15 +390,19 @@ export default {
             })
         },
 
+        activeTemplate() {
+            return this.emailsData.find(t => t.active) || null;
+        },
+
         emailsData() {
-            const lang = this.$i18n.locale
             if (!this.emailStudent) return []
             return this.emailStudent.map(item => ({
                 _id: item._id,
-                title: item.title?.find?.(t => t.key === lang)?.value ?? item.title ?? '',
-                description: item.description?.find?.(d => d.key === lang)?.value ?? item.description ?? '',
-                templete: item.templete,
+                title: item.title || '',
+                description: item.description || '',
+                template: item.template,
                 active: item.active,
+                locale: item.locale || 'en',
                 updatedAt: this.moment(item.updatedAt).format('DD/MM/YYYY HH:mm'),
             }))
         },
@@ -356,7 +431,15 @@ export default {
                 const current = new Date().getFullYear() + 543
                 return [{ value: null, label: 'All Years' }, { value: current, label: current.toString() }]
             }
-            const years = [...new Set(students.map(s => s.info?.year ? parseInt(s.info.year) : null).filter(Boolean))].sort((a, b) => b - a)
+            const years = [...new Set(students.map(s => {
+                const yr = s.info?.year;
+                if (Array.isArray(yr)) {
+                    const found = yr.find(y => y.key === 'en') || yr[0];
+                    return found ? parseInt(found.value) : null;
+                }
+                if (yr && typeof yr === 'object') return parseInt(yr.value) || null;
+                return yr ? parseInt(yr) : null;
+            }).filter(Boolean))].sort((a, b) => b - a)
             return [{ value: null, label: 'All Years' }, ...years.map(y => ({ value: y, label: y.toString() }))]
         },
 
@@ -455,9 +538,9 @@ export default {
     color: #166534;
 }
 
-.status-closed {
-    background-color: #f3f4f6;
-    color: #4b5563;
+.status-failed {
+    background-color: #fef2f2;
+    color: #dc2626;
 }
 
 .btn-action-icon {
@@ -660,6 +743,16 @@ export default {
     background-color: #ffffff !important;
     border-color: #d1d5db !important;
     box-shadow: none !important;
+}
+
+.badge-locale-en {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-locale-th {
+    background-color: #fef3c7;
+    color: #92400e;
 }
 
 .slide-enter-active,

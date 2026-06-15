@@ -21,10 +21,12 @@
 
                     <!-- Action Buttons -->
                     <CCol lg="6" md="6" class="d-flex justify-content-end align-items-center flex-wrap">
-                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')">
+                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('school')"
+                            :disabled="!isEmailReady">
                             <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> {{ $t('send_email_school') }}
                         </CButton>
-                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('program')">
+                        <CButton class="btn-modern-action mr-2" @click="sendBulkEmail('program')"
+                            :disabled="!isEmailReady">
                             <CIcon name="cil-envelope-closed" class="mr-2 text-primary" /> {{ $t('send_email_program')
                             }}
                         </CButton>
@@ -108,6 +110,7 @@ export default {
             this.$store.dispatch('academic/schools/schools')
             this.$store.dispatch('academic/programs/programs')
             this.$store.dispatch('email/emailStudent/email')
+            this.$store.dispatch('email/emailTransactionStudent/get')
         },
         async handlePreview() {
             const section = this.$refs.studentSection;
@@ -131,8 +134,13 @@ export default {
             const section = this.$refs.studentSection;
             if (!section) return;
 
+            if (!this.isEmailReady) {
+                alert(this.$t('no_active_template_found'));
+                return;
+            }
+
             // Filter for Pending only as requested for consistent behavior
-            const items = section.programsTable.filter(item => item.sendStatus === 'PENDING');
+            const items = section.programsTable.filter(item => item.deliveryStatus === 'PENDING');
 
             if (!items || items.length === 0) {
                 alert(this.$t('no_pending_students_found'));
@@ -165,6 +173,7 @@ export default {
         ...mapGetters('academic/schools', { storedSchools: 'schools' }),
         ...mapGetters('academic/programs', { storedPrograms: 'programs' }),
         ...mapGetters('email/emailStudent', { storedStudentEmails: 'emailStudent' }),
+        ...mapGetters('email/emailTransactionStudent', { storedTransactionStudents: 'emailTransactionStudent' }),
 
         isEmailReady() {
             return (this.storedStudentEmails || []).some(t => t.active);
@@ -174,12 +183,24 @@ export default {
             return (this.storedStudents || []).length;
         },
         sentCount() {
-            return (this.storedStudents || []).filter(s => s.evaluation).length;
+            const tx = this.storedTransactionStudents || []
+            const completed = tx.filter(t => (t.delivery_status || '').toUpperCase() === 'COMPLETED')
+            return new Set(completed.map(t => t.student_id?._id || t.student_id)).size
         },
         pendingCount() {
-            return this.totalCount - this.sentCount;
+            const tx = this.storedTransactionStudents || []
+            const pending = tx.filter(t => (t.delivery_status || '').toUpperCase() === 'PENDING')
+            const pendingIds = new Set(pending.map(t => t.student_id?._id || t.student_id))
+            const allIds = new Set((this.storedStudents || []).map(s => s._id))
+            const txIds = new Set(tx.map(t => t.student_id?._id || t.student_id))
+            const noTxIds = [...allIds].filter(id => !txIds.has(id))
+            return pendingIds.size + noTxIds.length
         },
-        failedCount() { return 0; },
+        failedCount() {
+            const tx = this.storedTransactionStudents || []
+            const failed = tx.filter(t => (t.delivery_status || '').toUpperCase() === 'FAILED')
+            return new Set(failed.map(t => t.student_id?._id || t.student_id)).size
+        },
 
         schoolOptions() {
             const lang = this.$store.getters['setting/lang'] || 'en';
@@ -206,7 +227,15 @@ export default {
         yearOptions() {
             const students = this.storedStudents || [];
             if (!students.length) return [{ value: null, label: this.$t('all_years_label') }];
-            const years = [...new Set(students.map(s => s.info?.year ? parseInt(s.info.year) : null).filter(Boolean))].sort((a, b) => b - a);
+            const years = [...new Set(students.map(s => {
+                const yr = s.info?.year;
+                if (Array.isArray(yr)) {
+                    const found = yr.find(y => y.key === 'en') || yr[0];
+                    return found ? parseInt(found.value) : null;
+                }
+                if (yr && typeof yr === 'object') return parseInt(yr.value) || null;
+                return yr ? parseInt(yr) : null;
+            }).filter(Boolean))].sort((a, b) => b - a);
             return [{ value: null, label: this.$t('all_years_label') }, ...years.map(y => ({ value: y, label: y.toString() }))];
         },
         statusOptions() {

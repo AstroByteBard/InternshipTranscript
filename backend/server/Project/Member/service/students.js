@@ -39,8 +39,17 @@ exports.onUpdate = async function (request, response) {
     try {
         let query = {}
         query._id = new mongo.ObjectId(request.body._id);
+        const existing = await objSchema.onQuery(query, [], '');
+        const nextData = {
+            ...(existing || {}),
+            ...(request.body || {}),
+            info: {
+                ...(existing?.info || {}),
+                ...(request.body?.info || {})
+            }
+        };
 
-        const doc = await objSchema.onUpdate(query, request.body);
+        const doc = await objSchema.onUpdate(query, nextData);
         return ResMessage.sendResponse(response, 0, 20000, doc);
     } catch (err) {
         console.error(err);

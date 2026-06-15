@@ -114,13 +114,25 @@ export default {
             ];
         },
         academicOptions() {
-            // Try to collect academic years from advisor -> student info when available
+            const lang = this.$i18n.locale || 'en';
             const years = new Set();
             (this.storedAdvisors || []).forEach(adv => {
-                if (adv.year) years.add(adv.year);
+                let studentObj = null;
                 if (adv.student && typeof adv.student === 'object') {
-                    const y = adv.student.info?.year;
-                    if (y) years.add(y);
+                    studentObj = adv.student;
+                }
+                if (studentObj) {
+                    const yr = studentObj.info?.year;
+                    if (yr) {
+                        if (Array.isArray(yr)) {
+                            const found = yr.find(y => y.key === lang) || yr.find(y => y.key === 'en');
+                            if (found && found.value) years.add(found.value);
+                        } else if (typeof yr === 'object' && yr.value) {
+                            years.add(yr.value);
+                        } else if (typeof yr === 'string') {
+                            years.add(yr);
+                        }
+                    }
                 }
             });
             return [

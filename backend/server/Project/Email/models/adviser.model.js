@@ -4,16 +4,11 @@ var mongoose    = require('mongoose');
 var Schema      = mongoose.Schema;
 
 var objsSchema  = new Schema({
-    title           : [{
-        key            : {type: String, default: null},
-        value          : {type: String, default: null},
-    }],
-    description     : [{
-        key            : {type: String, default: null},
-        value          : {type: String, default: null},
-    }],
-    templete        : {type: String , default: null},
-    active          : {type: Boolean, default: false},
+    title           : { type: String, default: null },
+    locale          : { type: String, default: null},
+    description     : { type: String, default: null },
+    template        : { type: String, default: null },
+    active          : { type: Boolean, default: false },
 }, { timestamps: true });
 
 objsSchema.pre('findOneAndUpdate', async function(next) {

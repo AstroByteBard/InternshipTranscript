@@ -9,24 +9,35 @@
 
         <div class="px-3 py-2">
             <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{
-                    $t('template_name')
-                    }}
-                    <span class="text-danger">*</span></label>
+                <div class="d-flex align-items-center justify-content-between">
+                    <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{
+                        $t('template_name')
+                        }}
+                        <span class="text-danger">*</span></label>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="text-muted font-weight-bold mr-2" style="font-size: 12px;">{{ $t('locale') }}:</span>
+                        <div class="d-flex border rounded" style="gap: 0;">
+                            <CButton size="sm"
+                                :class="locale === 'en' ? 'btn-lang-active' : 'btn-lang'"
+                                @click="onLocaleChange('en')" style="border-radius: 3px 0 0 3px; padding: 2px 10px; font-size: 12px; font-weight: 700;">EN</CButton>
+                            <CButton size="sm"
+                                :class="locale === 'th' ? 'btn-lang-active' : 'btn-lang'"
+                                @click="onLocaleChange('th')" style="border-radius: 0 3px 3px 0; padding: 2px 10px; font-size: 12px; font-weight: 700;">TH</CButton>
+                        </div>
+                    </div>
+                </div>
                 <CInput v-model="title" placeholder="e.g. Acceptance Letter" class="custom-input shadow-sm" />
             </div>
 
             <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{ $t('subject')
-                    }}
-                    <span class="text-danger">*</span></label>
-                <CInput v-model="subject" placeholder="e.g. Regarding your application"
-                    class="custom-input shadow-sm" />
-            </div>
-
-            <div class="mb-4">
-                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{
-                    $t('insert_variables') }}</label>
+                <div class="d-flex align-items-center mb-2">
+                    <label class="font-weight-bold text-muted text-uppercase mb-0" style="font-size: 13px;">{{
+                        $t('insert_variables') }}
+                        <span class="text-muted font-weight-normal" style="font-size: 11px; text-transform: none;">
+                            ({{ activeField === 'subject' ? $t('inserting_into_subject') : $t('inserting_into_content') }})
+                        </span>
+                    </label>
+                </div>
                 <div class="d-flex flex-wrap" style="gap: 16px;">
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Student Name')">
                         <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('student_name') }}
@@ -43,18 +54,29 @@
                     <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Academic Year')">
                         <CIcon name="cil-plus" size="sm" class="mr-1" /> {{ $t('academicYear') }}
                     </CButton>
-                    <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Evaluation Link')">
-                        <CIcon name="cil-link" size="sm" class="mr-1" /> {{ $t('evaluation_link') }}
+                    <CButton class="variable-btn shadow-sm" size="sm" @click="insertVariable('Internship System URL')">
+                        <CIcon name="cil-link" size="sm" class="mr-1" /> {{ $t('internship_system_url') }}
                     </CButton>
                 </div>
             </div>
 
+            <div class="mb-4">
+                <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{ $t('subject')
+                }}
+                    <span class="text-danger">*</span></label>
+                <CInput ref="subjectInput" v-model="subject" placeholder="e.g. Regarding your application"
+                    class="custom-input shadow-sm" @focus="onFieldFocus('subject')"
+                    @click="trackCursor('subject', $event)" @keyup="trackCursor('subject', $event)" />
+            </div>
+
             <div>
                 <label class="font-weight-bold text-muted mb-2 text-uppercase" style="font-size: 13px;">{{ $t('content')
-                    }}
+                }}
                     <span class="text-danger">*</span></label>
-                <CTextarea v-model="template" :rows="8" class="custom-textarea shadow-sm"
-                    placeholder="Write your email content here..." style="border-color: #ef4444;" />
+                <CTextarea ref="contentTextarea" v-model="template" :rows="8" class="custom-textarea shadow-sm"
+                    placeholder="Write your email content here..." style="border-color: #ef4444;"
+                    @focus="onFieldFocus('template')"
+                    @click="trackCursor('template', $event)" @keyup="trackCursor('template', $event)" />
             </div>
         </div>
 
@@ -81,47 +103,153 @@ export default {
             title: '',
             subject: '',
             template: '',
-            editingEmailId: null
+            editingEmailId: null,
+            activeField: 'template',
+            cursorPos: { subject: 0, template: 0 },
+            locale: 'en',
+            varPairs: [
+                { en: '{{Student Name}}', th: '{{ชื่อนักศึกษา}}' },
+                { en: '{{Student ID}}', th: '{{รหัสนักศึกษา}}' },
+                { en: '{{School}}', th: '{{โรงเรียน}}' },
+                { en: '{{Program}}', th: '{{หลักสูตร}}' },
+                { en: '{{Academic Year}}', th: '{{ปีการศึกษา}}' },
+                { en: '{{Internship System URL}}', th: '{{URL ระบบฝึกงาน}}' },
+            ],
+            defaults: {
+                en: {
+                    title: 'Internship Status Update',
+                    subject: 'Update regarding your Internship: {{Academic Year}}',
+                    template: `Dear {{Student Name}},
+We are writing to provide an update regarding your internship status for the {{Academic Year}} academic year.
+
+Please log in to the Internship Portal to view the latest documents and requirements for your program: {{Program}}.
+
+{{Internship System URL}}
+
+If you have any questions, please contact the Student Affairs office.
+
+Best regards,
+Student Affairs Department
+{{School}}`
+                },
+                th: {
+                    title: 'อัปเดตสถานะการฝึกงาน',
+                    subject: 'อัปเดตเกี่ยวกับการฝึกงานของคุณ: {{ปีการศึกษา}}',
+                    template: `เรียน {{ชื่อนักศึกษา}}
+ทางมหาวิทยาลัยขอแจ้งอัปเดตสถานะการฝึกงานของคุณสำหรับปีการศึกษา {{ปีการศึกษา}}
+
+กรุณาเข้าสู่ระบบพอร์ทัลฝึกงานเพื่อดูเอกสารและข้อกำหนดล่าสุดสำหรับหลักสูตร {{หลักสูตร}} ของคุณ
+
+{{URL ระบบฝึกงาน}}
+
+หากมีข้อสงสัย กรุณาติดต่อฝ่ายกิจการนักศึกษา
+
+ขอแสดงความนับถือ
+ฝ่ายกิจการนักศึกษา
+{{โรงเรียน}}`
+                }
+            },
+            varMap: {
+                en: {
+                    'Student Name': '{{Student Name}}',
+                    'Student ID': '{{Student ID}}',
+                    'School': '{{School}}',
+                    'Program': '{{Program}}',
+                    'Academic Year': '{{Academic Year}}',
+                    'Internship System URL': '{{Internship System URL}}',
+                },
+                th: {
+                    'Student Name': '{{ชื่อนักศึกษา}}',
+                    'Student ID': '{{รหัสนักศึกษา}}',
+                    'School': '{{โรงเรียน}}',
+                    'Program': '{{หลักสูตร}}',
+                    'Academic Year': '{{ปีการศึกษา}}',
+                    'Internship System URL': '{{URL ระบบฝึกงาน}}',
+                }
+            }
         }
     },
     methods: {
+        onFieldFocus(field) {
+            this.activeField = field
+        },
+        trackCursor(field, $event) {
+            if ($event && $event.target) {
+                this.cursorPos[field] = $event.target.selectionStart
+            }
+        },
         openAdd() {
             this.editingEmailId = null
-            this.title = 'Internship Status Update'
-            this.subject = 'Update regarding your Internship: {{Academic Year}}'
-            this.template = `Dear {{Student Name}},
-                We are writing to provide an update regarding your internship status for the {{Academic Year}} academic year.
-
-                Please log in to the Internship Portal to view the latest documents and requirements for your program: {{Program}}.
-
-                {{Evaluation Link}}
-
-                If you have any questions, please contact the Student Affairs office.
-
-                Best regards,
-                Student Affairs Department
-                {{School}}`
+            const d = this.defaults.en
+            this.title = d.title
+            this.locale = 'en'
+            this.subject = d.subject
+            this.template = d.template
             this.show = true
         },
         openEdit(email = {}) {
             this.editingEmailId = email._id
             this.title = email.title || ''
-            this.subject = email.subject || ''
-            this.template = email.templete || email.description || ''
+            this.subject = email.description || ''
+            this.template = email.template || ''
+            this.locale = email.locale || 'en'
             this.show = true
+        },
+        onLocaleChange(newLocale) {
+            const oldLocale = this.locale
+            if (oldLocale === newLocale) return
+            const other = this.defaults[oldLocale]
+            const next = this.defaults[newLocale]
+            ;['title', 'subject', 'template'].forEach(field => {
+                if (this[field] === other[field]) {
+                    this[field] = next[field]
+                } else if (this[field]) {
+                    let val = this[field]
+                    this.varPairs.forEach(p => {
+                        if (newLocale === 'th') {
+                            val = val.split(p.en).join(p.th)
+                        } else {
+                            val = val.split(p.th).join(p.en)
+                        }
+                    })
+                    this[field] = val
+                }
+            })
+            this.locale = newLocale
         },
         close() {
             this.show = false
         },
         insertVariable(name) {
-            const tag = `{{${name}}}`
-            this.template = this.template ? `${this.template} ${tag}` : tag
+            const map = this.varMap[this.locale] || this.varMap.en
+            const tag = map[name] || `{{${name}}}`
+            const target = this.activeField === 'subject' ? 'subject' : 'template'
+            const pos = this.cursorPos[target]
+            const val = this[target]
+            this[target] = val
+                ? val.slice(0, pos) + tag + val.slice(pos)
+                : tag
+            const newPos = pos + tag.length
+            this.cursorPos[target] = newPos
+            this.$nextTick(() => {
+                let el = null
+                if (target === 'subject' && this.$refs.subjectInput) {
+                    el = this.$refs.subjectInput.$el.querySelector('input')
+                } else if (this.$refs.contentTextarea) {
+                    el = this.$refs.contentTextarea.$el.querySelector('textarea')
+                }
+                if (el) {
+                    el.focus()
+                    el.setSelectionRange(newPos, newPos)
+                }
+            })
         },
         save() {
             const payload = {
-                title: [{ key: 'th', value: 'ทดสอบ' }, { key: 'en', value: this.title }],
-                description: [{ key: 'th', value: this.subject || 'test' }, { key: 'en', value: this.subject || 'test' }],
-                templete: this.template,
+                title: this.title,
+                locale: this.locale || 'en',
+                description: this.subject || '',
+                template: this.template,
                 active: false,
                 group: '69730cdf31640a4d402b0670'
             }
@@ -175,5 +303,17 @@ export default {
     background-color: #f1f5f9;
     color: #0f172a;
     border-color: #cbd5e1;
+}
+
+.btn-lang {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.btn-lang-active {
+    background-color: #dc2626;
+    border: 1px solid #dc2626;
+    color: #ffffff;
 }
 </style>

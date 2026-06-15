@@ -69,6 +69,8 @@ export default {
                 return instance.put("/competencies/evaluation", data);
             case 'delete':
                 return instance.delete("/competencies/evaluation", { data: data });
+            case 'averages':
+                return instance.get("/competencies/evaluation/averages", { params: data });
             default:
                 break;
         }
@@ -112,6 +114,40 @@ export default {
         }
     },
 
+    emailTransactionStudent(method, data, configs) {
+        switch (method) {
+            case 'exp':
+                return instance.post("email/transaction/student/explorers", data);
+            case 'get':
+                return instance.get("email/transaction/student", { params: data });
+            case 'post':
+                return instance.post("email/transaction/student", data);
+            case 'put':
+                return instance.put("email/transaction/student", data);
+            case 'delete':
+                return instance.delete("email/transaction/student", { data: data });
+            default:
+                break;
+        }
+    },
+
+    emailTransactionAdviser(method, data, configs) {
+        switch (method) {
+            case 'exp':
+                return instance.post("email/transaction/adviser/explorers", data);
+            case 'get':
+                return instance.get("email/transaction/adviser", { params: data });
+            case 'post':
+                return instance.post("email/transaction/adviser", data);
+            case 'put':
+                return instance.put("email/transaction/adviser", data);
+            case 'delete':
+                return instance.delete("email/transaction/adviser", { data: data });
+            default:
+                break;
+        }
+    },
+
     school(method, data, configs) {
         switch (method) {
             case 'exp':
@@ -123,7 +159,7 @@ export default {
             case 'put':
                 return instance.put("academic/school", data);
             case 'delete':
-                return instance.delete("academic/school", data);
+                return instance.delete("academic/school", { data: data });
             default:
                 break;
         }
@@ -140,7 +176,7 @@ export default {
             case 'put':
                 return instance.put("academic/program", data);
             case 'delete':
-                return instance.delete("academic/program", data);
+                return instance.delete("academic/program", { data: data });
             default:
                 break;
         }
@@ -155,7 +191,7 @@ export default {
             case 'put':
                 return instance.put("academic/course", data);
             case 'delete':
-                return instance.delete("academic/course", data);
+                return instance.delete("academic/course", { data: data });
             default:
                 break;
         }
@@ -210,6 +246,36 @@ export default {
         }
     },
 
+    generalSettings(method, data, configs) {
+        switch (method) {
+            case 'get':
+                return instance.get("setting/general", { params: data });
+            case 'post':
+                return instance.post("setting/general", data);
+            case 'put':
+                return instance.put("setting/general", data);
+            default:
+                break;
+        }
+    },
+
+    semester(method, data, configs) {
+        switch (method) {
+            case 'exp':
+                return instance.post("setting/semester/explorers", data);
+            case 'get':
+                return instance.get("setting/semester", { params: data });
+            case 'post':
+                return instance.post("setting/semester", data);
+            case 'put':
+                return instance.put("setting/semester", data);
+            case 'delete':
+                return instance.delete("setting/semester", { data: data });
+            default:
+                break;
+        }
+    },
+
     documents(method, data, configs) {
         switch (method) {
             case 'get':
@@ -240,6 +306,8 @@ export default {
                 return instance.put("competencies/evaluation", data);
             case 'delete':
                 return instance.delete("competencies/evaluation", { data: data });
+            case 'averages':
+                return instance.get("competencies/evaluation/averages", { params: data });
             default:
                 break;
         }
@@ -259,4 +327,5 @@ export default {
                 break;
         }
     },
+
 }

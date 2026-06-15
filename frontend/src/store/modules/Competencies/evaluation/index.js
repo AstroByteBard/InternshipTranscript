@@ -23,6 +23,15 @@ const ServerModule = {
                     throw err;
                 });
         },
+        averages({ commit }, data) {
+            return Service.evaluation('averages', data, {})
+                .then((response) => {
+                    return response.data.data;
+                }).catch((err) => {
+                    console.log(err);
+                    throw err;
+                });
+        },
         queryEvaluation({ commit }, data) {
             return Service.evaluation('query', data, {})
                 .then((response) => {

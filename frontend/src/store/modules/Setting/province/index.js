@@ -14,38 +14,43 @@ const ServerModule = {
 
     actions: {
         province({ commit }, data) {
-            Service.province('get', data, {})
+            return Service.province('get', data, {})
                 .then((response) => {
                     commit('province', response.data.data)
+                    return response.data.data
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         createProvince({ dispatch }, data) {
-            Service.province('post', data, {})
+            return Service.province('post', data, {})
                 .then((response) => {
                     console.log('สถานนะการบันทึก : ', response.data)
                     return dispatch('province')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         updateProvince({ dispatch }, data) {
-            Service.province('put', data, {})
+            return Service.province('put', data, {})
                 .then((response) => {
                     console.log('สถานนะการแก้ไข : ', response.data)
                     return dispatch('province')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
         deleteProvince({ dispatch }, data) {
-            Service.province('delete', data, {})
+            return Service.province('delete', data, {})
                 .then((response) => {
                     console.log('สถานนะการลบ : ', response.data)
                     return dispatch('province')
                 }).catch((err) => {
                     console.log(err)
+                    throw err
                 });
         },
     },

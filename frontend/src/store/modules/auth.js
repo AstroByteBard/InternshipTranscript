@@ -119,12 +119,13 @@ const actions = {
     /**
      * Login as Student (mock)
      */
-    async loginAsStudent({ dispatch }) {
+    async loginAsStudent({ dispatch }, email) {
+        const loginEmail = email || '6631503038@lamduan.mfu.ac.th';
         // Use real DB-backed login if available, fall back to mock
         try {
-            return await dispatch('loginReal', '6631503038@lamduan.mfu.ac.th');
+            return await dispatch('loginReal', loginEmail);
         } catch (e) {
-            return dispatch('mockLogin', '6631503038@lamduan.mfu.ac.th');
+            return dispatch('mockLogin', loginEmail);
         }
     },
 
