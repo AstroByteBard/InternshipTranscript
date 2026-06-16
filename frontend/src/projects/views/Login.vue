@@ -42,6 +42,7 @@
                 class="form-control"
                 :placeholder="$t('select_or_type_student')"
                 :disabled="studentLoading || !studentOptions.length"
+                autocomplete="off"
                 @focus="onFocus"
                 @input="onInput"
                 @keydown.enter="onEnter"
@@ -49,10 +50,13 @@
                 @keydown.down.prevent="onArrowDown"
                 @keydown.up.prevent="onArrowUp"
               />
-              <ul v-if="showDropdown && filteredOptions.length" class="autocomplete-dropdown">
+              <ul v-if="showDropdown" class="autocomplete-dropdown">
+                <li v-if="!filteredOptions.length" class="px-3 py-2 text-muted" style="font-size: 14px; cursor: default;">
+                  {{ $t('no_matching_students') || 'No matching students found' }}
+                </li>
                 <li
                   v-for="(student, idx) in filteredOptions"
-                  :key="student.value"
+                  :key="student._id"
                   :class="{ active: idx === highlightIndex }"
                   @mousedown.prevent="selectStudent(student)"
                   @mouseenter="highlightIndex = idx"
@@ -166,10 +170,9 @@ export default {
       this.highlightIndex = -1;
     },
 
-    onFocus() {
-      if (this.filteredOptions.length) {
-        this.showDropdown = true;
-      }
+    onFocus(e) {
+      this.showDropdown = true;
+      this.highlightIndex = -1;
     },
 
     onInput() {
@@ -248,7 +251,8 @@ export default {
     studentOptions() {
       return this.students.map(student => ({
         value: student.email || student.studentID || student.id || '',
-        label: this.getStudentLabel(student)
+        label: this.getStudentLabel(student),
+        _id: student._id || student.studentID || student.email || student.id || ''
       }));
     },
     filteredOptions() {
