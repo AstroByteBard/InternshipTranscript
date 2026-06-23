@@ -152,13 +152,15 @@ export default {
 
     async confirmStudentLogin() {
       const email = this.selectedStudentEmail || this.studentQuery;
+      console.log('[Login] confirmStudentLogin - selectedStudentEmail:', this.selectedStudentEmail, 'studentQuery:', this.studentQuery, '→ email:', email);
       if (!email) return;
       try {
         await this.$store.dispatch('auth/loginAsStudent', email);
+        console.log('[Login] login success, redirecting to /student/dashboard');
         this.showStudentLoginModal = false;
         this.$router.push('/student/dashboard');
       } catch (err) {
-        console.error('Student Login Error:', err);
+        console.error('[Login] Student Login Error:', err);
         this.$toast?.error(err.response?.data?.message || 'Student Login Failed');
       }
     },
@@ -166,6 +168,7 @@ export default {
     selectStudent(student) {
       this.selectedStudentEmail = student.value;
       this.studentQuery = student.label;
+      console.log('[Login] selected student - value:', student.value, 'label:', student.label, '_id:', student._id);
       this.showDropdown = false;
       this.highlightIndex = -1;
     },
@@ -250,7 +253,7 @@ export default {
     }),
     studentOptions() {
       return this.students.map(student => ({
-        value: student.email || student.studentID || student.id || '',
+        value: student.studentID || student.email || student.id || '',
         label: this.getStudentLabel(student),
         _id: student._id || student.studentID || student.email || student.id || ''
       }));

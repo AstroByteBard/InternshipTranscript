@@ -61,6 +61,7 @@ exports.mockLogin = async function (email) {
 
         return {
             user: {
+                _id: user.id,
                 id: user.id,
                 email: user.email,
                 name: user.name,

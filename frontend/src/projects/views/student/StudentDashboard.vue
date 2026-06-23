@@ -754,7 +754,7 @@ export default {
         };
 
         // Fetch student data
-        const currentUserId = user?._id || this.targetStudentId;
+        const currentUserId = user?._id || user?.id || this.targetStudentId;
         console.log('ID to use (user._id || targetStudentId):', currentUserId);
 
         try {

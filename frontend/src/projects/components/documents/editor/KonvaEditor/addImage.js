@@ -9,11 +9,8 @@ export default function addImage(dataUrl, opts = {}) {
             const maxW = page.width()
             const maxH = page.height()
 
-            // If it's a banner-like image (very wide), default to full width
-            const isBanner = imageObj.naturalWidth > imageObj.naturalHeight * 2;
-            const defaultW = opts.width ? Number(opts.width) : (isBanner ? maxW : Math.min(600, imageObj.naturalWidth, maxW))
+            const defaultW = opts.width ? Number(opts.width) : Math.min(600, imageObj.naturalWidth, maxW)
             const defaultH = opts.height ? Number(opts.height) : Math.floor((imageObj.naturalHeight / imageObj.naturalWidth) * defaultW)
-            const lockResize = opts.lockResize === true || (opts.lockResize !== false && isBanner);
 
             const hasX = typeof opts.x !== 'undefined' || typeof opts.left !== 'undefined'
             const hasY = typeof opts.y !== 'undefined' || typeof opts.top !== 'undefined'
@@ -30,7 +27,6 @@ export default function addImage(dataUrl, opts = {}) {
                 // ensure images are borderless by default
                 stroke: null,
                 strokeWidth: 0,
-                imageSmoothingEnabled: isBanner ? false : undefined,
             })
 
             this.assignCreationOrder(konvaImage)
@@ -53,12 +49,6 @@ export default function addImage(dataUrl, opts = {}) {
             })
 
             konvaImage.on('transform', () => {
-                if (lockResize) {
-                    // prevent scaling for banner images
-                    konvaImage.scaleX(1);
-                    konvaImage.scaleY(1);
-                    return;
-                }
                 // keep transform within bounds and enforce min size
                 const minSize = 16
                 const scaleX = konvaImage.scaleX()
@@ -77,13 +67,6 @@ export default function addImage(dataUrl, opts = {}) {
             })
 
             konvaImage.on('transformend', () => {
-                if (lockResize) {
-                    konvaImage.scaleX(1);
-                    konvaImage.scaleY(1);
-                    this.layer.draw()
-                    this.saveHistory()
-                    return
-                }
                 // apply scale to width/height and reset scale
                 const scaleX = konvaImage.scaleX()
                 const scaleY = konvaImage.scaleY()
@@ -138,13 +121,6 @@ export default function addImage(dataUrl, opts = {}) {
             if (opts.variableName) {
                 konvaImage.setAttr('variableName', opts.variableName)
                 konvaImage.setAttr('placeholder', opts.variableName)
-            }
-
-            if (isBanner) {
-                konvaImage.setAttr('isBanner', true)
-            }
-            if (lockResize) {
-                konvaImage.setAttr('lockResize', true)
             }
 
             this.layer.draw()

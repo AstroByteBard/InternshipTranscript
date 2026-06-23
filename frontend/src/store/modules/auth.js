@@ -121,10 +121,11 @@ const actions = {
      */
     async loginAsStudent({ dispatch }, email) {
         const loginEmail = email || '6631503038@lamduan.mfu.ac.th';
-        // Use real DB-backed login if available, fall back to mock
+        console.log('[loginAsStudent] email param:', email, '→ loginEmail:', loginEmail);
         try {
             return await dispatch('loginReal', loginEmail);
         } catch (e) {
+            console.warn('[loginAsStudent] loginReal failed, falling back to mockLogin:', e.message);
             return dispatch('mockLogin', loginEmail);
         }
     },
@@ -137,23 +138,25 @@ const actions = {
             commit('setLoading', true);
             commit('setError', null);
 
-            // Clear persisted auth to avoid stale user data
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
 
+            console.log('[loginReal] posting to backend with email:', email);
             const response = await axios.post(
                 'http://localhost:8081/api/v1/setting/auth/login',
                 { email }
             );
 
+            console.log('[loginReal] response:', response.data);
+
             if (response.data.success && response.data.data) {
                 const { user, token } = response.data.data;
+                console.log('[loginReal] user from backend:', JSON.stringify(user));
 
                 commit('setUser', user);
                 commit('setToken', token);
                 commit('setAuthenticated', true);
 
-                // Store in localStorage for persistence
                 localStorage.setItem('auth_token', token);
                 localStorage.setItem('auth_user', JSON.stringify(user));
 
@@ -163,6 +166,7 @@ const actions = {
             }
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message;
+            console.error('[loginReal] error:', errorMessage);
             commit('setError', errorMessage);
             throw err;
         } finally {

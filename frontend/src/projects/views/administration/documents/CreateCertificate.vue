@@ -3,6 +3,9 @@
         <DocumentTopNav v-if="isTemplateReady" :isPreview.sync="isPreview" :showSettings.sync="showSettings"
             :showHistorySidebar="showHistorySidebar" @toggle-history-sidebar="toggleSidebar('history')"
             @cancel="$router.push('/documents/certificate')" @back="$router.push('/documents/certificate')" @save="handleSave" />
+        <div v-if="isTemplateReady" class="auto-save-indicator text-right px-4 pb-2">
+            <small :class="autoSaveClass">{{ autoSaveText }}</small>
+        </div>
 
         <CModal :show.sync="showTemplateSetupModal" centered :close-on-backdrop="false" :close-on-esc="false"
             :close-button="false" :title="$t('create_certificate_title')" color="primary" size="lg"
@@ -117,6 +120,9 @@ export default {
             currentDate: '',
             currentTime: '',
             timer: null,
+            autoSaveTimer: null,
+            lastSavedContent: null,
+            autoSaveStatus: 'idle',
             isPreview: false,
             scale: 1,
             isManualZoom: false,
@@ -152,6 +158,9 @@ export default {
         if (this.timer) {
             clearInterval(this.timer);
         }
+        if (this.autoSaveTimer) {
+            clearInterval(this.autoSaveTimer);
+        }
         window.removeEventListener('resize', this.calculateScale);
     },
     methods: {
@@ -169,7 +178,9 @@ export default {
                     this.showTemplateSetupModal = false;
                     if (this.$refs.konvaEditor) {
                         this.$refs.konvaEditor.loadFromJSON(doc.content);
+                        this.lastSavedContent = JSON.stringify(doc.content);
                     }
+                    this.startAutoSave();
                 }
             } catch (err) {
                 console.error('Failed to load certificate', err);
@@ -217,6 +228,8 @@ export default {
                     }
                 }
 
+                this.lastSavedContent = JSON.stringify(content);
+                this.autoSaveStatus = 'saved';
                 window.alert && window.alert(this.$t('document_saved_successfully'));
                 return res;
             } catch (err) {
@@ -225,6 +238,57 @@ export default {
                     ? (err.response.data.message || err.response.data.msg || err.response.data.error)
                     : (err && err.message ? err.message : 'Unknown error');
                 window.alert && window.alert(this.$t('failed_to_save_document', { message: msg }));
+            }
+        },
+        startAutoSave() {
+            if (this.autoSaveTimer) {
+                clearInterval(this.autoSaveTimer);
+            }
+            this.autoSaveTimer = setInterval(this.autoSave, 2000);
+        },
+        async autoSave() {
+            if (!this.$refs.konvaEditor) return;
+
+            const content = this.$refs.konvaEditor.saveToJSON();
+            if (!content) return;
+
+            let contentStr;
+            try {
+                contentStr = JSON.stringify(content);
+            } catch (e) {
+                return;
+            }
+
+            if (contentStr === this.lastSavedContent) return;
+
+            this.autoSaveStatus = 'saving';
+
+            const payload = {
+                title: this.documentName,
+                type: 'certificate',
+                status: this.status,
+                locale: this.templateLocale,
+                content: content,
+            };
+
+            try {
+                let res;
+                if (this.docId) {
+                    payload._id = this.docId;
+                    res = await this.$api.documents('put', payload);
+                } else {
+                    res = await this.$api.documents('post', payload);
+                    if (res && res.data && res.data.data) {
+                        this.docId = res.data.data._id;
+                    }
+                }
+                this.lastSavedContent = contentStr;
+                this.autoSaveStatus = 'saved';
+                setTimeout(() => { if (this.autoSaveStatus === 'saved') this.autoSaveStatus = 'idle'; }, 2000);
+            } catch (err) {
+                console.error('Auto-save failed', err);
+                this.autoSaveStatus = 'error';
+                setTimeout(() => { if (this.autoSaveStatus === 'error') this.autoSaveStatus = 'idle'; }, 5000);
             }
         },
         confirmTemplateSetup() {
@@ -239,6 +303,7 @@ export default {
             this.templateLocale = this.templateLocale || 'th';
             this.templateSetupConfirmed = true;
             this.showTemplateSetupModal = false;
+            this.$nextTick(() => this.startAutoSave());
         },
         cancelTemplateSetup() {
             this.showTemplateSetupModal = false;
@@ -468,6 +533,18 @@ export default {
             if (this.showDataSidebar || this.showGraphSidebar) return 6;
             if (this.showSettings || this.showHistorySidebar) return 9;
             return 12;
+        },
+        autoSaveText() {
+            if (this.autoSaveStatus === 'saving') return 'Saving...';
+            if (this.autoSaveStatus === 'saved') return 'Auto-saved';
+            if (this.autoSaveStatus === 'error') return 'Auto-save failed';
+            return '';
+        },
+        autoSaveClass() {
+            if (this.autoSaveStatus === 'saving') return 'text-info';
+            if (this.autoSaveStatus === 'saved') return 'text-success';
+            if (this.autoSaveStatus === 'error') return 'text-danger';
+            return '';
         }
     }
 }
@@ -700,5 +777,11 @@ export default {
     width: 1px;
     height: 16px;
     background-color: #e5e7eb;
+}
+
+.auto-save-indicator small {
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: opacity 0.3s;
 }
 </style>
