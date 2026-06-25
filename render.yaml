@@ -10,6 +10,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: CLIENT_URL
+        value: https://frontend-ruby-mu-22.vercel.app
       - key: MONGODB
         value: mongodb+srv://6631503016_db_user:mhza3uzuKuGwywLx@cluster0.buc8uio.mongodb.net/?appName=Cluster0
       - key: KEY

@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "CHROMEDRIVER_SKIP_DOWNLOAD=true npm install --legacy-peer-deps",
   "buildCommand": "NODE_OPTIONS=--openssl-legacy-provider npm run build",
   "outputDirectory": "dist"
 }

@@ -43,7 +43,7 @@ var server = http.createServer(app);
 
 var io = require('socket.io')(server, {
     cors: {
-        origin: "https://127.0.0.1",
+        origin: process.env.CLIENT_URL || "*",
         // methods: ["GET", "POST"],
         // allowedHeaders: ["my-custom-header"],
         credentials: true
