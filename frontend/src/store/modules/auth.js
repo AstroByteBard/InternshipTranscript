@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8081/api/v1/';
+
 const state = {
     user: null,
     token: null,
@@ -59,7 +61,7 @@ const actions = {
             localStorage.removeItem('auth_user');
 
             const response = await axios.post(
-                'http://localhost:8081/api/v1/setting/auth/mock-login',
+                `${API_BASE_URL}setting/auth/mock-login`,
                 { email }
             );
 

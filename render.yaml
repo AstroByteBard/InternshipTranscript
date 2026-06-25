@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: internship-transcript-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/v1/test
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB
+        value: mongodb+srv://6631503016_db_user:mhza3uzuKuGwywLx@cluster0.buc8uio.mongodb.net/?appName=Cluster0
+      - key: KEY
+        value: supersecret123456789
+      - key: TIMEOUT
+        value: "500000"
+      - key: TOKENLANGTH
+        value: "32"
+      - key: TOKENEXPIRED
+        value: "30"
+      - key: TRANSACTIONEXPIRED
+        value: "10"

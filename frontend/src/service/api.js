@@ -2,7 +2,7 @@ import axios from 'axios';
 import store from '@/store/store'
 
 const instance = axios.create();
-instance.defaults.baseURL = 'http://localhost:8081/api/v1/';
+instance.defaults.baseURL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8081/api/v1/';
 instance.defaults.headers = {
     "Content-Type": "application/json",
     // "Api-version": "1.0",

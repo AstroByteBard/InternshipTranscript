@@ -4,7 +4,7 @@ class SocketioService {
     constructor() {}
 
     setupSocketConnection() {
-        this.socket = io("ws://127.0.0.1:80");
+        this.socket = io(process.env.VUE_APP_SOCKET_URL || "ws://127.0.0.1:80");
     }
 
     disconnect() {

@@ -1331,7 +1331,8 @@ export default {
             try {
                 // Use axios directly for fetching example data
                 const axios = (await import('axios')).default;
-                const response = await axios.get('http://localhost:8081/api/v1/member/example-data');
+                const apiBase = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8081/api/v1/';
+                const response = await axios.get(`${apiBase}member/example-data`);
                 if (response.data && response.data.data) {
                     this.exampleData = response.data.data;
                 }
