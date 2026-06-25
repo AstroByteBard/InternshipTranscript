@@ -17,8 +17,26 @@ exports.onQuerys = async function (request, response) {
     try {
         let query = {};
         const doc = await objSchema.onQuerys(query);
-        return ResMessage.sendResponse(response, 0, 20000, doc);
+        const mongoose = require('mongoose');
+        const EvaluationModel = mongoose.model('Competencies_Evaluation');
+
+        const enriched = await Promise.all(doc.map(async (advisor) => {
+            const advisorObj = advisor.toObject ? advisor.toObject() : { ...advisor };
+            const student = advisorObj.student || null;
+
+            if (!student?.evaluation) {
+                advisorObj.responseStatus = 'PENDING';
+                return advisorObj;
+            }
+
+            const exists = await EvaluationModel.exists({ _id: student.evaluation });
+            advisorObj.responseStatus = exists ? 'COMPLETE' : 'PENDING';
+            return advisorObj;
+        }));
+
+        return ResMessage.sendResponse(response, 0, 20000, enriched);
     } catch (err) {
+        console.error('[advisors:onQuerys]', err);
         return ResMessage.sendResponse(response, 0, 40400);
     }
 };

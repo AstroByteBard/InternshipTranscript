@@ -41,6 +41,9 @@ var server = http.createServer(app);
 //     socket.setTimeout(cfg.timeout);
 // });
 
+var { initQueueProcessors } = require('./helpers/queueProcessor');
+initQueueProcessors();
+
 var io = require('socket.io')(server, {
     cors: {
         origin: "https://127.0.0.1",
@@ -65,6 +68,13 @@ server.on('listening', onListening);
 // Graceful shutdown function
 const shutdown = () => {
     console.log('Gracefully shutting down...');
+
+    // Close Bull queues gracefully
+    const { createQueue } = require('./helpers/queue');
+    const names = ['form-submission', 'email'];
+    Promise.all(names.map(n => createQueue(n).close().catch(() => {}))).then(() => {
+        console.log('Closed Bull queues');
+    });
 
     // Stop accepting new requests
     server.close(async () => {

@@ -56,9 +56,9 @@
                                     :value.sync="filterYear" :placeholder="$t('all_years_label')" />
                             </CCol>
                             <CCol md="3">
-                                <label class="filter-mini-label">{{ $t('status') }}</label>
-                                <CSelect custom class="modern-select-filter mb-0" :options="statusOptions"
-                                    :value.sync="filterStatus" :placeholder="$t('all_status_label')" />
+                                <label class="filter-mini-label">{{ $t('delivery_status') }}</label>
+                                <CSelect custom class="modern-select-filter mb-0" :options="deliveryStatusOptions"
+                                    :value.sync="filterDeliveryStatus" :placeholder="$t('all_status_label')" />
                             </CCol>
                         </CRow>
                     </div>
@@ -69,7 +69,7 @@
         <!-- Content Area -->
         <div class="content-pannel">
             <StudentEmailSection ref="studentSection" :search-query="searchQuery" :school="filterSchool"
-                :program="filterProgram" :year="filterYear" :status="filterStatus" />
+                :program="filterProgram" :year="filterYear" :delivery-status="filterDeliveryStatus" />
         </div>
 
         <ModalEmailPreview ref="modalPreview" />
@@ -98,7 +98,7 @@ export default {
             filterSchool: null,
             filterProgram: null,
             filterYear: null,
-            filterStatus: null,
+            filterDeliveryStatus: null,
         }
     },
     created() {
@@ -238,12 +238,12 @@ export default {
             }).filter(Boolean))].sort((a, b) => b - a);
             return [{ value: null, label: this.$t('all_years_label') }, ...years.map(y => ({ value: y, label: y.toString() }))];
         },
-        statusOptions() {
+        deliveryStatusOptions() {
             return [
                 { value: null, label: this.$t('all_status_label') },
                 { value: 'PENDING', label: this.$t('pending') },
                 { value: 'COMPLETE', label: this.$t('complete') },
-                { value: 'FAILED', label: this.$t('closed') },
+                { value: 'FAILED', label: this.$t('failed') },
             ]
         }
     }

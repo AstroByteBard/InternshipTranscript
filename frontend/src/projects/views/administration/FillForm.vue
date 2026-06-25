@@ -37,7 +37,25 @@
                 </CCard>
               </div>
 
-              <!-- Case 2: Fresh Assessment Form (Default State) -->
+              <!-- Case 2: Submitting — Progress Bar -->
+              <div v-else-if="isSubmitting" class="py-5 mt-4">
+                <CCard class="border-0 shadow-lg text-center p-5 rounded-xl">
+                  <CCardBody>
+                    <div class="mb-4">
+                      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                      <h4 class="font-weight-bold mb-2" style="color: #1e293b;">{{ $t('submitting') }}</h4>
+                      <p class="text-muted mb-4">{{ $t('please_wait') }}</p>
+                    </div>
+                    <div class="progress" style="height: 8px; border-radius: 4px; max-width: 400px; margin: 0 auto;">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar"
+                        :style="{ width: submissionProgress + '%' }"></div>
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">{{ submissionProgress }}%</p>
+                  </CCardBody>
+                </CCard>
+              </div>
+
+              <!-- Case 3: Fresh Assessment Form (Default State) -->
               <div v-else>
                 <!-- Instructions & Description -->
                 <div
@@ -260,6 +278,7 @@ import CompetenciesHeader from '@/projects/components/Layout/CompetenciesHeader.
 import RatingSelector from '@/projects/components/Util/RatingSelector.vue'
 import FormNavbar from '@/projects/components/Layout/FormNavbar.vue'
 import StudentAssessmentHeader from '@/projects/components/Layout/StudentAssessmentHeader.vue'
+import api from '@/service/api'
 
 export default {
   name: 'FillForm',
@@ -283,6 +302,9 @@ export default {
       schools: [],
       programs: [],
       isSubmitting: false,
+      submissionProgress: 0,
+      _progressTimer: null,
+      _progressTimeout: null,
       showSuccessModal: false,
       isAlreadySubmitted: false,
       isPreview: false,
@@ -443,7 +465,6 @@ export default {
     ...mapActions('competencies/specific', { fetchSpecific: 'specific' }),
     ...mapActions('competencies/proposition', { fetchProposition: 'proposition' }),
     ...mapActions('competencies/evaluation', {
-      createEvaluation: 'createEvaluation',
       queryEvaluation: 'queryEvaluation',
       fetchEvaluations: 'evaluations'
     }),
@@ -487,6 +508,35 @@ export default {
         }
       } catch (e) {
         console.error("Failed to fetch student info", e);
+      }
+    },
+
+    // 3b. Progress Simulation
+    _startProgressSimulation() {
+      this.submissionProgress = 0;
+      this._progressTimer = setInterval(() => {
+        const step = Math.max(1, 10 - Math.floor(this.submissionProgress / 10));
+        this.submissionProgress = Math.min(90, this.submissionProgress + step);
+      }, 300);
+
+      // Safety: force-complete after 30s to prevent stuck progress
+      this._progressTimeout = setTimeout(() => {
+        this._stopProgressSimulation();
+        if (this.isSubmitting) {
+          this.submissionProgress = 100;
+          this.isSubmitting = false;
+          this.isAlreadySubmitted = true;
+        }
+      }, 30000);
+    },
+    _stopProgressSimulation() {
+      if (this._progressTimer) {
+        clearInterval(this._progressTimer);
+        this._progressTimer = null;
+      }
+      if (this._progressTimeout) {
+        clearTimeout(this._progressTimeout);
+        this._progressTimeout = null;
       }
     },
 
@@ -564,10 +614,26 @@ export default {
           })
         };
 
-        await this.createEvaluation(payload);
+        payload.sugestion = [];
+
+        this._startProgressSimulation();
+
+        const res = await api.batchEvaluate(payload);
+        this._stopProgressSimulation();
+        this.submissionProgress = 100;
+        this.isSubmitting = false;
+        await new Promise(r => setTimeout(r, 400));
         this.isAlreadySubmitted = true;
         this.showSuccessModal = true;
+
+        const batchResult = res.data;
+        if (batchResult.status === 'completed') {
+          console.log(`Batch completed with ${batchResult.results.length} results`);
+        } else {
+          console.log(`Evaluation submitted to batch ${batchResult.batchId} (${batchResult.collected}/${batchResult.target})`);
+        }
       } catch (error) {
+        this._stopProgressSimulation();
         console.error('Submission failed', error);
         if (error?.response?.status === 400) {
           this.isAlreadySubmitted = true;

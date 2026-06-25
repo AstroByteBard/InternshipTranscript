@@ -191,7 +191,7 @@ export default {
         school: { type: String, default: null },
         program: { type: String, default: null },
         year: { type: [String, Number], default: null },
-        status: { type: String, default: null },
+        deliveryStatus: { type: String, default: null },
     },
     data() {
         return {
@@ -340,8 +340,8 @@ export default {
                 }
             })
 
-            if (this.status) {
-                result = result.filter(item => item.deliveryStatus === this.status)
+            if (this.deliveryStatus) {
+                result = result.filter(item => item.deliveryStatus === this.deliveryStatus)
             }
 
             return result

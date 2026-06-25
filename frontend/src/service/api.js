@@ -76,6 +76,10 @@ export default {
         }
     },
 
+    batchEvaluate(data) {
+        return instance.post("/batch/evaluate", data);
+    },
+
     emailAdviser(method, data, configs) {
         switch (method) {
             case 'exp':

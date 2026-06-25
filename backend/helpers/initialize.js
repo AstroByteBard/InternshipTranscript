@@ -7,7 +7,7 @@ var mongodb = null;
 
 exports.init = function (callback) {
     mongoose.Promise = global.Promise;
-    mongodb = mongoose.connect(cfg.mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+    mongodb = mongoose.connect(cfg.mongoURI, { useNewUrlParser: true, useUnifiedTopology: true, maxPoolSize: 300 })
         .catch(err => {
             console.error('----- Initial MongoDB Connection Error -----');
             console.error(err);

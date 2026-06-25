@@ -5,6 +5,7 @@ const CompetenciesRoutes = require("../Project/Competencies/Competencies.routes"
 const EmailRoutes = require("../Project/Email/Email.routes")
 const DocumentRoutes = require("../Project/Documents/documents.routes");
 const AIRoutes = require("./ai.routes");
+const BatchRoutes = require("./batch.routes");
 // GeminiRoutes removed - AI-related endpoints disabled
 
 
@@ -23,6 +24,10 @@ module.exports = function (app) {
   app.use(path + '/member', MemberRoutes); // complete
   // AI route
   app.use(path + '/ai', AIRoutes);
+
+  // Batch evaluation route
+  app.use(path + '/batch', BatchRoutes);
+  console.log("Batch route registered at:", path + '/batch');
   app.use(path + '/setting', settingsRoutes); // complete
   // app.use(path + '/address', addressRoutes); // complete
 

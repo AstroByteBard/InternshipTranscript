@@ -208,7 +208,8 @@ export default {
         school: { type: String, default: null },
         program: { type: String, default: null },
         year: { type: [String, Number], default: null },
-        status: { type: String, default: null },
+        deliveryStatus: { type: String, default: null },
+        responseStatus: { type: String, default: null },
     },
     data() {
         return {
@@ -374,8 +375,6 @@ export default {
                     deliveryStatus = normStatus(latestTx.delivery_status)
                 }
 
-                const responseStatus = item.student?.evaluation ? 'COMPLETE' : 'PENDING'
-
                 return {
                     _id: item._id,
                     id: `ADV-00${index + 1}`,
@@ -384,12 +383,15 @@ export default {
                     email: item.email || 'N/A',
                     student: item.student?.name ? getTitle(item.student.name) : 'N/A',
                     deliveryStatus,
-                    responseStatus,
+                    responseStatus: item.responseStatus || 'PENDING',
                 }
             })
 
-            if (this.status) {
-                result = result.filter(item => item.responseStatus === this.status)
+            if (this.deliveryStatus) {
+                result = result.filter(item => item.deliveryStatus === this.deliveryStatus)
+            }
+            if (this.responseStatus) {
+                result = result.filter(item => item.responseStatus === this.responseStatus)
             }
 
             return result
